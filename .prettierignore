@@ -1,0 +1,6 @@
+.next
+.next-e2e
+node_modules
+pnpm-lock.yaml
+tsconfig.tsbuildinfo
+coverage

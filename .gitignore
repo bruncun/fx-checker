@@ -31,8 +31,10 @@
 /build
 /dist
 /.next
+/.next-e2e
 /out
 /.next/
+/.next-e2e/
 /out/
 
 # IDEs and editors

@@ -4,7 +4,98 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --font-jetbrains-mono: "JetBrains Mono", monospace;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --text-preset-1-font-size: 40px;
+    --text-preset-1-line-height: 100%;
+    --text-preset-1-letter-spacing: -0.5px;
+    --text-preset-1-font-weight: var(--font-weight-bold);
+    --text-preset-1-tablet-font-size: 32px;
+    --text-preset-1-tablet-line-height: 100%;
+    --text-preset-1-tablet-letter-spacing: -0.5px;
+    --text-preset-1-tablet-font-weight: var(--font-weight-bold);
+    --text-preset-2-font-size: 20px;
+    --text-preset-2-line-height: 120%;
+    --text-preset-2-letter-spacing: -0.5px;
+    --text-preset-2-font-weight: var(--font-weight-regular);
+    --text-preset-2-bold-font-size: 20px;
+    --text-preset-2-bold-line-height: 140%;
+    --text-preset-2-bold-letter-spacing: -0.5px;
+    --text-preset-2-bold-font-weight: var(--font-weight-bold);
+    --text-preset-3-font-size: 16px;
+    --text-preset-3-line-height: 120%;
+    --text-preset-3-letter-spacing: 1px;
+    --text-preset-3-font-weight: var(--font-weight-regular);
+    --text-preset-3-medium-font-size: 16px;
+    --text-preset-3-medium-line-height: 120%;
+    --text-preset-3-medium-letter-spacing: 1px;
+    --text-preset-3-medium-font-weight: var(--font-weight-medium);
+    --text-preset-3-bold-font-size: 16px;
+    --text-preset-3-bold-line-height: 110%;
+    --text-preset-3-bold-letter-spacing: 1px;
+    --text-preset-3-bold-font-weight: var(--font-weight-bold);
+    --text-preset-4-font-size: 14px;
+    --text-preset-4-line-height: 120%;
+    --text-preset-4-letter-spacing: 1px;
+    --text-preset-4-font-weight: var(--font-weight-regular);
+    --text-preset-5-font-size: 12px;
+    --text-preset-5-line-height: 120%;
+    --text-preset-5-letter-spacing: 0.5px;
+    --text-preset-5-font-weight: var(--font-weight-regular);
+    --text-preset-5-medium-font-size: 12px;
+    --text-preset-5-medium-line-height: 130%;
+    --text-preset-5-medium-letter-spacing: 0.5px;
+    --text-preset-5-medium-font-weight: var(--font-weight-medium);
+    --text-preset-6-font-size: 10px;
+    --text-preset-6-line-height: 100%;
+    --text-preset-6-letter-spacing: 0px;
+    --text-preset-6-font-weight: var(--font-weight-regular);
+    --spacing-0: 0;
+    --spacing-025: 2px;
+    --spacing-050: 4px;
+    --spacing-075: 6px;
+    --spacing-100: 8px;
+    --spacing-125: 10px;
+    --spacing-150: 12px;
+    --spacing-200: 16px;
+    --spacing-250: 20px;
+    --spacing-300: 24px;
+    --spacing-400: 32px;
+    --spacing-500: 40px;
+    --spacing-600: 48px;
+    --spacing-800: 64px;
+    --spacing-1000: 80px;
+    --spacing-1200: 96px;
+    --spacing-1400: 112px;
+    --spacing-1600: 128px;
+    --spacing-1800: 140px;
+    --radius-0: 0;
+    --radius-4: 4px;
+    --radius-6: 6px;
+    --radius-8: 8px;
+    --radius-10: 10px;
+    --radius-12: 12px;
+    --radius-16: 16px;
+    --radius-20: 20px;
+    --radius-24: 24px;
+    --radius-full: 999px;
+    --neutral-900: 0 0% 4%;
+    --neutral-700: 240 4% 9%;
+    --neutral-600: 240 3% 13%;
+    --neutral-500: 0 0% 18%;
+    --neutral-400: 0 0% 24%;
+    --neutral-300: 240 1% 27%;
+    --neutral-200: 0 0% 62%;
+    --neutral-100: 0 0% 78%;
+    --neutral-50: 0 0% 100%;
+    --lime-500: 71 92% 60%;
+    --lime-800: 73 100% 10%;
+    --green-500: 104 96% 47%;
+    --red-500: 0 100% 63%;
+
+    --background: var(--neutral-900);
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -30,32 +121,6 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
 }
 
 @layer base {
@@ -65,4 +130,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+abbr {
+  text-decoration: none;
 }
