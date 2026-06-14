@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const spacing = {
   "0": "var(--spacing-0)",
@@ -149,5 +150,5 @@ export default {
     colors,
     borderRadius,
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

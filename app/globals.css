@@ -131,3 +131,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+abbr {
+  text-decoration: none;
+}
