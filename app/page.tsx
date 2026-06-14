@@ -2,9 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { getCurrencies, getCurrencyCount } from "@/lib/frankfurter";
 import { Suspense } from "react";
 
-type HomePageData =
-  | { status: "available"; currencyCount: number }
-  | { status: "unavailable" };
+type HomePageData = { status: "available"; currencyCount: number } | { status: "unavailable" };
 
 async function getHomePageData(): Promise<HomePageData> {
   try {
@@ -27,9 +25,13 @@ function ExchangeRateStats({ currencyCount }: { currencyCount: number }) {
     >
       <li>{currencyCount} Currencies</li>
       <li aria-hidden="true">&nbsp;·&nbsp;</li>
-      <li><abbr title="End of day">EOD</abbr></li>
+      <li>
+        <abbr title="End of day">EOD</abbr>
+      </li>
       <li aria-hidden="true">&nbsp;·&nbsp;</li>
-      <li><abbr title="European Central Bank">ECB</abbr> data</li>
+      <li>
+        <abbr title="European Central Bank">ECB</abbr> data
+      </li>
     </ul>
   );
 }
@@ -54,9 +56,7 @@ async function HomeContent() {
     return <DataUnavailable />;
   }
 
-  return (
-    <AppShell headerContent={<ExchangeRateStats currencyCount={data.currencyCount} />} />
-  );
+  return <AppShell headerContent={<ExchangeRateStats currencyCount={data.currencyCount} />} />;
 }
 
 export default function Home() {

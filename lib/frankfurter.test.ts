@@ -44,13 +44,13 @@ describe("parseFrankfurterCurrencies", () => {
 
   it("throws for object-map shape", () => {
     expect(() => parseFrankfurterCurrencies({ EUR: "Euro" })).toThrow(
-      "Unexpected Frankfurter currencies response",
+      "Unexpected Frankfurter currencies response"
     );
   });
 
   it("throws when currency records are missing required fields", () => {
     expect(() => parseFrankfurterCurrencies([{ iso_code: "EUR" }])).toThrow(
-      "Unexpected Frankfurter currencies response",
+      "Unexpected Frankfurter currencies response"
     );
   });
 });
@@ -93,7 +93,7 @@ describe("getCurrencies", () => {
     await getCurrencies();
     expect(fetch).toHaveBeenCalledWith(
       "https://api.frankfurter.dev/v2/currencies",
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -116,7 +116,7 @@ describe("getCurrencies", () => {
           tags: ["exchange-rates"],
         },
         signal: expect.any(AbortSignal),
-      },
+      }
     );
   });
 
@@ -147,9 +147,7 @@ describe("getCurrencies", () => {
 
     vi.stubGlobal("fetch", fetch);
 
-    await expect(getCurrencies()).rejects.toThrow(
-      "Failed to fetch currencies from Frankfurter",
-    );
+    await expect(getCurrencies()).rejects.toThrow("Failed to fetch currencies from Frankfurter");
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith("Frankfurter request failed", {
       endpoint: "currencies",
@@ -164,9 +162,7 @@ describe("getCurrencies", () => {
 
     vi.stubEnv("FRANKFURTER_API_BASE_URL", "not a url");
 
-    await expect(getCurrencies()).rejects.toThrow(
-      "Failed to fetch currencies from Frankfurter",
-    );
+    await expect(getCurrencies()).rejects.toThrow("Failed to fetch currencies from Frankfurter");
     expect(consoleError).toHaveBeenCalledOnce();
   });
 
@@ -180,9 +176,7 @@ describe("getCurrencies", () => {
 
     vi.stubGlobal("fetch", fetch);
 
-    await expect(getCurrencies()).rejects.toThrow(
-      "Failed to parse currencies from Frankfurter",
-    );
+    await expect(getCurrencies()).rejects.toThrow("Failed to parse currencies from Frankfurter");
     expect(consoleError).toHaveBeenCalledWith("Frankfurter request failed", {
       endpoint: "currencies",
       status: undefined,

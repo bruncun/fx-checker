@@ -3,10 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { defineConfig } from "cypress";
 
-const mockCurrenciesPath = join(
-  process.cwd(),
-  "cypress/fixtures/frankfurter-currencies.json",
-);
+const mockCurrenciesPath = join(process.cwd(), "cypress/fixtures/frankfurter-currencies.json");
 const mockCurrencies = readFileSync(mockCurrenciesPath, "utf8");
 
 let mockServer: Server | null = null;
