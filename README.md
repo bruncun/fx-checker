@@ -1,110 +1,136 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Frontend Mentor - FX Checker Solution
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+This is a solution to the [FX Checker challenge on Frontend Mentor](https://www.frontendmentor.io/challenges/foreign-exchange-currency-converter). FX Checker is a small Next.js application for exploring exchange-rate data. It started from the Supabase Next.js starter and is being refined into a focused product slice, beginning with a server-rendered home page that reads currency metadata from Frankfurter.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+## Table of Contents
 
-## Features
+- [Overview](#overview)
+  - [The Challenge](#the-challenge)
+  - [Current Status](#current-status)
+- [Process](#process)
+  - [Built With](#built-with)
+  - [Architecture Notes](#architecture-notes)
+  - [What I Learned](#what-i-learned)
+  - [Continued Development](#continued-development)
+  - [AI Collaboration](#ai-collaboration)
+- [Development](#development)
+  - [Environment](#environment)
+  - [Quality Gates](#quality-gates)
+- [Decisions](#decisions)
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+## Overview
 
-## Demo
+### The Challenge
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+Users should ultimately be able to:
 
-## Deploy to Vercel
+- enter an amount and see it convert in real time
+- choose send and receive currencies from a searchable picker
+- see the live exchange rate for the active currency pair
+- swap send and receive currencies
+- favorite pairs and log conversions
+- search currencies by code or name
+- view market tickers, rate history, comparisons, favorites, and conversion history
+- use the interface across responsive layouts with keyboard-accessible interactive states
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### Current Status
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+The first foundation slice is intentionally narrower than the full challenge. The app currently establishes the project stack, CI gates, token-based styling, server-side Frankfurter integration, lightweight caching, and a home page that displays exchange-rate data availability.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Process
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### Built With
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+- semantic HTML and accessible React components
+- [Next.js](https://nextjs.org/) App Router with React Server Components
+- [React](https://react.dev/) 19
+- [Supabase](https://supabase.com/) starter wiring for authentication-ready project structure
+- [Tailwind CSS](https://tailwindcss.com/) with project tokens mapped through CSS custom properties
+- shadcn/ui-style primitives, Radix UI components, and Lucide icons
+- [Vitest](https://vitest.dev/) for unit tests
+- [Cypress](https://www.cypress.io/) for end-to-end tests
+- GitHub Actions for CI
 
-## Clone and run locally
+### Architecture Notes
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+The first vertical slice keeps data flow server-led. Frankfurter access lives in `lib/frankfurter.ts`, where requests are timed out, retried, cached through Next.js `fetch`, validated, and logged. The home page converts integration failures into a page-level unavailable state.
 
-2. Create a Next.js app using the Supabase Starter template npx command
+Styling uses Tailwind CSS with design tokens defined in `app/globals.css` and mapped in `tailwind.config.ts`. A formal style guide or design system is intentionally deferred because the current product surface is small and the design work does not yet justify that ceremony.
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+Operationally, the app starts with lightweight `console.error` logging for server failures and relies on Vercel logs rather than adding a full observability platform.
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+### What I Learned
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+This foundation phase was mostly about learning through constraints:
 
-3. Use `cd` to change into the app's directory
+- using Next.js App Router and React Server Components for server-owned data loading
+- letting the Supabase starter template provide useful defaults while gradually replacing starter-specific UI
+- mapping a compact set of design tokens into Tailwind instead of building a design system too early
+- leaning on Next.js `fetch` caching for reference data instead of introducing custom cache infrastructure
+- keeping CI explicit enough that type, lint, format, unit, and end-to-end failures are easy to diagnose
 
-   ```bash
-   cd with-supabase-app
-   ```
+### Continued Development
 
-4. Rename `.env.example` to `.env.local` and update the following:
+Next areas of focus:
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
+- build the converter interaction and searchable currency picker
+- add favorite pairs and conversion history
+- expand Frankfurter data access for rates and historical ranges
+- continue pruning unused starter-template artifacts as product screens replace them
+- revisit observability and data persistence only when the app outgrows the current lightweight choices
+
+### AI Collaboration
+
+AI assistance was used as a pair-programming and documentation partner: brainstorming architecture trade-offs, shaping ADRs, reviewing implementation choices, and keeping the README aligned with both the Frontend Mentor challenge and the actual codebase.
+
+The useful pattern was to let AI help make implicit decisions explicit while keeping final choices grounded in the project constraints. The main risk is over-documenting a small project, so the docs intentionally stay lightweight.
+
+## Development
+
+Install dependencies:
+
+```bash
+pnpm install
 ```
 
-> [!NOTE]
-> This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-> Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-> See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+Run the local development server:
 
-Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+```bash
+pnpm dev
+```
 
-5. You can now run the Next.js local development server:
+The app runs at [localhost:3000](http://localhost:3000).
 
-   ```bash
-   npm run dev
-   ```
+### Environment
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+The Supabase starter expects these variables when authentication-backed flows are used:
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+The Frankfurter integration can be pointed at another compatible API base URL for tests or local development:
 
-## Feedback and issues
+```env
+FRANKFURTER_API_BASE_URL=
+FRANKFURTER_CACHE_KEY=
+```
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### Quality Gates
 
-## More Supabase examples
+Run the same checks used by CI:
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+```bash
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm test:unit
+pnpm test:e2e
+```
+
+The CI workflow keeps these gates separate so failures are easy to identify: type checking, linting, formatting, unit tests, and Cypress end-to-end tests.
+
+## Decisions
+
+Initial architecture decisions are recorded in [docs/adr](docs/adr/README.md). The ADRs explain why the project uses the Supabase starter, Next.js App Router, React Server Components, Tailwind, lightweight caching, simple logging, and explicit CI gates.
