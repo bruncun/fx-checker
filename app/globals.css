@@ -1,10 +1,14 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
-@plugin 'tailwindcss-animate';
+@plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  --breakpoint-*: initial;
+  --breakpoint-sm: 767px;
+  --breakpoint-lg: 1440px;
+
   --spacing-*: initial;
   --spacing-0: var(--spacing-0);
   --spacing-100: var(--spacing-100);
@@ -33,9 +37,7 @@
   --text-preset-1--font-weight: var(--text-preset-1-font-weight);
   --text-preset-1-tablet: var(--text-preset-1-tablet-font-size);
   --text-preset-1-tablet--line-height: var(--text-preset-1-tablet-line-height);
-  --text-preset-1-tablet--letter-spacing: var(
-    --text-preset-1-tablet-letter-spacing
-  );
+  --text-preset-1-tablet--letter-spacing: var(--text-preset-1-tablet-letter-spacing);
   --text-preset-1-tablet--font-weight: var(--text-preset-1-tablet-font-weight);
   --text-preset-2: var(--text-preset-2-font-size);
   --text-preset-2--line-height: var(--text-preset-2-line-height);
@@ -43,9 +45,7 @@
   --text-preset-2--font-weight: var(--text-preset-2-font-weight);
   --text-preset-2-bold: var(--text-preset-2-bold-font-size);
   --text-preset-2-bold--line-height: var(--text-preset-2-bold-line-height);
-  --text-preset-2-bold--letter-spacing: var(
-    --text-preset-2-bold-letter-spacing
-  );
+  --text-preset-2-bold--letter-spacing: var(--text-preset-2-bold-letter-spacing);
   --text-preset-2-bold--font-weight: var(--text-preset-2-bold-font-weight);
   --text-preset-3: var(--text-preset-3-font-size);
   --text-preset-3--line-height: var(--text-preset-3-line-height);
@@ -53,15 +53,11 @@
   --text-preset-3--font-weight: var(--text-preset-3-font-weight);
   --text-preset-3-medium: var(--text-preset-3-medium-font-size);
   --text-preset-3-medium--line-height: var(--text-preset-3-medium-line-height);
-  --text-preset-3-medium--letter-spacing: var(
-    --text-preset-3-medium-letter-spacing
-  );
+  --text-preset-3-medium--letter-spacing: var(--text-preset-3-medium-letter-spacing);
   --text-preset-3-medium--font-weight: var(--text-preset-3-medium-font-weight);
   --text-preset-3-bold: var(--text-preset-3-bold-font-size);
   --text-preset-3-bold--line-height: var(--text-preset-3-bold-line-height);
-  --text-preset-3-bold--letter-spacing: var(
-    --text-preset-3-bold-letter-spacing
-  );
+  --text-preset-3-bold--letter-spacing: var(--text-preset-3-bold-letter-spacing);
   --text-preset-3-bold--font-weight: var(--text-preset-3-bold-font-weight);
   --text-preset-4: var(--text-preset-4-font-size);
   --text-preset-4--line-height: var(--text-preset-4-line-height);
@@ -73,9 +69,7 @@
   --text-preset-5--font-weight: var(--text-preset-5-font-weight);
   --text-preset-5-medium: var(--text-preset-5-medium-font-size);
   --text-preset-5-medium--line-height: var(--text-preset-5-medium-line-height);
-  --text-preset-5-medium--letter-spacing: var(
-    --text-preset-5-medium-letter-spacing
-  );
+  --text-preset-5-medium--letter-spacing: var(--text-preset-5-medium-letter-spacing);
   --text-preset-5-medium--font-weight: var(--text-preset-5-medium-font-weight);
   --text-preset-6: var(--text-preset-6-font-size);
   --text-preset-6--line-height: var(--text-preset-6-line-height);
@@ -295,6 +289,7 @@
   }
   body {
     @apply text-foreground;
+    @apply bg-background;
   }
 }
 

@@ -10,14 +10,14 @@ type AppShellProps = {
 
 export function AppShell({ headerContent, children }: AppShellProps) {
   return (
-    <main className="min-h-screen bg-neutral-900 text-white">
-      <nav className="w-full flex justify-between items-center p-200 sm:px-300 sm:py-250">
+    <main className="text-white min-h-screen bg-neutral-900">
+      <nav className="flex w-full items-center justify-between p-200 sm:px-300 sm:py-250">
         <Link href="/" aria-label="FX Checker">
           <Logo alt="" />
         </Link>
         {headerContent}
       </nav>
-      {children}
+      <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600">{children}</div>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { Converter } from "@/features/converter";
 import { getCurrencies, getCurrencyCount } from "@/lib/frankfurter";
 import { Suspense } from "react";
 
@@ -7,7 +8,6 @@ type HomePageData = { status: "available"; currencyCount: number } | { status: "
 async function getHomePageData(): Promise<HomePageData> {
   try {
     const currencies = await getCurrencies();
-
     return {
       status: "available",
       currencyCount: getCurrencyCount(currencies),
@@ -20,7 +20,7 @@ async function getHomePageData(): Promise<HomePageData> {
 function ExchangeRateStats({ currencyCount }: { currencyCount: number }) {
   return (
     <ul
-      className="flex items-center text-preset-6 text-neutral-200 sm:text-preset-4 uppercase"
+      className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
       aria-label="Exchange rate data stats"
     >
       <li>{currencyCount} Currencies</li>
@@ -56,7 +56,11 @@ async function HomeContent() {
     return <DataUnavailable />;
   }
 
-  return <AppShell headerContent={<ExchangeRateStats currencyCount={data.currencyCount} />} />;
+  return (
+    <AppShell headerContent={<ExchangeRateStats currencyCount={data.currencyCount} />}>
+      <Converter />
+    </AppShell>
+  );
 }
 
 export default function Home() {
