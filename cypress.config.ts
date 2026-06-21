@@ -5,6 +5,8 @@ import { defineConfig } from "cypress";
 
 const mockCurrenciesPath = join(process.cwd(), "cypress/fixtures/frankfurter-currencies.json");
 const mockCurrencies = readFileSync(mockCurrenciesPath, "utf8");
+const mockRatesPath = join(process.cwd(), "cypress/fixtures/frankfurter-rates.json");
+const mockRates = readFileSync(mockRatesPath, "utf8");
 
 let mockServer: Server | null = null;
 let shouldFailCurrenciesRequest = false;
@@ -26,6 +28,12 @@ function startMockServer() {
 
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(mockCurrencies);
+      return;
+    }
+
+    if (pathname === "/v2/rates") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(mockRates);
       return;
     }
 

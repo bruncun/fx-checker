@@ -7,7 +7,7 @@ const FRANKFURTER_REQUEST_TIMEOUT_MS = 5_000;
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
 const FRANKFURTER_AUTO_CACHE_KEY = `${Date.now()}`;
 
-type FrankfurterEndpoint = "currencies";
+type FrankfurterEndpoint = "currencies" | "rates";
 type FrankfurterFetchInit = RequestInit & {
   next: {
     revalidate: number;
@@ -17,11 +17,28 @@ type FrankfurterFetchInit = RequestInit & {
 
 const FRANKFURTER_ENDPOINT_PATHS: Record<FrankfurterEndpoint, string> = {
   currencies: "currencies",
+  rates: "rates",
 };
 
 export type FrankfurterCurrency = {
   iso_code: string;
+  iso_numeric?: string | null;
   name: string;
+  symbol?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+};
+
+export type FrankfurterRate = {
+  date: string;
+  base: string;
+  quote: string;
+  rate: number;
+  providers?: Array<{
+    key: string;
+    rate: number;
+    excluded?: boolean;
+  }>;
 };
 
 function getFrankfurterBaseUrl() {
@@ -48,13 +65,50 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isOptionalNullableString(value: unknown) {
+  return value === undefined || value === null || typeof value === "string";
+}
+
 function isFrankfurterCurrency(value: unknown): value is FrankfurterCurrency {
   return (
     isRecord(value) &&
     typeof value.iso_code === "string" &&
     value.iso_code.length > 0 &&
     typeof value.name === "string" &&
-    value.name.length > 0
+    value.name.length > 0 &&
+    isOptionalNullableString(value.iso_numeric) &&
+    isOptionalNullableString(value.symbol) &&
+    isOptionalNullableString(value.start_date) &&
+    isOptionalNullableString(value.end_date)
+  );
+}
+
+function isFrankfurterProviderRate(value: unknown) {
+  return (
+    isRecord(value) &&
+    typeof value.key === "string" &&
+    value.key.length > 0 &&
+    typeof value.rate === "number" &&
+    Number.isFinite(value.rate) &&
+    value.rate > 0 &&
+    (value.excluded === undefined || typeof value.excluded === "boolean")
+  );
+}
+
+function isFrankfurterRate(value: unknown): value is FrankfurterRate {
+  return (
+    isRecord(value) &&
+    typeof value.date === "string" &&
+    value.date.length > 0 &&
+    typeof value.base === "string" &&
+    value.base.length > 0 &&
+    typeof value.quote === "string" &&
+    value.quote.length > 0 &&
+    typeof value.rate === "number" &&
+    Number.isFinite(value.rate) &&
+    value.rate > 0 &&
+    (value.providers === undefined ||
+      (Array.isArray(value.providers) && value.providers.every(isFrankfurterProviderRate)))
   );
 }
 
@@ -164,8 +218,12 @@ export function parseFrankfurterCurrencies(data: unknown) {
   return data;
 }
 
-export function getCurrencyCount(currencies: FrankfurterCurrency[]) {
-  return currencies.length;
+export function parseFrankfurterRates(data: unknown) {
+  if (!Array.isArray(data) || !data.every(isFrankfurterRate)) {
+    throw new Error("Unexpected Frankfurter rates response");
+  }
+
+  return data;
 }
 
 export async function getCurrencies() {
@@ -181,5 +239,21 @@ export async function getCurrencies() {
     });
 
     throw new Error("Failed to parse currencies from Frankfurter");
+  }
+}
+
+export async function getRates() {
+  const response = await fetchFrankfurterEndpoint("rates");
+
+  try {
+    return parseFrankfurterRates(await response.json());
+  } catch (error) {
+    logFrankfurterFailure({
+      endpoint: "rates",
+      error,
+      url: getResponseUrl(response),
+    });
+
+    throw new Error("Failed to parse rates from Frankfurter");
   }
 }

@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getCurrencies,
-  getCurrencyCount,
+  getRates,
   parseFrankfurterCurrencies,
+  parseFrankfurterRates,
   type FrankfurterCurrency,
+  type FrankfurterRate,
 } from "./frankfurter";
 
 vi.mock("server-only", () => ({}));
@@ -27,15 +29,10 @@ const mockCurrencies: FrankfurterCurrency[] = [
   },
 ];
 
-describe("getCurrencyCount", () => {
-  it("counts available currencies", () => {
-    expect(getCurrencyCount(mockCurrencies)).toBe(4);
-  });
-
-  it("returns 0 for an empty currency list", () => {
-    expect(getCurrencyCount([])).toBe(0);
-  });
-});
+const mockRates: FrankfurterRate[] = [
+  { date: "2026-06-19", base: "EUR", quote: "GBP", rate: 0.8542 },
+  { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.171 },
+];
 
 describe("parseFrankfurterCurrencies", () => {
   it("returns valid Frankfurter currency rows", () => {
@@ -52,6 +49,24 @@ describe("parseFrankfurterCurrencies", () => {
     expect(() => parseFrankfurterCurrencies([{ iso_code: "EUR" }])).toThrow(
       "Unexpected Frankfurter currencies response"
     );
+  });
+});
+
+describe("parseFrankfurterRates", () => {
+  it("returns rate rows matching the OpenAPI response shape", () => {
+    expect(parseFrankfurterRates(mockRates)).toEqual(mockRates);
+  });
+
+  it("throws for the legacy object-map response shape", () => {
+    expect(() => parseFrankfurterRates({ base: "EUR", rates: { USD: 1.171 } })).toThrow(
+      "Unexpected Frankfurter rates response"
+    );
+  });
+
+  it("throws for invalid or non-positive rate values", () => {
+    expect(() =>
+      parseFrankfurterRates([{ date: "2026-06-19", base: "EUR", quote: "USD", rate: 0 }])
+    ).toThrow("Unexpected Frankfurter rates response");
   });
 });
 
@@ -182,6 +197,71 @@ describe("getCurrencies", () => {
       status: undefined,
       url: "https://api.frankfurter.dev/v2/currencies",
       cause: "Unexpected Frankfurter currencies response",
+    });
+  });
+});
+
+describe("getRates", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("fetches and parses the shared-base rates endpoint", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockRates),
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(getRates()).resolves.toEqual(mockRates);
+    expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates", {
+      next: {
+        revalidate: 86_400,
+        tags: ["exchange-rates"],
+      },
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it("rejects rate endpoint failures after retrying a server error", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(getRates()).rejects.toThrow("Failed to fetch rates from Frankfurter");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(consoleError).toHaveBeenCalledWith("Frankfurter request failed", {
+      endpoint: "rates",
+      status: 503,
+      url: "https://api.frankfurter.dev/v2/rates",
+      cause: "Frankfurter returned 503",
+    });
+  });
+
+  it("rejects malformed rates responses", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        url: "https://api.frankfurter.dev/v2/rates",
+        json: vi.fn().mockResolvedValue({ rates: { USD: 1.171 } }),
+      })
+    );
+
+    await expect(getRates()).rejects.toThrow("Failed to parse rates from Frankfurter");
+    expect(consoleError).toHaveBeenCalledWith("Frankfurter request failed", {
+      endpoint: "rates",
+      status: undefined,
+      url: "https://api.frankfurter.dev/v2/rates",
+      cause: "Unexpected Frankfurter rates response",
     });
   });
 });

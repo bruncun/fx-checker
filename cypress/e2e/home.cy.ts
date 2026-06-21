@@ -33,6 +33,7 @@ describe("home page", () => {
         cy.contains("EOD").should("be.visible");
         cy.contains("ECB data").should("be.visible");
       });
+      cy.contains("1 USD = 0.8540 EUR").should("be.visible");
     });
   });
 
@@ -41,7 +42,7 @@ describe("home page", () => {
 
     cy.findByRole("button", { name: "Select send currency" }).focus();
     cy.press(Cypress.Keyboard.Keys.DOWN);
-    cy.findByRole("button", { name: "USD, US Dollar" }).should("be.focused");
+    cy.findByRole("button", { name: "USD, United States Dollar" }).should("be.focused");
 
     cy.focused().trigger("keydown", { key: "j" });
     cy.findByRole("searchbox", { name: "Search currencies" })
@@ -78,11 +79,11 @@ describe("home page", () => {
     cy.findByRole("heading", { name: "Send" }).click();
 
     cy.findByRole("button", { name: "Select send currency" }).click();
-    cy.findByRole("button", { name: "USD, US Dollar" }).should("be.focused");
+    cy.findByRole("button", { name: "USD, United States Dollar" }).should("be.focused");
 
     cy.findByRole("searchbox", { name: "Search currencies" }).click();
     cy.press(Cypress.Keyboard.Keys.TAB);
-    cy.findByRole("button", { name: "USD, US Dollar" })
+    cy.findByRole("button", { name: "USD, United States Dollar" })
       .should("be.focused")
       .and(($currency) => {
         expect(getComputedStyle($currency[0]!).boxShadow).not.to.equal("none");

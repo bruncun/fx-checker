@@ -7,12 +7,9 @@ import { CurrencyButton } from "@/components/ui/currency-button";
 import { Flag, type FlagCountryCode } from "@/components/ui/flag";
 import { Icon } from "@/components/ui/icon";
 import { SearchInput } from "@/components/ui/search-input";
+import type { AvailableCurrency } from "../currencies";
 
-export type CurrencyPickerItem = {
-  code: string;
-  countryCode: FlagCountryCode;
-  name: string;
-};
+export type CurrencyPickerItem = AvailableCurrency;
 
 type CurrencyPickerGroup = {
   count: number;
@@ -21,6 +18,20 @@ type CurrencyPickerGroup = {
 };
 
 type CurrencyNavigationKey = "ArrowDown" | "ArrowUp" | "End" | "Home";
+
+const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
+
+function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup[] {
+  const popularCurrencies = currencies.filter((currency) =>
+    popularCurrencyCodes.has(currency.code)
+  );
+  const otherCurrencies = currencies.filter((currency) => !popularCurrencyCodes.has(currency.code));
+
+  return [
+    { count: popularCurrencies.length, currencies: popularCurrencies, label: "Popular" },
+    { count: otherCurrencies.length, currencies: otherCurrencies, label: "Other currencies" },
+  ].filter((group) => group.count > 0);
+}
 
 const currencyNavigationKeys: CurrencyNavigationKey[] = ["ArrowDown", "ArrowUp", "Home", "End"];
 
@@ -48,80 +59,11 @@ function getNextCurrencyIndex(currentIndex: number, key: CurrencyNavigationKey, 
     : (currentIndex - 1 + itemCount) % itemCount;
 }
 
-const currencyGroups: CurrencyPickerGroup[] = [
-  {
-    count: 3,
-    label: "Popular",
-    currencies: [
-      { code: "USD", countryCode: "us", name: "US Dollar" },
-      { code: "EUR", countryCode: "eu", name: "Euro" },
-      { code: "GBP", countryCode: "gb", name: "British Pound" },
-    ],
-  },
-  {
-    count: 52,
-    label: "Other currencies",
-    currencies: [
-      { code: "AED", countryCode: "ae", name: "UAE Dirham" },
-      { code: "ARS", countryCode: "ar", name: "Argentine Peso" },
-      { code: "AUD", countryCode: "au", name: "Australian Dollar" },
-      { code: "BDT", countryCode: "bd", name: "Bangladeshi Taka" },
-      { code: "BGN", countryCode: "bg", name: "Bulgarian Lev" },
-      { code: "BHD", countryCode: "bh", name: "Bahraini Dinar" },
-      { code: "BRL", countryCode: "br", name: "Brazilian Real" },
-      { code: "CAD", countryCode: "ca", name: "Canadian Dollar" },
-      { code: "CHF", countryCode: "ch", name: "Swiss Franc" },
-      { code: "CLP", countryCode: "cl", name: "Chilean Peso" },
-      { code: "CNY", countryCode: "cn", name: "Chinese Yuan" },
-      { code: "COP", countryCode: "co", name: "Colombian Peso" },
-      { code: "CYP", countryCode: "cy", name: "Cypriot Pound" },
-      { code: "CZK", countryCode: "cz", name: "Czech Koruna" },
-      { code: "DKK", countryCode: "dk", name: "Danish Krone" },
-      { code: "EGP", countryCode: "eg", name: "Egyptian Pound" },
-      { code: "HKD", countryCode: "hk", name: "Hong Kong Dollar" },
-      { code: "HRK", countryCode: "hr", name: "Croatian Kuna" },
-      { code: "HUF", countryCode: "hu", name: "Hungarian Forint" },
-      { code: "IDR", countryCode: "id", name: "Indonesian Rupiah" },
-      { code: "INR", countryCode: "in", name: "Indian Rupee" },
-      { code: "ISK", countryCode: "is", name: "Icelandic Krona" },
-      { code: "JOD", countryCode: "jo", name: "Jordanian Dinar" },
-      { code: "JPY", countryCode: "jp", name: "Japanese Yen" },
-      { code: "KES", countryCode: "ke", name: "Kenyan Shilling" },
-      { code: "KRW", countryCode: "kr", name: "South Korean Won" },
-      { code: "KWD", countryCode: "kw", name: "Kuwaiti Dinar" },
-      { code: "LKR", countryCode: "lk", name: "Sri Lankan Rupee" },
-      { code: "MAD", countryCode: "ma", name: "Moroccan Dirham" },
-      { code: "MXN", countryCode: "mx", name: "Mexican Peso" },
-      { code: "MYR", countryCode: "my", name: "Malaysian Ringgit" },
-      { code: "NGN", countryCode: "ng", name: "Nigerian Naira" },
-      { code: "NOK", countryCode: "no", name: "Norwegian Krone" },
-      { code: "NPR", countryCode: "np", name: "Nepalese Rupee" },
-      { code: "NZD", countryCode: "nz", name: "New Zealand Dollar" },
-      { code: "OMR", countryCode: "om", name: "Omani Rial" },
-      { code: "PEN", countryCode: "pe", name: "Peruvian Sol" },
-      { code: "PHP", countryCode: "ph", name: "Philippine Peso" },
-      { code: "PKR", countryCode: "pk", name: "Pakistani Rupee" },
-      { code: "PLN", countryCode: "pl", name: "Polish Zloty" },
-      { code: "QAR", countryCode: "qa", name: "Qatari Riyal" },
-      { code: "RON", countryCode: "ro", name: "Romanian Leu" },
-      { code: "RUB", countryCode: "ru", name: "Russian Ruble" },
-      { code: "SAR", countryCode: "sa", name: "Saudi Riyal" },
-      { code: "SEK", countryCode: "se", name: "Swedish Krona" },
-      { code: "SGD", countryCode: "sg", name: "Singapore Dollar" },
-      { code: "THB", countryCode: "th", name: "Thai Baht" },
-      { code: "TRY", countryCode: "tr", name: "Turkish Lira" },
-      { code: "TWD", countryCode: "tw", name: "New Taiwan Dollar" },
-      { code: "UAH", countryCode: "ua", name: "Ukrainian Hryvnia" },
-      { code: "VND", countryCode: "vn", name: "Vietnamese Dong" },
-      { code: "ZAR", countryCode: "za", name: "South African Rand" },
-    ],
-  },
-];
-
 export interface CurrencyPickerProps {
   "aria-label"?: string;
   className?: string;
   countryCode: FlagCountryCode;
+  currencies: AvailableCurrency[];
   currencyCode: string;
   onCurrencySelect?: (currency: CurrencyPickerItem) => void;
   left?: boolean;
@@ -167,6 +109,7 @@ function CurrencyPicker({
   "aria-label": ariaLabel = "Select currency",
   className,
   countryCode,
+  currencies,
   currencyCode,
   onCurrencySelect,
   left = false,
@@ -179,6 +122,7 @@ function CurrencyPicker({
   const panelRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
+  const currencyGroups = getCurrencyGroups(currencies);
 
   const selectedCurrency =
     currencyGroups
@@ -491,4 +435,4 @@ function CurrencyPicker({
   );
 }
 
-export { CurrencyPicker, currencyGroups };
+export { CurrencyPicker, getCurrencyGroups };

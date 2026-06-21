@@ -4,7 +4,17 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CurrencyPicker, currencyGroups } from "../currency-picker";
+import type { AvailableCurrency } from "../../currencies";
+import { CurrencyPicker, getCurrencyGroups } from "../currency-picker";
+
+const currencies: AvailableCurrency[] = [
+  { code: "USD", countryCode: "us", name: "United States Dollar" },
+  { code: "EUR", countryCode: "eu", name: "Euro" },
+  { code: "JOD", countryCode: "jo", name: "Jordanian Dinar" },
+  { code: "JPY", countryCode: "jp", name: "Japanese Yen" },
+  { code: "TWD", countryCode: "tw", name: "New Taiwan Dollar" },
+  { code: "ZAR", countryCode: "za", name: "South African Rand" },
+];
 
 afterEach(() => {
   cleanup();
@@ -15,6 +25,7 @@ function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") 
     <CurrencyPicker
       aria-label="Select send currency"
       countryCode="us"
+      currencies={currencies}
       currencyCode={currencyCode}
       onCurrencySelect={onCurrencySelect}
     />
@@ -27,10 +38,11 @@ function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") 
 }
 
 describe("CurrencyPicker", () => {
-  it("provides all 52 other currencies represented by the group count", () => {
-    const otherCurrencies = currencyGroups.find((group) => group.label === "Other currencies");
+  it("groups the supplied currencies and derives each group count", () => {
+    const groups = getCurrencyGroups(currencies);
+    const otherCurrencies = groups.find((group) => group.label === "Other currencies");
 
-    expect(otherCurrencies?.currencies).toHaveLength(52);
+    expect(otherCurrencies?.currencies).toHaveLength(4);
     expect(otherCurrencies?.count).toBe(otherCurrencies?.currencies.length);
   });
 
@@ -41,7 +53,9 @@ describe("CurrencyPicker", () => {
 
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
     await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "USD, US Dollar" }));
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "USD, United States Dollar" })
+      );
     });
   });
 
@@ -109,7 +123,9 @@ describe("CurrencyPicker", () => {
 
     fireEvent.click(trigger);
     const searchInput = screen.getByRole("searchbox", { name: "Search currencies" });
-    const selectedCurrency = screen.getByRole("button", { name: "USD, US Dollar" });
+    const selectedCurrency = screen.getByRole("button", {
+      name: "USD, United States Dollar",
+    });
     searchInput.focus();
 
     fireEvent.keyDown(searchInput, { key: "Tab" });
@@ -129,7 +145,9 @@ describe("CurrencyPicker", () => {
     searchInput.focus();
 
     fireEvent.keyDown(searchInput, { key: "Tab" });
-    const selectedCurrency = screen.getByRole("button", { name: "USD, US Dollar" });
+    const selectedCurrency = screen.getByRole("button", {
+      name: "USD, United States Dollar",
+    });
     expect(document.activeElement).toBe(selectedCurrency);
 
     fireEvent.keyDown(selectedCurrency, { key: "ArrowDown" });
@@ -157,7 +175,7 @@ describe("CurrencyPicker", () => {
     const { trigger } = renderCurrencyPicker();
 
     fireEvent.click(trigger);
-    const activeCurrency = screen.getByRole("button", { name: "USD, US Dollar" });
+    const activeCurrency = screen.getByRole("button", { name: "USD, United States Dollar" });
     activeCurrency.focus();
 
     fireEvent.keyDown(activeCurrency, { key: "Tab" });
@@ -171,7 +189,9 @@ describe("CurrencyPicker", () => {
     const { trigger } = renderCurrencyPicker();
 
     fireEvent.click(trigger);
-    const selectedCurrency = screen.getByRole("button", { name: "USD, US Dollar" });
+    const selectedCurrency = screen.getByRole("button", {
+      name: "USD, United States Dollar",
+    });
     const searchInput = screen.getByRole<HTMLInputElement>("searchbox", {
       name: "Search currencies",
     });
@@ -258,7 +278,9 @@ describe("CurrencyPicker", () => {
     fireEvent.change(searchInput, { target: { value: "dollar" } });
     fireEvent.keyDown(searchInput, { key: "Enter" });
 
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "USD, US Dollar" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "USD, United States Dollar" })
+    );
     expect(onCurrencySelect).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
   });
@@ -285,7 +307,9 @@ describe("CurrencyPicker", () => {
     fireEvent.change(searchInput, { target: { value: "dollar" } });
 
     fireEvent.keyDown(searchInput, { key: "ArrowDown" });
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "USD, US Dollar" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "USD, United States Dollar" })
+    );
 
     searchInput.focus();
     fireEvent.keyDown(searchInput, { key: "ArrowUp" });
@@ -301,7 +325,9 @@ describe("CurrencyPicker", () => {
 
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
     await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "USD, US Dollar" }));
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "USD, United States Dollar" })
+      );
     });
   });
 
@@ -309,7 +335,7 @@ describe("CurrencyPicker", () => {
     const { trigger } = renderCurrencyPicker();
 
     fireEvent.click(trigger);
-    const usd = screen.getByRole("button", { name: "USD, US Dollar" });
+    const usd = screen.getByRole("button", { name: "USD, United States Dollar" });
     const eur = screen.getByRole("button", { name: "EUR, Euro" });
     usd.focus();
 
@@ -326,7 +352,7 @@ describe("CurrencyPicker", () => {
     const { trigger } = renderCurrencyPicker();
 
     fireEvent.click(trigger);
-    const firstCurrency = screen.getByRole("button", { name: "USD, US Dollar" });
+    const firstCurrency = screen.getByRole("button", { name: "USD, United States Dollar" });
     const lastCurrency = screen.getByRole("button", { name: "ZAR, South African Rand" });
 
     lastCurrency.focus();
@@ -341,7 +367,7 @@ describe("CurrencyPicker", () => {
     const { trigger } = renderCurrencyPicker();
 
     fireEvent.click(trigger);
-    const firstCurrency = screen.getByRole("button", { name: "USD, US Dollar" });
+    const firstCurrency = screen.getByRole("button", { name: "USD, United States Dollar" });
     const middleCurrency = screen.getByRole("button", { name: "EUR, Euro" });
     const lastCurrency = screen.getByRole("button", { name: "ZAR, South African Rand" });
 
