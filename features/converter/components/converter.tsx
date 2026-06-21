@@ -16,6 +16,8 @@ type SelectedCurrency = {
   currencyCode: string;
 };
 
+type AmountSide = "send" | "receive";
+
 type ConverterProps = {
   currencies: AvailableCurrency[];
   rates: FrankfurterRate[];
@@ -51,6 +53,43 @@ function formatExchangeRate(rate: number) {
   }
 
   return rate.toFixed(4);
+}
+
+function getConvertedAmountDecimalPlaces(amount: number) {
+  const absoluteAmount = Math.abs(amount);
+
+  if (absoluteAmount === 0 || absoluteAmount >= 0.01) {
+    return 2;
+  }
+
+  const magnitude = Math.floor(Math.log10(absoluteAmount));
+
+  return Math.min(8, 3 - magnitude);
+}
+
+function convertAmount(amount: string, rate: number | null) {
+  if (amount === "" || rate === null) {
+    return "";
+  }
+
+  const numericAmount = Number(amount);
+
+  if (!Number.isFinite(numericAmount)) {
+    return "";
+  }
+
+  const convertedAmount = numericAmount * rate;
+
+  if (!Number.isFinite(convertedAmount)) {
+    return "";
+  }
+
+  const decimalPlaces = getConvertedAmountDecimalPlaces(convertedAmount);
+  const roundedAmount = convertedAmount.toFixed(decimalPlaces);
+
+  return roundedAmount.includes(".")
+    ? roundedAmount.replace(/0+$/, "").replace(/\.$/, "")
+    : roundedAmount;
 }
 
 type ConverterAmountPanelProps = {
@@ -89,6 +128,7 @@ function ConverterAmountPanel({
             onAmountChange(event.currentTarget.value);
           }}
           value={amount}
+          className={label === "Receive" ? "text-lime-500" : ""}
         />
         <CurrencyPicker
           aria-label={`Select ${label.toLowerCase()} currency`}
@@ -127,15 +167,55 @@ function Converter({ currencies, rates }: ConverterProps) {
     countryCode: defaultReceiveCurrency.countryCode,
     currencyCode: defaultReceiveCurrency.code,
   });
+  const amountSource = React.useRef<AmountSide>("send");
   const exchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
     receiveCurrency.currencyCode
   );
 
+  function updateSendAmount(amount: string) {
+    amountSource.current = "send";
+    setSendAmount(amount);
+    setReceiveAmount(convertAmount(amount, exchangeRate));
+  }
+
+  function updateReceiveAmount(amount: string) {
+    amountSource.current = "receive";
+    setReceiveAmount(amount);
+    setSendAmount(convertAmount(amount, exchangeRate === null ? null : 1 / exchangeRate));
+  }
+
+  function updateSendCurrency(currency: SelectedCurrency) {
+    const nextRate = getExchangeRate(rates, currency.currencyCode, receiveCurrency.currencyCode);
+
+    setSendCurrency(currency);
+
+    if (amountSource.current === "send") {
+      setReceiveAmount(convertAmount(sendAmount, nextRate));
+    } else {
+      setSendAmount(convertAmount(receiveAmount, nextRate === null ? null : 1 / nextRate));
+    }
+  }
+
+  function updateReceiveCurrency(currency: SelectedCurrency) {
+    const nextRate = getExchangeRate(rates, sendCurrency.currencyCode, currency.currencyCode);
+
+    setReceiveCurrency(currency);
+
+    if (amountSource.current === "send") {
+      setReceiveAmount(convertAmount(sendAmount, nextRate));
+    } else {
+      setSendAmount(convertAmount(receiveAmount, nextRate === null ? null : 1 / nextRate));
+    }
+  }
+
   function exchangeCurrencies() {
     setSendCurrency(receiveCurrency);
     setReceiveCurrency(sendCurrency);
+    setSendAmount(receiveAmount);
+    setReceiveAmount(sendAmount);
+    amountSource.current = amountSource.current === "send" ? "receive" : "send";
   }
 
   return (
@@ -150,8 +230,8 @@ function Converter({ currencies, rates }: ConverterProps) {
             amount={sendAmount}
             currencies={currencies}
             label="Send"
-            onAmountChange={setSendAmount}
-            onCurrencyChange={setSendCurrency}
+            onAmountChange={updateSendAmount}
+            onCurrencyChange={updateSendCurrency}
           />
           <ExchangeButton className="self-center" onClick={exchangeCurrencies} />
           <ConverterAmountPanel
@@ -159,8 +239,8 @@ function Converter({ currencies, rates }: ConverterProps) {
             amount={receiveAmount}
             currencies={currencies}
             label="Receive"
-            onAmountChange={setReceiveAmount}
-            onCurrencyChange={setReceiveCurrency}
+            onAmountChange={updateReceiveAmount}
+            onCurrencyChange={updateReceiveCurrency}
           />
         </div>
         <svg width="100%" height="1">
