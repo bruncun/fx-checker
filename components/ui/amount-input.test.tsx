@@ -36,12 +36,9 @@ describe("getAmountValue", () => {
     expect(getAmountValue("$12a3.45.6")).toBe("123.456");
   });
 
-  it("limits the integer portion to twelve digits", () => {
-    expect(getAmountValue("123456789012345")).toBe("123456789012");
-  });
-
-  it("limits the fractional portion to eight digits", () => {
-    expect(getAmountValue("12.1234567890")).toBe("12.12345678");
+  it("does not impose domain-specific precision limits", () => {
+    expect(getAmountValue("123456789012345678")).toBe("123456789012345678");
+    expect(getAmountValue("0.00123456789012345678")).toBe("0.00123456789012345678");
   });
 });
 
@@ -60,6 +57,10 @@ describe("formatAmountValue", () => {
 
   it("formats values that already include separators and symbols", () => {
     expect(formatAmountValue("$1,2a3.45")).toBe("123.45");
+  });
+
+  it("does not truncate controlled values beyond the user-input digit limit", () => {
+    expect(formatAmountValue("25619128949590092")).toBe("25,619,128,949,590,092");
   });
 });
 
@@ -99,14 +100,14 @@ describe("AmountInput", () => {
     expect(input).toHaveProperty("value", "1,234,567.89");
   });
 
-  it("ignores digits typed beyond the supported precision", () => {
-    render(<ControlledAmountInput value="123456789012.12345678" />);
+  it("accepts values of arbitrary precision", () => {
+    render(<ControlledAmountInput value="1234567.12345678" />);
 
     const input = screen.getByLabelText("Amount");
 
-    fireEvent.change(input, { target: { value: "1234567890123.123456789" } });
+    fireEvent.change(input, { target: { value: "1234567.123456789" } });
 
-    expect(input).toHaveProperty("value", "123,456,789,012.12345678");
+    expect(input).toHaveProperty("value", "1,234,567.123456789");
   });
 
   it("preserves a trailing decimal point while typing", () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Decimal from "decimal.js";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
@@ -23,9 +24,11 @@ type ConverterProps = {
   rates: FrankfurterRate[];
 };
 
+const MoneyDecimal = Decimal.clone({ precision: 40 });
+
 function getExchangeRate(rates: FrankfurterRate[], base: string, quote: string) {
   if (base === quote) {
-    return 1;
+    return new MoneyDecimal(1);
   }
 
   const sharedBase = rates[0]?.base;
@@ -33,63 +36,54 @@ function getExchangeRate(rates: FrankfurterRate[], base: string, quote: string) 
     return null;
   }
 
-  const rateByQuote = new Map(rates.map((rate) => [rate.quote, rate.rate]));
-  const baseRate = base === sharedBase ? 1 : rateByQuote.get(base);
-  const quoteRate = quote === sharedBase ? 1 : rateByQuote.get(quote);
+  const rateByQuote = new Map(rates.map((rate) => [rate.quote, new MoneyDecimal(rate.rate)]));
+  const baseRate = base === sharedBase ? new MoneyDecimal(1) : rateByQuote.get(base);
+  const quoteRate = quote === sharedBase ? new MoneyDecimal(1) : rateByQuote.get(quote);
 
   if (baseRate === undefined || quoteRate === undefined) {
     return null;
   }
 
-  return quoteRate / baseRate;
+  return quoteRate.div(baseRate);
 }
 
-function formatExchangeRate(rate: number) {
-  if (rate < 0.0001) {
-    return new Intl.NumberFormat("en-US", {
-      maximumSignificantDigits: 4,
-      useGrouping: false,
-    }).format(rate);
+function formatExchangeRate(rate: Decimal) {
+  if (rate.lt(0.0001)) {
+    return rate.toSignificantDigits(4).toFixed();
   }
 
-  return rate.toFixed(4);
+  return rate.toDecimalPlaces(4).toFixed(4);
 }
 
-function getConvertedAmountDecimalPlaces(amount: number) {
-  const absoluteAmount = Math.abs(amount);
+function getConvertedAmountDecimalPlaces(amount: Decimal) {
+  const absoluteAmount = amount.abs();
 
-  if (absoluteAmount === 0 || absoluteAmount >= 0.01) {
+  if (absoluteAmount.isZero() || absoluteAmount.gte(0.01)) {
     return 2;
   }
 
-  const magnitude = Math.floor(Math.log10(absoluteAmount));
+  const magnitude = absoluteAmount.e;
 
   return Math.min(8, 3 - magnitude);
 }
 
-function convertAmount(amount: string, rate: number | null) {
+function convertAmount(amount: string, rate: Decimal | null) {
   if (amount === "" || rate === null) {
     return "";
   }
 
-  const numericAmount = Number(amount);
+  let numericAmount: Decimal;
 
-  if (!Number.isFinite(numericAmount)) {
+  try {
+    numericAmount = new MoneyDecimal(amount);
+  } catch {
     return "";
   }
 
-  const convertedAmount = numericAmount * rate;
-
-  if (!Number.isFinite(convertedAmount)) {
-    return "";
-  }
-
+  const convertedAmount = numericAmount.mul(rate);
   const decimalPlaces = getConvertedAmountDecimalPlaces(convertedAmount);
-  const roundedAmount = convertedAmount.toFixed(decimalPlaces);
 
-  return roundedAmount.includes(".")
-    ? roundedAmount.replace(/0+$/, "").replace(/\.$/, "")
-    : roundedAmount;
+  return convertedAmount.toDecimalPlaces(decimalPlaces).toFixed();
 }
 
 type ConverterAmountPanelProps = {
@@ -183,7 +177,9 @@ function Converter({ currencies, rates }: ConverterProps) {
   function updateReceiveAmount(amount: string) {
     amountSource.current = "receive";
     setReceiveAmount(amount);
-    setSendAmount(convertAmount(amount, exchangeRate === null ? null : 1 / exchangeRate));
+    setSendAmount(
+      convertAmount(amount, exchangeRate === null ? null : new MoneyDecimal(1).div(exchangeRate))
+    );
   }
 
   function updateSendCurrency(currency: SelectedCurrency) {
@@ -194,7 +190,9 @@ function Converter({ currencies, rates }: ConverterProps) {
     if (amountSource.current === "send") {
       setReceiveAmount(convertAmount(sendAmount, nextRate));
     } else {
-      setSendAmount(convertAmount(receiveAmount, nextRate === null ? null : 1 / nextRate));
+      setSendAmount(
+        convertAmount(receiveAmount, nextRate === null ? null : new MoneyDecimal(1).div(nextRate))
+      );
     }
   }
 
@@ -206,7 +204,9 @@ function Converter({ currencies, rates }: ConverterProps) {
     if (amountSource.current === "send") {
       setReceiveAmount(convertAmount(sendAmount, nextRate));
     } else {
-      setSendAmount(convertAmount(receiveAmount, nextRate === null ? null : 1 / nextRate));
+      setSendAmount(
+        convertAmount(receiveAmount, nextRate === null ? null : new MoneyDecimal(1).div(nextRate))
+      );
     }
   }
 

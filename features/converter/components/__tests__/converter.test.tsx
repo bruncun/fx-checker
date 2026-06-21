@@ -76,6 +76,33 @@ describe("Converter", () => {
     );
   });
 
+  it("keeps large calculated amounts editable without changing their magnitude", () => {
+    render(
+      <Converter
+        currencies={[currencies[0], { code: "VND", countryCode: "vn", name: "Vietnamese Dong" }]}
+        rates={[rates[0], { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }]}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "999999999999" },
+    });
+
+    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
+      "value",
+      "25,619,128,949,590,093.94"
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
+      target: { value: "25,619,128,949,590,093.94" },
+    });
+
+    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
+      "value",
+      "25,619,128,949,590,093.94"
+    );
+  });
+
   it("keeps both amounts empty while an amount is cleared", () => {
     render(<Converter currencies={currencies} rates={rates} />);
 
