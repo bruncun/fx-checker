@@ -14,3 +14,4 @@ The project uses lightweight ADRs because this is a small hackathon-style applic
 - [0006. Use Next.js fetch caching for exchange-rate reference data](0006-use-nextjs-fetch-caching-for-exchange-rate-reference-data.md)
 - [0007. Start with basic server logging through Vercel logs](0007-start-with-basic-server-logging-through-vercel-logs.md)
 - [0008. Defer a formal design system](0008-defer-a-formal-design-system.md)
+- [0009. Use Storybook as a component workbench](0009-use-storybook-as-a-component-workbench.md)
