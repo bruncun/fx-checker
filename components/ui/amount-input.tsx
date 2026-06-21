@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 export type AmountInputProps = Omit<React.ComponentProps<"input">, "defaultValue" | "type">;
 type SeparatorDeleteDirection = "backward" | "forward";
 
+const MAX_INTEGER_DIGITS = 12;
+const MAX_FRACTION_DIGITS = 8;
+
 function getAmountValue(value: string) {
   return getAmountValueParts(value).amountValue;
 }
@@ -14,13 +17,21 @@ function getAmountValue(value: string) {
 function getAmountValueParts(value: string, selectionStart = value.length) {
   let amountValue = "";
   let amountValueBeforeSelection = "";
+  let fractionDigitCount = 0;
   let hasDecimal = false;
+  let integerDigitCount = 0;
 
   for (const [index, character] of Array.from(value).entries()) {
     let acceptedCharacter = "";
 
     if (/\d/.test(character)) {
-      acceptedCharacter = character;
+      if (hasDecimal && fractionDigitCount < MAX_FRACTION_DIGITS) {
+        acceptedCharacter = character;
+        fractionDigitCount += 1;
+      } else if (!hasDecimal && integerDigitCount < MAX_INTEGER_DIGITS) {
+        acceptedCharacter = character;
+        integerDigitCount += 1;
+      }
     }
 
     if (character === "." && !hasDecimal) {

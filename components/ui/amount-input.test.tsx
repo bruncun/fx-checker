@@ -35,6 +35,14 @@ describe("getAmountValue", () => {
   it("keeps numeric characters and one decimal point", () => {
     expect(getAmountValue("$12a3.45.6")).toBe("123.456");
   });
+
+  it("limits the integer portion to twelve digits", () => {
+    expect(getAmountValue("123456789012345")).toBe("123456789012");
+  });
+
+  it("limits the fractional portion to eight digits", () => {
+    expect(getAmountValue("12.1234567890")).toBe("12.12345678");
+  });
 });
 
 describe("formatAmountValue", () => {
@@ -89,6 +97,16 @@ describe("AmountInput", () => {
     fireEvent.change(input, { target: { value: "1234567.89" } });
 
     expect(input).toHaveProperty("value", "1,234,567.89");
+  });
+
+  it("ignores digits typed beyond the supported precision", () => {
+    render(<ControlledAmountInput value="123456789012.12345678" />);
+
+    const input = screen.getByLabelText("Amount");
+
+    fireEvent.change(input, { target: { value: "1234567890123.123456789" } });
+
+    expect(input).toHaveProperty("value", "123,456,789,012.12345678");
   });
 
   it("preserves a trailing decimal point while typing", () => {

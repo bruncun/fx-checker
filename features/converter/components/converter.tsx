@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { AmountInput } from "@/components/ui/amount-input";
+import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import { FavoriteButton } from "@/components/ui/favorite-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
@@ -78,6 +78,13 @@ function ConverterAmountPanel({
       <div className="flex items-end justify-between gap-200">
         <AmountInput
           aria-label={`${label} amount`}
+          onBlur={(event) => {
+            const normalizedAmount = getAmountValue(event.currentTarget.value).replace(/\.$/, "");
+
+            if (normalizedAmount !== amount) {
+              onAmountChange(normalizedAmount);
+            }
+          }}
           onChange={(event) => {
             onAmountChange(event.currentTarget.value);
           }}

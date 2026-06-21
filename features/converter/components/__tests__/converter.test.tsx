@@ -34,6 +34,19 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "2,100.50");
   });
 
+  it("normalizes a trailing decimal point when an amount loses focus", () => {
+    render(<Converter currencies={currencies} rates={rates} />);
+
+    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
+
+    fireEvent.change(sendAmount, { target: { value: "12." } });
+    expect(sendAmount).toHaveProperty("value", "12.");
+
+    fireEvent.blur(sendAmount);
+
+    expect(sendAmount).toHaveProperty("value", "12");
+  });
+
   it("swaps the active currencies and updates the displayed currency pair", () => {
     render(<Converter currencies={currencies} rates={rates} />);
 
