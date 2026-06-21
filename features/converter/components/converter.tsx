@@ -157,8 +157,8 @@ function Converter({ currencies, rates }: ConverterProps) {
     ) ??
     currencies.find((currency) => currency.code !== defaultSendCurrency.code) ??
     defaultSendCurrency;
-  const [sendAmount, setSendAmount] = React.useState("0");
-  const [receiveAmount, setReceiveAmount] = React.useState("0");
+  const [sendAmount, setSendAmount] = React.useState("");
+  const [receiveAmount, setReceiveAmount] = React.useState("");
   const [sendCurrency, setSendCurrency] = React.useState<SelectedCurrency>({
     countryCode: defaultSendCurrency.countryCode,
     currencyCode: defaultSendCurrency.code,
