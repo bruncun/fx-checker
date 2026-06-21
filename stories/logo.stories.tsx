@@ -15,7 +15,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <Logo priority />
-  ),
+  render: () => <Logo priority />,
 };

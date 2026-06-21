@@ -17,9 +17,9 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: s
 
 export default function Page({ searchParams }: { searchParams: Promise<{ error: string }> }) {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+    <div className="p-6 md:p-10 flex min-h-svh w-full items-center justify-center">
       <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
+        <div className="gap-6 flex flex-col">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Sorry, something went wrong.</CardTitle>

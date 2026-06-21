@@ -46,12 +46,7 @@ describe("Converter", () => {
   });
 
   it("preserves significant digits for small converted amounts", () => {
-    render(
-      <Converter
-        currencies={[currencies[2], currencies[1]]}
-        rates={rates}
-      />
-    );
+    render(<Converter currencies={[currencies[2], currencies[1]]} rates={rates} />);
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "1" },
@@ -66,14 +61,8 @@ describe("Converter", () => {
   it("caps calculated amount precision at eight decimal places", () => {
     render(
       <Converter
-        currencies={[
-          currencies[0],
-          { code: "TINY", countryCode: "eu", name: "Tiny Currency" },
-        ]}
-        rates={[
-          rates[0],
-          { date: "2026-06-19", base: "EUR", quote: "TINY", rate: 0.0000001 },
-        ]}
+        currencies={[currencies[0], { code: "TINY", countryCode: "eu", name: "Tiny Currency" }]}
+        rates={[rates[0], { date: "2026-06-19", base: "EUR", quote: "TINY", rate: 0.0000001 }]}
       />
     );
 
@@ -173,14 +162,8 @@ describe("Converter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Select send currency" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "100"
-    );
-    expect(screen.getByRole("textbox", { name: "Send amount" })).toHaveProperty(
-      "value",
-      "18,324"
-    );
+    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty("value", "100");
+    expect(screen.getByRole("textbox", { name: "Send amount" })).toHaveProperty("value", "18,324");
   });
 
   it("preserves significant digits for very small rates", () => {

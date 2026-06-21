@@ -39,7 +39,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("gap-6 flex flex-col", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -47,8 +47,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
+            <div className="gap-6 flex flex-col">
+              <div className="gap-2 grid">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -59,12 +59,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="gap-2 grid">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    className="text-sm ml-auto inline-block underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </Link>
@@ -82,7 +82,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-4 text-sm text-center">
               Don&apos;t have an account?{" "}
               <Link href="/auth/sign-up" className="underline underline-offset-4">
                 Sign up

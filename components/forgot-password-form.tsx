@@ -36,7 +36,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("gap-6 flex flex-col", className)} {...props}>
       {success ? (
         <Card>
           <CardHeader>
@@ -60,8 +60,8 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
+              <div className="gap-6 flex flex-col">
+                <div className="gap-2 grid">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -77,7 +77,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
                   {isLoading ? "Sending..." : "Send reset email"}
                 </Button>
               </div>
-              <div className="mt-4 text-center text-sm">
+              <div className="mt-4 text-sm text-center">
                 Already have an account?{" "}
                 <Link href="/auth/login" className="underline underline-offset-4">
                   Login

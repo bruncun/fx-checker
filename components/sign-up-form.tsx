@@ -48,7 +48,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("gap-6 flex flex-col", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
@@ -56,8 +56,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
+            <div className="gap-6 flex flex-col">
+              <div className="gap-2 grid">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -68,7 +68,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="gap-2 grid">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
@@ -80,7 +80,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="gap-2 grid">
                 <div className="flex items-center">
                   <Label htmlFor="repeat-password">Repeat Password</Label>
                 </div>
@@ -97,7 +97,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-4 text-sm text-center">
               Already have an account?{" "}
               <Link href="/auth/login" className="underline underline-offset-4">
                 Login
