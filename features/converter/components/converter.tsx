@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Decimal from "decimal.js";
+import Decimal from "decimal.js-light";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
@@ -62,7 +62,7 @@ function getConvertedAmountDecimalPlaces(amount: Decimal) {
     return 2;
   }
 
-  const magnitude = absoluteAmount.e;
+  const magnitude = absoluteAmount.exponent();
 
   return Math.min(8, 3 - magnitude);
 }
