@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 const jetBrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+  weight: ["400", "500", "700"],
   display: "swap",
   subsets: ["latin"],
 });
