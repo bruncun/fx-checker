@@ -249,7 +249,7 @@ function Converter({ currencies, rates }: ConverterProps) {
             y1="0"
             x2="100%"
             y2="0"
-            stroke="#2E2E2E"
+            className="stroke-neutral-500"
             strokeWidth="1"
             strokeDasharray="4 4"
           />
@@ -265,8 +265,8 @@ function Converter({ currencies, rates }: ConverterProps) {
               : `1 ${sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${receiveCurrency.currencyCode}`}
           </p>
           <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
-            <FavoriteButton pinned />
-            <LogConversionButton />
+            <FavoriteButton disabled />
+            <LogConversionButton disabled />
           </div>
         </div>
       </div>
