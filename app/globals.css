@@ -287,6 +287,9 @@
   * {
     @apply border-border;
   }
+  ::selection {
+    @apply bg-lime-800 text-neutral-50;
+  }
   body {
     @apply text-foreground;
     @apply bg-background;
