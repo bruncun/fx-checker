@@ -46,7 +46,7 @@ describe("CurrencyPicker", () => {
     expect(otherCurrencies?.count).toBe(otherCurrencies?.currencies.length);
   });
 
-  it("opens the picker and moves focus to the selected currency", async () => {
+  it("opens the picker and moves focus to currency search", async () => {
     const { trigger } = renderCurrencyPicker();
 
     fireEvent.click(trigger);
@@ -54,7 +54,7 @@ describe("CurrencyPicker", () => {
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
     await waitFor(() => {
       expect(document.activeElement).toBe(
-        screen.getByRole("button", { name: "USD, United States Dollar" })
+        screen.getByRole("searchbox", { name: "Search currencies" })
       );
     });
   });
@@ -154,21 +154,19 @@ describe("CurrencyPicker", () => {
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "EUR, Euro" }));
   });
 
-  it("moves focus from the selected currency to search on Shift+Tab", async () => {
+  it("moves focus from the selected currency to search on Shift+Tab", () => {
     const { trigger } = renderCurrencyPicker(vi.fn(), "EUR");
 
     fireEvent.click(trigger);
+    const searchInput = screen.getByRole("searchbox", { name: "Search currencies" });
     const selectedCurrency = screen.getByRole("button", { name: "EUR, Euro" });
 
-    await waitFor(() => {
-      expect(document.activeElement).toBe(selectedCurrency);
-    });
+    fireEvent.keyDown(searchInput, { key: "Tab" });
+    expect(document.activeElement).toBe(selectedCurrency);
 
     fireEvent.keyDown(selectedCurrency, { key: "Tab", shiftKey: true });
 
-    expect(document.activeElement).toBe(
-      screen.getByRole("searchbox", { name: "Search currencies" })
-    );
+    expect(document.activeElement).toBe(searchInput);
   });
 
   it("moves focus from the active currency to search with Tab", () => {
@@ -196,6 +194,7 @@ describe("CurrencyPicker", () => {
       name: "Search currencies",
     });
 
+    selectedCurrency.focus();
     fireEvent.keyDown(selectedCurrency, { key: "j" });
 
     expect(document.activeElement).toBe(searchInput);
@@ -326,7 +325,7 @@ describe("CurrencyPicker", () => {
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
     await waitFor(() => {
       expect(document.activeElement).toBe(
-        screen.getByRole("button", { name: "USD, United States Dollar" })
+        screen.getByRole("searchbox", { name: "Search currencies" })
       );
     });
   });

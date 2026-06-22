@@ -42,13 +42,9 @@ describe("home page", () => {
 
     cy.findByRole("button", { name: "Select send currency" }).focus();
     cy.press(Cypress.Keyboard.Keys.DOWN);
-    cy.findByRole("button", { name: "USD, United States Dollar" }).should("be.focused");
-
-    cy.focused().trigger("keydown", { key: "j" });
     cy.findByRole("searchbox", { name: "Search currencies" })
       .should("be.focused")
-      .and("have.value", "j")
-      .type("py{enter}");
+      .type("jpy{enter}");
 
     cy.findByRole("dialog", { name: "Currency picker" }).should("not.exist");
     cy.findByRole("button", { name: "Select send currency" })
@@ -56,6 +52,8 @@ describe("home page", () => {
       .and("contain.text", "JPY");
 
     cy.press(Cypress.Keyboard.Keys.DOWN);
+    cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
+    cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("button", { name: "JPY, Japanese Yen" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
@@ -79,9 +77,7 @@ describe("home page", () => {
     cy.findByRole("heading", { name: "Send" }).click();
 
     cy.findByRole("button", { name: "Select send currency" }).click();
-    cy.findByRole("button", { name: "USD, United States Dollar" }).should("be.focused");
-
-    cy.findByRole("searchbox", { name: "Search currencies" }).click();
+    cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("button", { name: "USD, United States Dollar" })
       .should("be.focused")

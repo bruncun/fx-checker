@@ -168,10 +168,8 @@ function CurrencyPicker({
       return;
     }
 
-    panelRef.current
-      ?.querySelector<HTMLButtonElement>('[data-currency-option][tabindex="0"]')
-      ?.focus();
-  }, [currencyCode, isOpen]);
+    searchRef.current?.focus();
+  }, [isOpen]);
 
   React.useEffect(() => {
     if (!isOpen) {
