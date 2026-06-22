@@ -1,6 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+
+import { IOSViewport } from "@/components/ios-viewport";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -21,6 +23,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 const jetBrainsMono = JetBrains_Mono({
   weight: ["400", "500", "700"],
   display: "swap",
@@ -35,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${jetBrainsMono.className} antialiased`}>
+        <IOSViewport />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
