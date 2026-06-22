@@ -143,13 +143,26 @@ describe("Converter", () => {
     expect(screen.getByText("1 EUR = 1.1710 USD")).toBeTruthy();
   });
 
-  it("swaps the amounts with the currencies", () => {
+  it("keeps the send amount in place and recalculates the receive amount", () => {
     render(<Converter currencies={currencies} rates={rates} />);
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
     const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
 
     fireEvent.change(sendAmount, { target: { value: "100" } });
+    fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
+
+    expect(sendAmount).toHaveProperty("value", "100");
+    expect(receiveAmount).toHaveProperty("value", "117.1");
+  });
+
+  it("keeps the receive amount in place when it was edited most recently", () => {
+    render(<Converter currencies={currencies} rates={rates} />);
+
+    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
+    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+
+    fireEvent.change(receiveAmount, { target: { value: "100" } });
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
 
     expect(sendAmount).toHaveProperty("value", "85.4");

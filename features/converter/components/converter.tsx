@@ -211,11 +211,22 @@ function Converter({ currencies, rates }: ConverterProps) {
   }
 
   function exchangeCurrencies() {
+    const nextRate = getExchangeRate(
+      rates,
+      receiveCurrency.currencyCode,
+      sendCurrency.currencyCode
+    );
+
     setSendCurrency(receiveCurrency);
     setReceiveCurrency(sendCurrency);
-    setSendAmount(receiveAmount);
-    setReceiveAmount(sendAmount);
-    amountSource.current = amountSource.current === "send" ? "receive" : "send";
+
+    if (amountSource.current === "send") {
+      setReceiveAmount(convertAmount(sendAmount, nextRate));
+    } else {
+      setSendAmount(
+        convertAmount(receiveAmount, nextRate === null ? null : new MoneyDecimal(1).div(nextRate))
+      );
+    }
   }
 
   return (
