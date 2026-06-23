@@ -59,7 +59,7 @@ describe("home page", () => {
     cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.UP);
     cy.findByRole("button", { name: "ZAR, South African Rand" }).should("be.focused");
-    cy.get("[data-currency-results]").should(($results) => {
+    cy.get('[data-test-id="currency-results"').should(($results) => {
       expect($results[0]?.scrollTop).to.be.greaterThan(0);
     });
 
@@ -87,5 +87,24 @@ describe("home page", () => {
 
     cy.press(Cypress.Keyboard.Keys.DOWN);
     cy.findByRole("button", { name: "EUR, Euro" }).should("be.focused");
+  });
+
+  it("resizes the mobile currency picker to the space below its trigger", () => {
+    cy.viewport(375, 667);
+    cy.visit("/");
+
+    cy.findByRole("button", { name: "Select send currency" }).then(($trigger) => {
+      const triggerBottom = $trigger[0]!.getBoundingClientRect().bottom;
+
+      cy.wrap($trigger).click();
+      cy.findByRole("dialog", { name: "Currency picker" }).should(($dialog) => {
+        const dialogRect = $dialog[0]!.getBoundingClientRect();
+        const viewportHeight = $dialog[0]!.ownerDocument.defaultView!.innerHeight;
+
+        expect(dialogRect.top).to.be.greaterThan(triggerBottom);
+        expect(dialogRect.bottom).to.be.at.most(viewportHeight - 16);
+        expect(dialogRect.height).to.be.lessThan(458);
+      });
+    });
   });
 });

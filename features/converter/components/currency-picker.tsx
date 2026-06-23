@@ -20,6 +20,7 @@ type CurrencyPickerGroup = {
 type CurrencyNavigationKey = "ArrowDown" | "ArrowUp" | "End" | "Home";
 
 const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
+const panelViewportGutter = 16;
 
 function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup[] {
   const popularCurrencies = currencies.filter((currency) =>
@@ -169,6 +170,48 @@ function CurrencyPicker({
     }
 
     searchRef.current?.focus();
+  }, [isOpen]);
+
+  React.useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const panel = panelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const updateAvailableHeight = () => {
+      const visualViewport = window.visualViewport;
+      const panelTop = panel.getBoundingClientRect().top;
+      const isWebKit =
+        typeof CSS !== "undefined" && CSS.supports("-webkit-backdrop-filter", "none");
+      const viewportBottom = visualViewport
+        ? visualViewport.height + (isWebKit ? 0 : visualViewport.offsetTop)
+        : window.innerHeight;
+      const availableHeight = Math.max(
+        0,
+        Math.floor(viewportBottom - panelTop - panelViewportGutter)
+      );
+
+      panel.style.setProperty("--currency-picker-available-height", `${availableHeight}px`);
+      panel.style.setProperty("--currency-picker-panel-top", `${Math.max(0, panelTop)}px`);
+    };
+
+    updateAvailableHeight();
+    window.addEventListener("resize", updateAvailableHeight);
+    window.addEventListener("scroll", updateAvailableHeight, true);
+    window.visualViewport?.addEventListener("resize", updateAvailableHeight);
+    window.visualViewport?.addEventListener("scroll", updateAvailableHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateAvailableHeight);
+      window.removeEventListener("scroll", updateAvailableHeight, true);
+      window.visualViewport?.removeEventListener("resize", updateAvailableHeight);
+      window.visualViewport?.removeEventListener("scroll", updateAvailableHeight);
+    };
   }, [isOpen]);
 
   React.useEffect(() => {
@@ -379,7 +422,7 @@ function CurrencyPicker({
           aria-label="Currency picker"
           aria-modal="true"
           className={cn(
-            "absolute top-[calc(100%+20px)] right-[-16px] z-50 flex max-h-[458px] w-[min(calc(100vw-64px),472px)] max-w-[376px] flex-col overflow-hidden rounded-10 bg-neutral-600 pt-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_20px_60px_0_rgb(10_10_10_/_0.50)] sm:top-[calc(100%+9.5px)] sm:max-h-[466px] sm:py-100 lg:right-0 lg:left-auto",
+            "absolute top-[calc(100%+20px)] right-[-16px] z-50 flex max-h-[min(458px,var(--currency-picker-available-height,458px),calc(100svh_-_var(--currency-picker-panel-top,0px)_-_16px_-_env(safe-area-inset-bottom,0px)))] w-[min(calc(100vw-64px),472px)] max-w-[376px] flex-col overflow-hidden rounded-10 bg-neutral-600 pt-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_20px_60px_0_rgb(10_10_10_/_0.50)] sm:top-[calc(100%+9.5px)] sm:max-h-[466px] sm:py-100 lg:right-0 lg:left-auto",
             left ? "sm:left-0" : "sm:right-0"
           )}
           id={panelId}
@@ -396,7 +439,10 @@ function CurrencyPicker({
             value={searchQuery}
           />
 
-          <div className="flex min-h-0 flex-col gap-025 overflow-y-auto" data-currency-results>
+          <div
+            className="flex min-h-0 flex-col gap-025 overflow-y-auto overscroll-contain"
+            data-test-id="currency-results"
+          >
             {filteredCurrencyGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
                 <div className="mx-100 mb-050 flex items-center justify-between p-100 text-preset-5 text-neutral-200 uppercase shadow-[inset_0_-1px_0_0_hsl(var(--neutral-500))]">
