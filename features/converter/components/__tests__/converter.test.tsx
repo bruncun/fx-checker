@@ -2,19 +2,56 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { useState } from "react";
 
-import { Converter } from "../converter";
+import { Converter, type SelectedCurrency } from "../converter";
+import type { AvailableCurrency } from "../../currencies";
+import type { FrankfurterRate } from "@/lib/frankfurter";
 
-const rates = [
+const rates: FrankfurterRate[] = [
   { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.171 },
   { date: "2026-06-19", base: "EUR", quote: "JPY", rate: 183.24 },
 ];
 
-const currencies = [
+const currencies: AvailableCurrency[] = [
   { code: "USD", countryCode: "us" as const, name: "United States Dollar" },
   { code: "EUR", countryCode: "eu" as const, name: "Euro" },
   { code: "JPY", countryCode: "jp" as const, name: "Japanese Yen" },
 ];
+
+const defaultSelectedCurrencies = {
+  sendCurrency: { countryCode: "us", currencyCode: "USD" } satisfies SelectedCurrency,
+  receiveCurrency: { countryCode: "eu", currencyCode: "EUR" } satisfies SelectedCurrency,
+};
+
+function renderConverter({
+  converterCurrencies = currencies,
+  converterRates = rates,
+  initialSelectedCurrencies = defaultSelectedCurrencies,
+}: {
+  converterCurrencies?: AvailableCurrency[];
+  converterRates?: FrankfurterRate[];
+  initialSelectedCurrencies?: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  };
+} = {}) {
+  function TestConverter() {
+    const [selectedCurrencies, setSelectedCurrencies] = useState(initialSelectedCurrencies);
+
+    return (
+      <Converter
+        currencies={converterCurrencies}
+        rates={converterRates}
+        sendCurrency={selectedCurrencies.sendCurrency}
+        receiveCurrency={selectedCurrencies.receiveCurrency}
+        onSelectedCurrenciesChange={setSelectedCurrencies}
+      />
+    );
+  }
+
+  return render(<TestConverter />);
+}
 
 afterEach(() => {
   cleanup();
@@ -22,7 +59,7 @@ afterEach(() => {
 
 describe("Converter", () => {
   it("converts from the send amount as it is edited", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
     const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
@@ -34,7 +71,7 @@ describe("Converter", () => {
   });
 
   it("converts back from the receive amount as it is edited", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
     const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
@@ -46,7 +83,12 @@ describe("Converter", () => {
   });
 
   it("preserves significant digits for small converted amounts", () => {
-    render(<Converter currencies={[currencies[2], currencies[1]]} rates={rates} />);
+    renderConverter({
+      initialSelectedCurrencies: {
+        sendCurrency: { countryCode: "jp", currencyCode: "JPY" },
+        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
+      },
+    });
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "1" },
@@ -59,12 +101,20 @@ describe("Converter", () => {
   });
 
   it("caps calculated amount precision at eight decimal places", () => {
-    render(
-      <Converter
-        currencies={[currencies[0], { code: "TINY", countryCode: "eu", name: "Tiny Currency" }]}
-        rates={[rates[0], { date: "2026-06-19", base: "EUR", quote: "TINY", rate: 0.0000001 }]}
-      />
-    );
+    renderConverter({
+      converterCurrencies: [
+        currencies[0],
+        { code: "TINY", countryCode: "eu", name: "Tiny Currency" },
+      ],
+      converterRates: [
+        rates[0],
+        { date: "2026-06-19", base: "EUR", quote: "TINY", rate: 0.0000001 },
+      ],
+      initialSelectedCurrencies: {
+        sendCurrency: { countryCode: "us", currencyCode: "USD" },
+        receiveCurrency: { countryCode: "eu", currencyCode: "TINY" },
+      },
+    });
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "1" },
@@ -77,12 +127,17 @@ describe("Converter", () => {
   });
 
   it("keeps large calculated amounts editable without changing their magnitude", () => {
-    render(
-      <Converter
-        currencies={[currencies[0], { code: "VND", countryCode: "vn", name: "Vietnamese Dong" }]}
-        rates={[rates[0], { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }]}
-      />
-    );
+    renderConverter({
+      converterCurrencies: [
+        currencies[0],
+        { code: "VND", countryCode: "vn", name: "Vietnamese Dong" },
+      ],
+      converterRates: [rates[0], { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }],
+      initialSelectedCurrencies: {
+        sendCurrency: { countryCode: "us", currencyCode: "USD" },
+        receiveCurrency: { countryCode: "vn", currencyCode: "VND" },
+      },
+    });
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "999999999999" },
@@ -104,7 +159,7 @@ describe("Converter", () => {
   });
 
   it("keeps both amounts empty while an amount is cleared", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
     const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
@@ -117,7 +172,7 @@ describe("Converter", () => {
   });
 
   it("normalizes a trailing decimal point when an amount loses focus", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
 
@@ -130,7 +185,7 @@ describe("Converter", () => {
   });
 
   it("swaps the active currencies and updates the displayed currency pair", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
 
@@ -144,7 +199,7 @@ describe("Converter", () => {
   });
 
   it("keeps the send amount in place and recalculates the receive amount", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
     const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
@@ -156,8 +211,22 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "117.1");
   });
 
+  it("does not change the amount source when a formatted derived amount blurs unchanged", () => {
+    renderConverter();
+
+    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
+    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+
+    fireEvent.change(sendAmount, { target: { value: "2500" } });
+    fireEvent.blur(receiveAmount);
+    fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
+
+    expect(sendAmount).toHaveProperty("value", "2,500");
+    expect(receiveAmount).toHaveProperty("value", "2,927.5");
+  });
+
   it("keeps the receive amount in place when it was edited most recently", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
     const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
@@ -170,7 +239,7 @@ describe("Converter", () => {
   });
 
   it("derives cross rates from the shared response base", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     fireEvent.click(screen.getByRole("button", { name: "Select receive currency" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
@@ -179,7 +248,7 @@ describe("Converter", () => {
   });
 
   it("recalculates the receive amount when its currency changes", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "100" },
@@ -194,7 +263,7 @@ describe("Converter", () => {
   });
 
   it("keeps the most recently edited amount as the source when a currency changes", () => {
-    render(<Converter currencies={currencies} rates={rates} />);
+    renderConverter();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
       target: { value: "100" },
@@ -207,12 +276,13 @@ describe("Converter", () => {
   });
 
   it("preserves significant digits for very small rates", () => {
-    render(
-      <Converter
-        currencies={[...currencies, { code: "VND", countryCode: "vn", name: "Vietnamese Dong" }]}
-        rates={[...rates, { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }]}
-      />
-    );
+    renderConverter({
+      converterCurrencies: [
+        ...currencies,
+        { code: "VND", countryCode: "vn", name: "Vietnamese Dong" },
+      ],
+      converterRates: [...rates, { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }],
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Select send currency" }));
     fireEvent.click(screen.getByRole("button", { name: "VND, Vietnamese Dong" }));
@@ -220,14 +290,53 @@ describe("Converter", () => {
     expect(screen.getByText("1 VND = 0.00003333 EUR")).toBeTruthy();
   });
 
-  it("chooses two distinct fallback currencies when USD is unavailable", () => {
-    render(<Converter currencies={currencies.slice(1)} rates={rates} />);
+  it("recalculates amounts when selected currencies change outside the converter", () => {
+    function ControlledConverter() {
+      const [selectedCurrencies, setSelectedCurrencies] = useState<{
+        receiveCurrency: SelectedCurrency;
+        sendCurrency: SelectedCurrency;
+      }>({
+        sendCurrency: { countryCode: "us", currencyCode: "USD" },
+        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
+      });
 
-    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
-      "EUR"
-    );
-    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
-      "JPY"
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedCurrencies({
+                sendCurrency: { countryCode: "gb", currencyCode: "GBP" },
+                receiveCurrency: { countryCode: "us", currencyCode: "USD" },
+              })
+            }
+          >
+            Select GBP/USD
+          </button>
+          <Converter
+            currencies={[
+              ...currencies,
+              { code: "GBP", countryCode: "gb" as const, name: "British Pound" },
+            ]}
+            rates={[...rates, { date: "2026-06-19", base: "EUR", quote: "GBP", rate: 0.85 }]}
+            sendCurrency={selectedCurrencies.sendCurrency}
+            receiveCurrency={selectedCurrencies.receiveCurrency}
+            onSelectedCurrenciesChange={setSelectedCurrencies}
+          />
+        </>
+      );
+    }
+
+    render(<ControlledConverter />);
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "100" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Select GBP/USD" }));
+
+    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
+      "value",
+      "137.76"
     );
   });
 });

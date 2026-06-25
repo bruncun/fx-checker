@@ -1,1 +1,1 @@
-export { Converter } from "./components/converter";
+export { Converter, type SelectedCurrency } from "./components/converter";

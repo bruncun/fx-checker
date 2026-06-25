@@ -12,7 +12,7 @@ import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { AvailableCurrency } from "../currencies";
 import { CurrencyPicker } from "./currency-picker";
 
-type SelectedCurrency = {
+export type SelectedCurrency = {
   countryCode: FlagCountryCode;
   currencyCode: string;
 };
@@ -21,7 +21,13 @@ type AmountSide = "send" | "receive";
 
 type ConverterProps = {
   currencies: AvailableCurrency[];
+  receiveCurrency: SelectedCurrency;
   rates: FrankfurterRate[];
+  sendCurrency: SelectedCurrency;
+  onSelectedCurrenciesChange: (currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) => void;
 };
 
 const MoneyDecimal = Decimal.clone({ precision: 40 });
@@ -113,8 +119,11 @@ function ConverterAmountPanel({
           aria-label={`${label} amount`}
           onBlur={(event) => {
             const normalizedAmount = getAmountValue(event.currentTarget.value).replace(/\.$/, "");
+            const currentAmount = amount.endsWith(".")
+              ? amount
+              : getAmountValue(amount).replace(/\.$/, "");
 
-            if (normalizedAmount !== amount) {
+            if (normalizedAmount !== currentAmount) {
               onAmountChange(normalizedAmount);
             }
           }}
@@ -142,91 +151,47 @@ function ConverterAmountPanel({
   );
 }
 
-function Converter({ currencies, rates }: ConverterProps) {
-  const defaultSendCurrency =
-    currencies.find((currency) => currency.code === "USD") ?? currencies[0];
-  const defaultReceiveCurrency =
-    currencies.find(
-      (currency) => currency.code === "EUR" && currency.code !== defaultSendCurrency.code
-    ) ??
-    currencies.find((currency) => currency.code !== defaultSendCurrency.code) ??
-    defaultSendCurrency;
-  const [sendAmount, setSendAmount] = React.useState("");
-  const [receiveAmount, setReceiveAmount] = React.useState("");
-  const [sendCurrency, setSendCurrency] = React.useState<SelectedCurrency>({
-    countryCode: defaultSendCurrency.countryCode,
-    currencyCode: defaultSendCurrency.code,
-  });
-  const [receiveCurrency, setReceiveCurrency] = React.useState<SelectedCurrency>({
-    countryCode: defaultReceiveCurrency.countryCode,
-    currencyCode: defaultReceiveCurrency.code,
-  });
-  const amountSource = React.useRef<AmountSide>("send");
+function Converter({
+  currencies,
+  receiveCurrency,
+  rates,
+  sendCurrency,
+  onSelectedCurrenciesChange,
+}: ConverterProps) {
+  const [amount, setAmount] = React.useState("");
+  const [amountSource, setAmountSource] = React.useState<AmountSide>("send");
   const exchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
     receiveCurrency.currencyCode
   );
+  const inverseExchangeRate = exchangeRate === null ? null : new MoneyDecimal(1).div(exchangeRate);
+  const sendAmount = amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate);
+  const receiveAmount = amountSource === "receive" ? amount : convertAmount(amount, exchangeRate);
 
-  function updateSendAmount(amount: string) {
-    amountSource.current = "send";
-    setSendAmount(amount);
-    setReceiveAmount(convertAmount(amount, exchangeRate));
+  function updateSendAmount(nextAmount: string) {
+    setAmountSource("send");
+    setAmount(nextAmount);
   }
 
-  function updateReceiveAmount(amount: string) {
-    amountSource.current = "receive";
-    setReceiveAmount(amount);
-    setSendAmount(
-      convertAmount(amount, exchangeRate === null ? null : new MoneyDecimal(1).div(exchangeRate))
-    );
+  function updateReceiveAmount(nextAmount: string) {
+    setAmountSource("receive");
+    setAmount(nextAmount);
   }
 
   function updateSendCurrency(currency: SelectedCurrency) {
-    const nextRate = getExchangeRate(rates, currency.currencyCode, receiveCurrency.currencyCode);
-
-    setSendCurrency(currency);
-
-    if (amountSource.current === "send") {
-      setReceiveAmount(convertAmount(sendAmount, nextRate));
-    } else {
-      setSendAmount(
-        convertAmount(receiveAmount, nextRate === null ? null : new MoneyDecimal(1).div(nextRate))
-      );
-    }
+    onSelectedCurrenciesChange({ sendCurrency: currency, receiveCurrency });
   }
 
   function updateReceiveCurrency(currency: SelectedCurrency) {
-    const nextRate = getExchangeRate(rates, sendCurrency.currencyCode, currency.currencyCode);
-
-    setReceiveCurrency(currency);
-
-    if (amountSource.current === "send") {
-      setReceiveAmount(convertAmount(sendAmount, nextRate));
-    } else {
-      setSendAmount(
-        convertAmount(receiveAmount, nextRate === null ? null : new MoneyDecimal(1).div(nextRate))
-      );
-    }
+    onSelectedCurrenciesChange({ sendCurrency, receiveCurrency: currency });
   }
 
   function exchangeCurrencies() {
-    const nextRate = getExchangeRate(
-      rates,
-      receiveCurrency.currencyCode,
-      sendCurrency.currencyCode
-    );
-
-    setSendCurrency(receiveCurrency);
-    setReceiveCurrency(sendCurrency);
-
-    if (amountSource.current === "send") {
-      setReceiveAmount(convertAmount(sendAmount, nextRate));
-    } else {
-      setSendAmount(
-        convertAmount(receiveAmount, nextRate === null ? null : new MoneyDecimal(1).div(nextRate))
-      );
-    }
+    onSelectedCurrenciesChange({
+      sendCurrency: receiveCurrency,
+      receiveCurrency: sendCurrency,
+    });
   }
 
   return (

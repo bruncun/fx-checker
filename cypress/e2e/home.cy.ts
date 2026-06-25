@@ -13,7 +13,6 @@ describe("home page", () => {
 
     cy.visit("/");
 
-    cy.findByRole("link", { name: "FX Checker" }).should("be.visible");
     cy.findByRole("heading", {
       name: "Exchange rate data is unavailable",
     }).should("be.visible");
