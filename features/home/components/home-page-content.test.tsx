@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { HomePageContent } from "./home-page-content";
@@ -43,5 +43,22 @@ describe("HomePageContent", () => {
       "EUR"
     );
     expect(screen.getByText("1 USD = 0.8540 EUR")).toBeTruthy();
+  });
+
+  it("populates the converter when a live rate is selected", () => {
+    render(<HomePageContent availableCurrencies={currencies} currencyCount={56} rates={rates} />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Use GBP/USD in converter, rate 1.3575, down -0.22%",
+      })
+    );
+
+    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
+      "GBP"
+    );
+    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
+      "USD"
+    );
   });
 });
