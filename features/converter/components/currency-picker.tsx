@@ -7,6 +7,7 @@ import { CurrencyButton } from "@/components/ui/currency-button";
 import { Flag, type FlagCountryCode } from "@/components/ui/flag";
 import { Icon } from "@/components/ui/icon";
 import { SearchInput } from "@/components/ui/search-input";
+import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { AvailableCurrency } from "../currencies";
 
 export type CurrencyPickerItem = AvailableCurrency;
@@ -16,8 +17,6 @@ type CurrencyPickerGroup = {
   currencies: CurrencyPickerItem[];
   label: string;
 };
-
-type CurrencyNavigationKey = "ArrowDown" | "ArrowUp" | "End" | "Home";
 
 const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
 const panelViewportGutter = 16;
@@ -34,30 +33,10 @@ function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup
   ].filter((group) => group.count > 0);
 }
 
-const currencyNavigationKeys: CurrencyNavigationKey[] = ["ArrowDown", "ArrowUp", "Home", "End"];
-
-function isCurrencyNavigationKey(key: string): key is CurrencyNavigationKey {
-  return currencyNavigationKeys.includes(key as CurrencyNavigationKey);
-}
-
 function isPrintableSearchKey(event: React.KeyboardEvent) {
   return (
     event.key.length === 1 && event.key !== " " && !event.altKey && !event.ctrlKey && !event.metaKey
   );
-}
-
-function getNextCurrencyIndex(currentIndex: number, key: CurrencyNavigationKey, itemCount: number) {
-  if (key === "Home") {
-    return 0;
-  }
-
-  if (key === "End") {
-    return itemCount - 1;
-  }
-
-  return key === "ArrowDown"
-    ? (currentIndex + 1) % itemCount
-    : (currentIndex - 1 + itemCount) % itemCount;
 }
 
 export interface CurrencyPickerProps {
@@ -123,6 +102,14 @@ function CurrencyPicker({
   const panelRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
+  const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
+    containerRef: panelRef,
+    itemSelector: "[data-currency-option]",
+    onCurrentElementChange: (button) => {
+      setActiveCurrencyCode(button.dataset.currencyCode ?? "");
+    },
+    orientation: "vertical",
+  });
   const currencyGroups = getCurrencyGroups(currencies);
 
   const selectedCurrency =
@@ -236,22 +223,6 @@ function CurrencyPicker({
     };
   }, [closePicker, isOpen]);
 
-  function focusCurrencyButton(
-    button: HTMLButtonElement | undefined,
-    currencyButtons: HTMLButtonElement[]
-  ) {
-    if (!button) {
-      return;
-    }
-
-    currencyButtons.forEach((currencyButton) => {
-      currencyButton.tabIndex = currencyButton === button ? 0 : -1;
-    });
-    setActiveCurrencyCode(button.dataset.currencyCode ?? "");
-    button.focus({ preventScroll: true });
-    button.scrollIntoView?.({ block: "nearest" });
-  }
-
   function handleSearchKeyDown(
     event: React.KeyboardEvent<HTMLElement>,
     currencyButtons: HTMLButtonElement[]
@@ -266,9 +237,8 @@ function CurrencyPicker({
       if (currencyButtons.length === 1) {
         currencyButtons[0]?.click();
       } else if (currencyButtons.length > 1) {
-        focusCurrencyButton(
-          currencyButtons.find((button) => button.tabIndex === 0) ?? currencyButtons[0],
-          currencyButtons
+        rovingFocus.focusItem(
+          currencyButtons.find((button) => button.tabIndex === 0) ?? currencyButtons[0]
         );
       }
       return true;
@@ -276,36 +246,15 @@ function CurrencyPicker({
 
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
-      focusCurrencyButton(
+      rovingFocus.focusItem(
         event.key === "ArrowUp"
           ? currencyButtons.at(-1)
-          : (currencyButtons.find((button) => button.tabIndex === 0) ?? currencyButtons[0]),
-        currencyButtons
+          : (currencyButtons.find((button) => button.tabIndex === 0) ?? currencyButtons[0])
       );
       return true;
     }
 
     return false;
-  }
-
-  function handleCurrencyNavigationKeyDown(
-    event: React.KeyboardEvent<HTMLDivElement>,
-    currencyButtons: HTMLButtonElement[]
-  ) {
-    if (!isCurrencyNavigationKey(event.key)) {
-      return false;
-    }
-
-    const currentIndex = currencyButtons.findIndex((button) => button === document.activeElement);
-
-    if (currentIndex === -1) {
-      return false;
-    }
-
-    event.preventDefault();
-    const nextIndex = getNextCurrencyIndex(currentIndex, event.key, currencyButtons.length);
-    focusCurrencyButton(currencyButtons[nextIndex], currencyButtons);
-    return true;
   }
 
   function handleTypeToSearch(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -353,9 +302,8 @@ function CurrencyPicker({
     if (event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
-      focusCurrencyButton(
-        currencyButtons.find((button) => button.tabIndex === 0) ?? currencyButtons[0],
-        currencyButtons
+      rovingFocus.focusItem(
+        currencyButtons.find((button) => button.tabIndex === 0) ?? currencyButtons[0]
       );
     }
   }
@@ -367,15 +315,11 @@ function CurrencyPicker({
       return;
     }
 
-    const currencyButtons = Array.from(
-      event.currentTarget.querySelectorAll<HTMLButtonElement>("[data-currency-option]")
-    );
-
     if (event.target === searchRef.current) {
       return;
     }
 
-    if (handleCurrencyNavigationKeyDown(event, currencyButtons)) {
+    if (rovingFocus.handleKeyDown(event)) {
       return;
     }
 

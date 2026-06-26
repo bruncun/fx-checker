@@ -5,9 +5,15 @@ const EXCHANGE_RATES_REVALIDATE_SECONDS = 60 * 60 * 24;
 const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
 const FRANKFURTER_REQUEST_TIMEOUT_MS = 5_000;
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
-const FRANKFURTER_AUTO_CACHE_KEY = `${Date.now()}`;
+const FRANKFURTER_PROVIDER = "ECB";
 
 type FrankfurterEndpoint = "currencies" | "rates";
+type FrankfurterRatesParams = {
+  from?: string;
+  providers?: string;
+  quotes?: string[];
+  to?: string;
+};
 type FrankfurterFetchInit = RequestInit & {
   next: {
     revalidate: number;
@@ -45,17 +51,43 @@ function getFrankfurterBaseUrl() {
   return process.env.FRANKFURTER_API_BASE_URL ?? DEFAULT_FRANKFURTER_BASE_URL;
 }
 
-function getFrankfurterEndpointUrl(endpoint: FrankfurterEndpoint) {
+function getFrankfurterCacheKey() {
+  if (process.env.FRANKFURTER_CACHE_KEY !== "auto") {
+    return process.env.FRANKFURTER_CACHE_KEY;
+  }
+
+  return "auto";
+}
+
+function getFrankfurterEndpointUrl(
+  endpoint: FrankfurterEndpoint,
+  params: FrankfurterRatesParams = {}
+) {
   const baseUrl = getFrankfurterBaseUrl();
   const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   const url = new URL(FRANKFURTER_ENDPOINT_PATHS[endpoint], normalizedBaseUrl);
-  const cacheKey =
-    process.env.FRANKFURTER_CACHE_KEY === "auto"
-      ? FRANKFURTER_AUTO_CACHE_KEY
-      : process.env.FRANKFURTER_CACHE_KEY;
+  const cacheKey = getFrankfurterCacheKey();
 
   if (cacheKey) {
     url.searchParams.set("_fx_cache", cacheKey);
+  }
+
+  if (endpoint === "rates") {
+    if (params.from) {
+      url.searchParams.set("from", params.from);
+    }
+
+    if (params.to) {
+      url.searchParams.set("to", params.to);
+    }
+
+    if (params.quotes && params.quotes.length > 0) {
+      url.searchParams.set("quotes", params.quotes.join(","));
+    }
+
+    if (params.providers) {
+      url.searchParams.set("providers", params.providers);
+    }
   }
 
   return url.toString();
@@ -157,13 +189,16 @@ async function fetchWithTimeout(url: string, init: FrankfurterFetchInit) {
   }
 }
 
-async function fetchFrankfurterEndpoint(endpoint: FrankfurterEndpoint) {
+async function fetchFrankfurterEndpoint(
+  endpoint: FrankfurterEndpoint,
+  params: FrankfurterRatesParams = {}
+) {
   let url: string | undefined;
   let lastError: unknown;
   let lastStatus: number | undefined;
 
   try {
-    url = getFrankfurterEndpointUrl(endpoint);
+    url = getFrankfurterEndpointUrl(endpoint, params);
   } catch (error) {
     logFrankfurterFailure({
       endpoint,
@@ -242,8 +277,11 @@ export async function getCurrencies() {
   }
 }
 
-export async function getRates() {
-  const response = await fetchFrankfurterEndpoint("rates");
+export async function getRates(params: FrankfurterRatesParams = {}) {
+  const response = await fetchFrankfurterEndpoint("rates", {
+    ...params,
+    providers: params.providers ?? FRANKFURTER_PROVIDER,
+  });
 
   try {
     return parseFrankfurterRates(await response.json());
