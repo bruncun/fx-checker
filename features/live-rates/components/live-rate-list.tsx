@@ -46,7 +46,11 @@ export function LiveRateList({ onRateSelect, rates }: LiveRateListProps) {
         <span className="size-[6px] rounded-full bg-neutral-900" aria-hidden="true" />
         <span id={labelId}>Live markets</span>
       </div>
-      <div className="min-w-0 overflow-x-auto" role="region" aria-label="Live exchange rates">
+      <div
+        className="min-w-0 flex-1 overflow-x-auto"
+        role="region"
+        aria-label="Live exchange rates"
+      >
         <div
           ref={toolbarRef}
           aria-labelledby={labelId}

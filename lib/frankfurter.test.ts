@@ -217,13 +217,66 @@ describe("getRates", () => {
     vi.stubGlobal("fetch", fetch);
 
     await expect(getRates()).resolves.toEqual(mockRates);
-    expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates", {
+    expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates?providers=ECB", {
       next: {
         revalidate: 86_400,
         tags: ["exchange-rates"],
       },
       signal: expect.any(AbortSignal),
     });
+  });
+
+  it("fetches an unfiltered ECB time series", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockRates),
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      getRates({
+        from: "2026-06-05",
+        to: "2026-06-19",
+      })
+    ).resolves.toEqual(mockRates);
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.frankfurter.dev/v2/rates?from=2026-06-05&to=2026-06-19&providers=ECB",
+      {
+        next: {
+          revalidate: 86_400,
+          tags: ["exchange-rates"],
+        },
+        signal: expect.any(AbortSignal),
+      }
+    );
+  });
+
+  it("supports filtered ECB time series requests", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockRates),
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      getRates({
+        from: "2026-06-05",
+        quotes: ["USD", "JPY", "GBP"],
+        to: "2026-06-19",
+      })
+    ).resolves.toEqual(mockRates);
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.frankfurter.dev/v2/rates?from=2026-06-05&to=2026-06-19&quotes=USD%2CJPY%2CGBP&providers=ECB",
+      {
+        next: {
+          revalidate: 86_400,
+          tags: ["exchange-rates"],
+        },
+        signal: expect.any(AbortSignal),
+      }
+    );
   });
 
   it("rejects rate endpoint failures after retrying a server error", async () => {
@@ -240,7 +293,7 @@ describe("getRates", () => {
     expect(consoleError).toHaveBeenCalledWith("Frankfurter request failed", {
       endpoint: "rates",
       status: 503,
-      url: "https://api.frankfurter.dev/v2/rates",
+      url: "https://api.frankfurter.dev/v2/rates?providers=ECB",
       cause: "Frankfurter returned 503",
     });
   });

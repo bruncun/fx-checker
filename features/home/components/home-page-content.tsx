@@ -4,13 +4,13 @@ import { Converter, type SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { Header } from "@/features/header";
 import { LiveRateList, type LiveRate } from "@/features/live-rates";
-import { mockLiveRates } from "@/features/live-rates/mock-live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { useMemo, useState } from "react";
 
 type HomePageContentProps = {
   availableCurrencies: AvailableCurrency[];
   currencyCount: number;
+  liveRates: LiveRate[];
   rates: FrankfurterRate[];
 };
 
@@ -52,6 +52,7 @@ function getDefaultCurrencyPair(currencies: AvailableCurrency[]) {
 export function HomePageContent({
   availableCurrencies,
   currencyCount,
+  liveRates,
   rates,
 }: HomePageContentProps) {
   const defaultCurrencyPair = useMemo(
@@ -80,10 +81,7 @@ export function HomePageContent({
   return (
     <main className="text-white min-h-screen bg-neutral-900">
       <Header currencyCount={currencyCount} />
-      <LiveRateList
-        rates={mockLiveRates}
-        onRateSelect={selectLiveRate}
-      />
+      <LiveRateList rates={liveRates} onRateSelect={selectLiveRate} />
       <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600">
         <Converter
           currencies={availableCurrencies}
