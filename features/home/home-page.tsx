@@ -1,6 +1,7 @@
 import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/converter/currencies";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
+import type { ReactNode } from "react";
 import { HomePageContent } from "./components/home-page-content";
 
 const LIVE_RATE_HISTORY_DAYS = 14;
@@ -94,7 +95,11 @@ function DataUnavailable() {
   );
 }
 
-export async function HomePage() {
+type HomePageShellProps = {
+  children: ReactNode;
+};
+
+export async function HomePageShell({ children }: HomePageShellProps) {
   const data = await getHomePageData();
 
   if (data.status === "unavailable") {
@@ -107,6 +112,8 @@ export async function HomePage() {
       currencyCount={data.currencyCount}
       liveRates={data.liveRates}
       rates={data.rates}
-    />
+    >
+      {children}
+    </HomePageContent>
   );
 }

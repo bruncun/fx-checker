@@ -46,7 +46,9 @@ describe("HomePageContent", () => {
         currencyCount={56}
         liveRates={liveRates}
         rates={rates}
-      />
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
     );
 
     expect(screen.getByRole("link", { name: "FX Checker" })).toBeTruthy();
@@ -69,7 +71,9 @@ describe("HomePageContent", () => {
         currencyCount={56}
         liveRates={liveRates}
         rates={rates}
-      />
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
     );
 
     fireEvent.click(

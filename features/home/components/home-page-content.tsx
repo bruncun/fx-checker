@@ -5,10 +5,12 @@ import type { AvailableCurrency } from "@/features/converter/currencies";
 import { Header } from "@/features/header";
 import { LiveRateList, type LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 type HomePageContentProps = {
   availableCurrencies: AvailableCurrency[];
+  children: ReactNode;
   currencyCount: number;
   liveRates: LiveRate[];
   rates: FrankfurterRate[];
@@ -51,6 +53,7 @@ function getDefaultCurrencyPair(currencies: AvailableCurrency[]) {
 
 export function HomePageContent({
   availableCurrencies,
+  children,
   currencyCount,
   liveRates,
   rates,
@@ -82,7 +85,7 @@ export function HomePageContent({
     <main className="text-white min-h-screen bg-neutral-900">
       <Header currencyCount={currencyCount} />
       <LiveRateList rates={liveRates} onRateSelect={selectLiveRate} />
-      <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600">
+      <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">
         <Converter
           currencies={availableCurrencies}
           rates={rates}
@@ -90,6 +93,7 @@ export function HomePageContent({
           receiveCurrency={selectedCurrencies.receiveCurrency}
           onSelectedCurrenciesChange={setSelectedCurrencies}
         />
+        <div className="mt-500 lg:mt-400">{children}</div>
       </div>
     </main>
   );
