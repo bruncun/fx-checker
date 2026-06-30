@@ -1,1 +1,1 @@
-export { HomePage } from "./home-page";
+export { HomePageShell } from "./home-page";

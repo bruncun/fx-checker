@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
+import { InlineMetaList } from "@/components/ui/inline-meta-list";
 
 type AppHeaderProps = {
   currencyCount: number;
@@ -8,20 +9,19 @@ type AppHeaderProps = {
 
 function ExchangeRateStats({ currencyCount }: AppHeaderProps) {
   return (
-    <ul
+    <InlineMetaList
       className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
       aria-label="Exchange rate data stats"
-    >
-      <li>{currencyCount} Currencies</li>
-      <li aria-hidden="true">&nbsp;·&nbsp;</li>
-      <li>
-        <abbr title="End of day">EOD</abbr>
-      </li>
-      <li aria-hidden="true">&nbsp;·&nbsp;</li>
-      <li>
-        <abbr title="European Central Bank">ECB</abbr> data
-      </li>
-    </ul>
+      items={[
+        `${currencyCount} Currencies`,
+        <abbr key="eod" title="End of day">
+          EOD
+        </abbr>,
+        <span key="ecb">
+          <abbr title="European Central Bank">ECB</abbr> data
+        </span>,
+      ]}
+    />
   );
 }
 

@@ -1,9 +1,22 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { HomePageContent } from "./home-page-content";
+
+const { routerReplace, testSearchParams } = vi.hoisted(() => ({
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
 
 const currencies = [
   { code: "USD", countryCode: "us" as const, name: "United States Dollar" },
@@ -35,6 +48,8 @@ const liveRates = [
 ];
 
 afterEach(() => {
+  routerReplace.mockClear();
+  testSearchParams.current = "";
   cleanup();
 });
 
@@ -46,7 +61,9 @@ describe("HomePageContent", () => {
         currencyCount={56}
         liveRates={liveRates}
         rates={rates}
-      />
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
     );
 
     expect(screen.getByRole("link", { name: "FX Checker" })).toBeTruthy();
@@ -62,14 +79,38 @@ describe("HomePageContent", () => {
     expect(screen.getByText("1 USD = 0.8540 EUR")).toBeTruthy();
   });
 
-  it("populates the converter when a live rate is selected", () => {
+  it("uses selected currencies from URL state when present", () => {
+    testSearchParams.current = "from=GBP&to=USD";
+
     render(
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
         liveRates={liveRates}
         rates={rates}
-      />
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
+    );
+
+    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
+      "GBP"
+    );
+    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
+      "USD"
+    );
+  });
+
+  it("updates the converter optimistically and writes URL state when a live rate is selected", () => {
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
     );
 
     fireEvent.click(
@@ -84,5 +125,29 @@ describe("HomePageContent", () => {
     expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
       "USD"
     );
+    expect(routerReplace).toHaveBeenCalledWith("/?from=GBP&to=USD", { scroll: false });
+  });
+
+  it("does not replace the URL when the selected pair already matches URL state", () => {
+    testSearchParams.current = "from=GBP&to=USD";
+
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Use GBP/USD in converter, rate 1.3776, down -0.22%",
+      })
+    );
+
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 });

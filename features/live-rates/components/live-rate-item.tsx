@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { RateChange } from "@/components/ui/rate-change";
 
 export type LiveRate = {
   pair: string;
@@ -32,21 +32,11 @@ export function LiveRateItem({ rate, tabIndex, onFocus, onSelect }: LiveRateItem
       >
         <span className="text-preset-6 text-neutral-200 sm:text-preset-5">{rate.pair}</span>
         <span className="text-preset-6 text-neutral-50 sm:text-preset-5-medium">{rate.rate}</span>
-        <span
-          className={cn(
-            `inline-flex text-preset-6 ${isPositive ? "text-green-500" : "text-red-500"}`,
-            "sm:text-preset-5"
-          )}
-        >
-          <span
-            className="inline-flex w-075 justify-center text-[6.5px] sm:w-100 sm:text-[8.5px]"
-            aria-hidden="true"
-          >
-            {isPositive ? "▲" : "▼"}
-          </span>
-          &nbsp;
-          <span>{rate.change}</span>
-        </span>
+        <RateChange
+          className="text-preset-6 sm:text-preset-5 [&>span:first-child]:w-075 [&>span:first-child]:text-[6.5px] sm:[&>span:first-child]:w-100 sm:[&>span:first-child]:text-[8.5px]"
+          direction={rate.direction}
+          value={rate.change}
+        />
       </button>
     </li>
   );

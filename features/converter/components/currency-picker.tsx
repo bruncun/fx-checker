@@ -7,6 +7,7 @@ import { CurrencyButton } from "@/components/ui/currency-button";
 import { Flag, type FlagCountryCode } from "@/components/ui/flag";
 import { Icon } from "@/components/ui/icon";
 import { SearchInput } from "@/components/ui/search-input";
+import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { AvailableCurrency } from "../currencies";
 
@@ -157,12 +158,6 @@ function CurrencyPicker({
     }
 
     searchRef.current?.focus();
-  }, [isOpen]);
-
-  React.useLayoutEffect(() => {
-    if (!isOpen) {
-      return;
-    }
 
     const panel = panelRef.current;
 
@@ -201,27 +196,13 @@ function CurrencyPicker({
     };
   }, [isOpen]);
 
-  React.useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      const root = rootRef.current;
-
-      if (!root || root.contains(event.target as Node)) {
-        return;
-      }
-
+  usePointerDownOutside({
+    enabled: isOpen,
+    onPointerDownOutside: React.useCallback(() => {
       closePicker({ restoreFocus: false });
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-    };
-  }, [closePicker, isOpen]);
+    }, [closePicker]),
+    ref: rootRef,
+  });
 
   function handleSearchKeyDown(
     event: React.KeyboardEvent<HTMLElement>,
