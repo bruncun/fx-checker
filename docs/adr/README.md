@@ -15,3 +15,4 @@ The project uses lightweight ADRs because this is a small hackathon-style applic
 - [0007. Start with basic server logging through Vercel logs](0007-start-with-basic-server-logging-through-vercel-logs.md)
 - [0008. Defer a formal design system](0008-defer-a-formal-design-system.md)
 - [0009. Use Storybook as a component workbench](0009-use-storybook-as-a-component-workbench.md)
+- [0010. Upgrade to Next.js Instant Navigations for rate details](0010-upgrade-to-nextjs-instant-navigations-for-rate-details.md)

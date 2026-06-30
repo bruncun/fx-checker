@@ -14,26 +14,18 @@ type LiveRateListProps = {
 export function LiveRateList({ onRateSelect, rates }: LiveRateListProps) {
   const labelId = React.useId();
   const toolbarRef = React.useRef<HTMLDivElement>(null);
-  const [tabStopPair, setTabStopPair] = React.useState(rates[0]?.pair ?? "");
+  const [preferredTabStopPair, setPreferredTabStopPair] = React.useState(rates[0]?.pair ?? "");
+  const tabStopPair = rates.some((rate) => rate.pair === preferredTabStopPair)
+    ? preferredTabStopPair
+    : (rates[0]?.pair ?? "");
   const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
     containerRef: toolbarRef,
     itemSelector: "[data-live-rate-option]",
     onCurrentElementChange: (button) => {
-      setTabStopPair(button.dataset.liveRatePair ?? "");
+      setPreferredTabStopPair(button.dataset.liveRatePair ?? "");
     },
     orientation: "horizontal",
   });
-
-  React.useEffect(() => {
-    if (rates.length === 0) {
-      setTabStopPair("");
-      return;
-    }
-
-    if (!rates.some((rate) => rate.pair === tabStopPair)) {
-      setTabStopPair(rates[0]?.pair ?? "");
-    }
-  }, [rates, tabStopPair]);
 
   return (
     <section className="relative flex w-full bg-neutral-700">
@@ -66,7 +58,7 @@ export function LiveRateList({ onRateSelect, rates }: LiveRateListProps) {
                 key={rate.pair}
                 rate={rate}
                 onFocus={() => {
-                  setTabStopPair(rate.pair);
+                  setPreferredTabStopPair(rate.pair);
                 }}
                 onSelect={onRateSelect}
                 tabIndex={rate.pair === tabStopPair ? 0 : -1}
