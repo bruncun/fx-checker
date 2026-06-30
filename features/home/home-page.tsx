@@ -1,24 +1,27 @@
 import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/converter/currencies";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
+import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
-import type { ReactNode } from "react";
+import { cache, type ReactNode } from "react";
 import { HomePageContent } from "./components/home-page-content";
 
-const LIVE_RATE_HISTORY_DAYS = 14;
+const RATE_HISTORY_YEARS = 5;
 
-type HomePageData =
+type DateRange = {
+  from: string;
+  to: string;
+};
+
+export type HomePageData =
   | {
       status: "available";
       availableCurrencies: AvailableCurrency[];
       currencyCount: number;
+      historicalRates: FrankfurterRate[];
       liveRates: LiveRate[];
       rates: FrankfurterRate[];
     }
   | { status: "unavailable" };
-
-function formatIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
 
 function parseIsoDate(date: string) {
   const [year, month, day] = date.split("-").map(Number);
@@ -30,34 +33,84 @@ function parseIsoDate(date: string) {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-function getDateDaysBefore(date: string, days: number) {
-  const targetDate = parseIsoDate(date);
-
-  if (!targetDate) {
-    return null;
-  }
-
-  targetDate.setUTCDate(targetDate.getUTCDate() - days);
-
-  return formatIsoDate(targetDate);
+function formatIsoDate(date: Date) {
+  return date.toISOString().slice(0, 10);
 }
 
-async function getHomePageData(): Promise<HomePageData> {
+function addYears(date: Date, years: number) {
+  const nextDate = new Date(date);
+
+  nextDate.setUTCFullYear(nextDate.getUTCFullYear() + years);
+
+  return nextDate;
+}
+
+function getPreviousDate(date: Date) {
+  const previousDate = new Date(date);
+
+  previousDate.setUTCDate(previousDate.getUTCDate() - 1);
+
+  return previousDate;
+}
+
+export function getYearlyDateRanges({
+  from,
+  years,
+  to,
+}: {
+  from: string;
+  years: number;
+  to: string;
+}): DateRange[] {
+  const startDate = parseIsoDate(from);
+  const endDate = parseIsoDate(to);
+
+  if (!startDate || !endDate || startDate > endDate || years < 1) {
+    return [];
+  }
+
+  const ranges: DateRange[] = [];
+
+  for (let index = 0; index < years; index += 1) {
+    const rangeStartDate = addYears(startDate, index);
+    const nextRangeStartDate = addYears(startDate, index + 1);
+    const rangeEndDate = index === years - 1 ? endDate : getPreviousDate(nextRangeStartDate);
+
+    if (rangeStartDate > endDate) {
+      break;
+    }
+
+    const clampedRangeEndDate = rangeEndDate < endDate ? rangeEndDate : endDate;
+
+    ranges.push({
+      from: formatIsoDate(rangeStartDate),
+      to: formatIsoDate(clampedRangeEndDate),
+    });
+  }
+
+  return ranges;
+}
+
+async function getHistoricalRatesByYear({ from, to }: DateRange) {
+  const ranges = getYearlyDateRanges({ from, to, years: RATE_HISTORY_YEARS });
+  const rateGroups = await Promise.all(ranges.map((range) => getRates(range)));
+
+  return rateGroups.flat();
+}
+
+export const getHomePageData = cache(async (): Promise<HomePageData> => {
   try {
     const [currencies, rates] = await Promise.all([getCurrencies(), getRates()]);
     const latestDate = rates[0]?.date;
-    const historyStartDate = latestDate
-      ? getDateDaysBefore(latestDate, LIVE_RATE_HISTORY_DAYS - 1)
-      : null;
-    const historyEndDate = latestDate ? getDateDaysBefore(latestDate, 1) : null;
+    const historyStartDate = latestDate ? getDateYearsBefore(latestDate, RATE_HISTORY_YEARS) : null;
 
-    if (!latestDate || !historyStartDate || !historyEndDate) {
+    if (!latestDate || !historyStartDate) {
       return { status: "unavailable" };
     }
 
-    const historicalRates = await getRates({
+    const historicalRates = await getHistoricalRatesByYear({
       from: historyStartDate,
-      to: historyEndDate,
+      to: latestDate,
     });
     const availableCurrencies = deriveAvailableCurrencies(currencies, rates);
 
@@ -74,13 +127,14 @@ async function getHomePageData(): Promise<HomePageData> {
       status: "available",
       availableCurrencies,
       currencyCount: availableCurrencies.length,
+      historicalRates,
       liveRates,
       rates,
     };
   } catch {
     return { status: "unavailable" };
   }
-}
+});
 
 function DataUnavailable() {
   return (

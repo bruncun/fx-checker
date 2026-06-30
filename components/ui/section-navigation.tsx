@@ -3,7 +3,6 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { TabButton, TabCountBadge } from "@/components/ui/tab-button";
 import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
@@ -19,9 +18,7 @@ export type SectionNavigationItem = {
 
 export interface SectionNavigationProps extends React.ComponentProps<"nav"> {
   "aria-label"?: string;
-  activateOnFocus?: boolean;
   items: SectionNavigationItem[];
-  onNavigate?: (item: SectionNavigationItem) => void;
   value: string;
 }
 
@@ -34,15 +31,12 @@ function getSectionAccessibleName(section: SectionNavigationItem | undefined) {
 }
 
 function SectionNavigation({
-  activateOnFocus = false,
   "aria-label": ariaLabel = "Sections",
   className,
   items,
-  onNavigate,
   value,
   ...props
 }: SectionNavigationProps) {
-  const router = useRouter();
   const [isOpen, setIsOpen] = React.useState(false);
   const panelId = React.useId();
   const rootRef = React.useRef<HTMLElement>(null);
@@ -67,57 +61,14 @@ function SectionNavigation({
     setIsOpen(true);
   }
 
-  const navigateTo = React.useCallback(
-    (item: SectionNavigationItem, options?: { close?: boolean }) => {
-      if (onNavigate) {
-        onNavigate(item);
-      } else {
-        router.push(item.href, { scroll: false });
-      }
-
-      if (options?.close ?? true) {
-        closeMenu();
-      }
-    },
-    [closeMenu, onNavigate, router]
-  );
-
   const rovingFocus = useRovingTabIndex<HTMLAnchorElement>({
     containerRef: panelRef,
     itemSelector: "[data-section-navigation-link]",
-    onCurrentElementChange: React.useCallback(
-      (element: HTMLAnchorElement) => {
-        if (!activateOnFocus) {
-          return;
-        }
-
-        const item = items.find((section) => section.value === element.dataset.sectionValue);
-
-        if (!item || item.value === value) {
-          return;
-        }
-
-        navigateTo(item, { close: false });
-      },
-      [activateOnFocus, items, navigateTo, value]
-    ),
     orientation: "vertical",
   });
-  const tabRovingFocus = useRovingTabIndex<HTMLButtonElement>({
+  const tabRovingFocus = useRovingTabIndex<HTMLAnchorElement>({
     containerRef: tabListRef,
     itemSelector: "[data-section-navigation-tab]",
-    onCurrentElementChange: React.useCallback(
-      (element: HTMLButtonElement) => {
-        const item = items.find((section) => section.value === element.dataset.sectionValue);
-
-        if (!item || item.value === value) {
-          return;
-        }
-
-        navigateTo(item, { close: false });
-      },
-      [items, navigateTo, value]
-    ),
     orientation: "horizontal",
   });
 
@@ -220,13 +171,7 @@ function SectionNavigation({
                     data-section-navigation-link
                     data-section-value={item.value}
                     href={item.href}
-                    onClick={(event) => {
-                      if (onNavigate) {
-                        event.preventDefault();
-                      }
-
-                      navigateTo(item);
-                    }}
+                    onClick={() => closeMenu()}
                     scroll={false}
                     tabIndex={isCurrent ? 0 : -1}
                   >
@@ -255,15 +200,12 @@ function SectionNavigation({
               key={item.value}
               active={isCurrent}
               aria-label={getSectionAccessibleName(item)}
-              count={item.count}
               data-section-navigation-tab
               data-section-value={item.value}
+              count={item.count}
+              href={item.href}
               label={item.label}
-              onClick={() => {
-                if (!isCurrent) {
-                  navigateTo(item, { close: false });
-                }
-              }}
+              scroll={false}
               tabIndex={isCurrent ? 0 : -1}
             />
           );

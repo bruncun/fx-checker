@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link, { type LinkProps } from "next/link";
 
 import { cn } from "@/lib/utils";
 
@@ -20,38 +21,62 @@ function TabCountBadge({ className, count, ...props }: TabCountBadgeProps) {
   );
 }
 
-export interface TabButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export type TabButtonProps = {
   active?: boolean;
   count?: number;
   label: string;
+} & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | "href"> &
+  LinkProps & {
+    href: LinkProps["href"];
+  };
+
+function getTabButtonContent({
+  active,
+  count,
+  label,
+}: {
+  active: boolean;
+  count?: number;
+  label: string;
+}) {
+  return (
+    <>
+      <span className="inline-flex items-center gap-100 px-200 py-125">
+        <span>{label}</span>
+        {count !== undefined ? <TabCountBadge count={count} /> : null}
+      </span>
+      <span aria-hidden className={cn("h-025 bg-transparent", active && "bg-lime-500")} />
+    </>
+  );
+}
+
+function getTabButtonClassName(className: string | undefined) {
+  return cn(
+    "inline-flex h-[42px] flex-col items-stretch text-preset-3 text-neutral-50 uppercase focus-visible:rounded-4 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-900)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
+    className
+  );
 }
 
 function TabButton({
   active = false,
   className,
   count,
+  href,
   label,
   role = "tab",
-  type = "button",
   ...props
 }: TabButtonProps) {
   return (
-    <button
+    <Link
       aria-selected={active}
-      className={cn(
-        "inline-flex h-[42px] flex-col items-stretch text-preset-3 text-neutral-50 uppercase focus-visible:rounded-4 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-900)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
-        className
-      )}
+      className={getTabButtonClassName(className)}
+      href={href}
       role={role}
-      type={type}
       {...props}
+      prefetch
     >
-      <span className="inline-flex items-center gap-100 px-200 py-125">
-        <span>{label}</span>
-        {count !== undefined ? <TabCountBadge count={count} /> : null}
-      </span>
-      <span aria-hidden className={cn("h-025 bg-transparent", active && "bg-lime-500")} />
-    </button>
+      {getTabButtonContent({ active, count, label })}
+    </Link>
   );
 }
 

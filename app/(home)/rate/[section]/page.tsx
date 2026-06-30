@@ -22,16 +22,8 @@ function RateDetailsPlaceholder({ label }: { label: string }) {
 }
 
 function getRateDetailsContent(section: RateDetailsSection) {
-  if (section === "compare") {
-    return <RateDetailsPlaceholder label="Compare" />;
-  }
-
-  if (section === "favorites") {
-    return <RateDetailsPlaceholder label="Favorites" />;
-  }
-
-  if (section === "log") {
-    return <RateDetailsPlaceholder label="Log" />;
+  if (section === "compare" || section === "favorites" || section === "log") {
+    return null;
   }
 
   notFound();

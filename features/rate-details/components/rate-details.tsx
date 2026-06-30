@@ -1,8 +1,8 @@
 "use client";
 
 import { SectionNavigation, type SectionNavigationItem } from "@/components/ui/section-navigation";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useMemo, type ReactNode } from "react";
 
 export type RateDetailsSection = "compare" | "favorites" | "history" | "log";
 
@@ -31,10 +31,23 @@ function getRateDetailsSectionFromPathname(pathname: string | null): RateDetails
   return "history";
 }
 
+function appendSearchParams(href: string, searchParams: string) {
+  return searchParams ? `${href}?${searchParams}` : href;
+}
+
 function RateDetails({ children }: RateDetailsProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
   const selectedSection = getRateDetailsSectionFromPathname(pathname);
-  const rateDetailsSections: SectionNavigationItem[] = [...rateDetailsSectionDefinitions];
+  const rateDetailsSections: SectionNavigationItem[] = useMemo(
+    () =>
+      rateDetailsSectionDefinitions.map((section) => ({
+        ...section,
+        href: appendSearchParams(section.href, searchParamsString),
+      })),
+    [searchParamsString]
+  );
 
   return (
     <section aria-label="Rate details" className="uppercase">

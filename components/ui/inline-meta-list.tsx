@@ -4,19 +4,28 @@ import { cn } from "@/lib/utils";
 
 type InlineMetaListProps = {
   "aria-label"?: string;
+  "aria-live"?: "assertive" | "off" | "polite";
+  "aria-atomic"?: boolean | "false" | "true";
   className?: string;
   items: ReactNode[];
   separatorClassName?: string;
 };
 
 function InlineMetaList({
+  "aria-atomic": ariaAtomic,
   "aria-label": ariaLabel,
+  "aria-live": ariaLive,
   className,
   items,
   separatorClassName,
 }: InlineMetaListProps) {
   return (
-    <ul aria-label={ariaLabel} className={cn("flex items-center", className)}>
+    <ul
+      aria-atomic={ariaAtomic}
+      aria-label={ariaLabel}
+      aria-live={ariaLive}
+      className={cn("flex items-center", className)}
+    >
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 ? (

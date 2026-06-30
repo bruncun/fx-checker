@@ -1,15 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
-
 import { TabButton } from "@/components/ui/tab-button";
 
 const meta = {
-  title: "Design System/Tab Button",
+  title: "Design System/Tab",
   component: TabButton,
   args: {
     count: 4,
+    href: "/",
     label: "History",
-    onClick: fn(),
+    scroll: false,
   },
   parameters: {
     layout: "centered",

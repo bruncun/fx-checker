@@ -5,6 +5,7 @@ import type { AvailableCurrency } from "@/features/converter/currencies";
 import { Header } from "@/features/header";
 import { LiveRateList, type LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
@@ -51,6 +52,54 @@ function getDefaultCurrencyPair(currencies: AvailableCurrency[]) {
   };
 }
 
+function getSelectedCurrencyPairFromParams(
+  currencies: AvailableCurrency[],
+  searchParams: URLSearchParams
+) {
+  const defaultCurrencyPair = getDefaultCurrencyPair(currencies);
+  const sendCurrency = getCurrencyByCode(currencies, searchParams.get("from")?.toUpperCase() ?? "");
+  const receiveCurrency = getCurrencyByCode(
+    currencies,
+    searchParams.get("to")?.toUpperCase() ?? ""
+  );
+
+  return {
+    sendCurrency: sendCurrency ?? defaultCurrencyPair.sendCurrency,
+    receiveCurrency: receiveCurrency ?? defaultCurrencyPair.receiveCurrency,
+  };
+}
+
+function getCurrencyPairUrl({
+  pathname,
+  receiveCurrency,
+  searchParams,
+  sendCurrency,
+}: {
+  pathname: string;
+  receiveCurrency: SelectedCurrency;
+  searchParams: URLSearchParams;
+  sendCurrency: SelectedCurrency;
+}) {
+  const nextSearchParams = new URLSearchParams(searchParams);
+
+  nextSearchParams.set("from", sendCurrency.currencyCode);
+  nextSearchParams.set("to", receiveCurrency.currencyCode);
+
+  const queryString = nextSearchParams.toString();
+
+  return queryString ? `${pathname}?${queryString}` : pathname;
+}
+
+function getSelectedCurrencyPairKey({
+  receiveCurrency,
+  sendCurrency,
+}: {
+  receiveCurrency: SelectedCurrency;
+  sendCurrency: SelectedCurrency;
+}) {
+  return `${sendCurrency.currencyCode}/${receiveCurrency.currencyCode}`;
+}
+
 export function HomePageContent({
   availableCurrencies,
   children,
@@ -58,11 +107,49 @@ export function HomePageContent({
   liveRates,
   rates,
 }: HomePageContentProps) {
-  const defaultCurrencyPair = useMemo(
-    () => getDefaultCurrencyPair(availableCurrencies),
-    [availableCurrencies]
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const selectedCurrencyPairFromUrl = useMemo(
+    () =>
+      getSelectedCurrencyPairFromParams(
+        availableCurrencies,
+        new URLSearchParams(searchParamsString)
+      ),
+    [availableCurrencies, searchParamsString]
   );
-  const [selectedCurrencies, setSelectedCurrencies] = useState(defaultCurrencyPair);
+  const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
+  const [optimisticSelectedCurrencies, setOptimisticSelectedCurrencies] = useState(() => ({
+    currencies: selectedCurrencyPairFromUrl,
+    urlKey: selectedCurrencyPairUrlKey,
+  }));
+  const selectedCurrencies =
+    optimisticSelectedCurrencies.urlKey === selectedCurrencyPairUrlKey
+      ? optimisticSelectedCurrencies.currencies
+      : selectedCurrencyPairFromUrl;
+
+  function updateSelectedCurrencies(currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) {
+    setOptimisticSelectedCurrencies({
+      currencies,
+      urlKey: selectedCurrencyPairUrlKey,
+    });
+
+    const nextUrl = getCurrencyPairUrl({
+      pathname,
+      receiveCurrency: currencies.receiveCurrency,
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency: currencies.sendCurrency,
+    });
+    const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
+
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }
 
   function selectLiveRate(rate: LiveRate) {
     const [sendCurrencyCode, receiveCurrencyCode] = rate.pair.split("/");
@@ -78,7 +165,7 @@ export function HomePageContent({
       return;
     }
 
-    setSelectedCurrencies({ sendCurrency, receiveCurrency });
+    updateSelectedCurrencies({ sendCurrency, receiveCurrency });
   }
 
   return (
@@ -91,7 +178,7 @@ export function HomePageContent({
           rates={rates}
           sendCurrency={selectedCurrencies.sendCurrency}
           receiveCurrency={selectedCurrencies.receiveCurrency}
-          onSelectedCurrenciesChange={setSelectedCurrencies}
+          onSelectedCurrenciesChange={updateSelectedCurrencies}
         />
         <div className="mt-500 lg:mt-400">{children}</div>
       </div>

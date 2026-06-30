@@ -5,21 +5,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RateDetails } from "./rate-details";
 
-const { routerPush, testPathname } = vi.hoisted(() => ({
-  routerPush: vi.fn(),
+const { testPathname, testSearchParams } = vi.hoisted(() => ({
   testPathname: { current: "/" },
+  testSearchParams: { current: "" },
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => testPathname.current,
-  useRouter: () => ({
-    push: routerPush,
-  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
 afterEach(() => {
   testPathname.current = "/";
-  routerPush.mockClear();
+  testSearchParams.current = "";
   cleanup();
 });
 
@@ -37,6 +35,8 @@ describe("RateDetails", () => {
   });
 
   it("links nested sections through route segments without scrolling the page", () => {
+    testSearchParams.current = "from=GBP&to=USD";
+
     render(
       <RateDetails>
         <section aria-label="Rate history" />
@@ -46,7 +46,7 @@ describe("RateDetails", () => {
     fireEvent.click(screen.getByRole("button", { name: "Rate details sections: History" }));
     const compareLink = screen.getByRole("link", { name: "Compare" });
 
-    expect(compareLink.getAttribute("href")).toBe("/rate/compare");
+    expect(compareLink.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
   });
 
   it("moves focus through the mobile menu without activating a route", () => {
@@ -63,7 +63,6 @@ describe("RateDetails", () => {
     fireEvent.keyDown(historyLink, { key: "ArrowDown" });
 
     expect(document.activeElement).toBe(screen.getByRole("link", { name: "Compare" }));
-    expect(routerPush).not.toHaveBeenCalled();
   });
 
   it("renders the selected nested section from the route", () => {
@@ -78,5 +77,22 @@ describe("RateDetails", () => {
     expect(screen.getByRole("button", { name: "Rate details sections: Compare" })).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
     expect(screen.getByRole("region", { name: "Compare" })).toBeTruthy();
+  });
+
+  it("renders desktop section tabs as route links", () => {
+    testPathname.current = "/rate/compare";
+    testSearchParams.current = "from=GBP&to=USD";
+
+    render(
+      <RateDetails>
+        <section aria-label="Compare" />
+      </RateDetails>
+    );
+
+    const historyTab = screen.getByRole("tab", { name: "History" });
+    const compareTab = screen.getByRole("tab", { name: "Compare" });
+
+    expect(historyTab.getAttribute("href")).toBe("/?from=GBP&to=USD");
+    expect(compareTab.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
   });
 });
