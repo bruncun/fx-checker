@@ -240,12 +240,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
           ))}
         </div>
       </div>
-      <p
-        id="rate-history-chart-summary"
-        className="sr-only"
-        aria-live="polite"
-        aria-atomic="true"
-      >
+      <p id="rate-history-chart-summary" className="sr-only" aria-live="polite" aria-atomic="true">
         {range} {pair} moved from {firstPoint.rate.toFixed(4)} on{" "}
         {formatDateAxisLabel(firstPoint.date)} to {lastPoint.rate.toFixed(4)} on{" "}
         {formatDateAxisLabel(lastPoint.date)}. The highest displayed rate is{" "}

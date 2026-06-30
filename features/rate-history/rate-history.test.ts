@@ -42,7 +42,9 @@ describe("rate history derivation", () => {
       date: "2026-05-19",
       rate: 0.64,
     });
-    expect(history ? getRateHistoryStats(getRateHistoryRangePoints(history.points, "1D")) : []).toEqual([
+    expect(
+      history ? getRateHistoryStats(getRateHistoryRangePoints(history.points, "1D")) : []
+    ).toEqual([
       { label: "Open", value: "0.6720" },
       { label: "Last", value: "0.7167" },
       { direction: "up", label: "Change", showIndicator: false, value: "+0.0447" },
@@ -61,7 +63,9 @@ describe("rate history derivation", () => {
       { date: "2026-06-18", rate: 1 },
       { date: "2026-06-19", rate: 1 },
     ]);
-    expect(history ? getRateHistoryStats(getRateHistoryRangePoints(history.points, "1D"))[2] : null).toEqual({
+    expect(
+      history ? getRateHistoryStats(getRateHistoryRangePoints(history.points, "1D"))[2] : null
+    ).toEqual({
       direction: "up",
       label: "Change",
       showIndicator: false,
