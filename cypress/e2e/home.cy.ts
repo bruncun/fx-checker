@@ -93,10 +93,9 @@ describe("home page", () => {
     cy.visit("/");
 
     cy.findByRole("button", { name: "Select send currency" }).then(($trigger) => {
-      const triggerBottom = $trigger[0]!.getBoundingClientRect().bottom;
-
-      cy.wrap($trigger).click();
+      cy.wrap($trigger).click({ scrollBehavior: false });
       cy.findByRole("dialog", { name: "Currency picker" }).should(($dialog) => {
+        const triggerBottom = $trigger[0]!.getBoundingClientRect().bottom;
         const dialogRect = $dialog[0]!.getBoundingClientRect();
         const viewportHeight = $dialog[0]!.ownerDocument.defaultView!.innerHeight;
 
