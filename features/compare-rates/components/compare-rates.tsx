@@ -4,7 +4,11 @@ import * as React from "react";
 
 import { Flag } from "@/components/ui/flag";
 import { FavoriteButton } from "@/components/ui/favorite-button";
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
+import {
+  RateDetailsList,
+  RateDetailsTreeGrid,
+  RateDetailsTreeGridRow,
+} from "@/components/ui/rate-details-list";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import {
   convertAmount,
@@ -75,7 +79,6 @@ function CompareRateItem({
   rate,
   tabIndex,
 }: CompareRateItemProps) {
-  const favoriteButtonRef = React.useRef<HTMLButtonElement>(null);
   const pair = {
     fromCurrency: fromCurrencyCode,
     toCurrency: currency.code,
@@ -87,56 +90,30 @@ function CompareRateItem({
     onCompareCurrencySelect(currency);
   }
 
-  function handleRowKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>) {
-    if (event.target !== event.currentTarget) {
-      return;
-    }
-
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      selectCompareCurrency();
-      return;
-    }
-
-    if (event.key === "Tab" && !event.shiftKey) {
-      event.preventDefault();
-      favoriteButtonRef.current?.focus({ preventScroll: true });
-      return;
-    }
-
-    if (event.key === "ArrowRight" || event.key === "F2") {
-      event.preventDefault();
-      favoriteButtonRef.current?.focus({ preventScroll: true });
-    }
-  }
-
-  function handleFavoriteKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
-    if (
-      event.key !== "ArrowLeft" &&
-      event.key !== "Escape" &&
-      event.key !== "F2" &&
-      (event.key !== "Tab" || !event.shiftKey)
-    ) {
-      return;
-    }
-
-    const row = event.currentTarget.closest<HTMLTableRowElement>("[data-compare-rate-row]");
-
-    event.preventDefault();
-    row?.focus({ preventScroll: true });
-  }
-
   return (
-    <tr
+    <RateDetailsTreeGridRow
       aria-label={rowLabel}
-      aria-level={1}
-      aria-selected={isSelected}
-      className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-x-125 rounded-16 bg-neutral-600 px-150 py-150 text-left shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] outline-none hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-300))] focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] sm:gap-x-250 sm:px-200"
-      data-compare-rate-code={currency.code}
-      data-compare-rate-row
-      onClick={selectCompareCurrency}
-      onKeyDown={handleRowKeyDown}
-      role="row"
+      action={(actionProps) => (
+        <FavoriteButton
+          {...actionProps}
+          aria-label={
+            isFavorited
+              ? `Remove ${fromCurrencyCode}/${currency.code} from favorites`
+              : `Favorite ${fromCurrencyCode}/${currency.code}`
+          }
+          onClick={(event) => {
+            event.stopPropagation();
+            onFavoriteToggle(pair);
+          }}
+          pinned={isFavorited}
+          variant="icon"
+          data-compare-favorite-button
+        />
+      )}
+      gridClassName="grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+      isSelected={isSelected}
+      onSelect={selectCompareCurrency}
+      rowId={currency.code}
       tabIndex={tabIndex}
     >
       <td className="block" role="gridcell">
@@ -152,31 +129,11 @@ function CompareRateItem({
         <span className="block truncate text-preset-3 text-neutral-50">{amount}</span>
         <span className="mt-075 block text-preset-6 text-neutral-200">@ {rate}</span>
       </td>
-      <td className="block" role="gridcell">
-        <FavoriteButton
-          aria-label={
-            isFavorited
-              ? `Remove ${fromCurrencyCode}/${currency.code} from favorites`
-              : `Favorite ${fromCurrencyCode}/${currency.code}`
-          }
-          onClick={(event) => {
-            event.stopPropagation();
-            onFavoriteToggle(pair);
-          }}
-          onKeyDown={handleFavoriteKeyDown}
-          pinned={isFavorited}
-          ref={favoriteButtonRef}
-          tabIndex={-1}
-          variant="icon"
-          data-compare-favorite-button
-        />
-      </td>
-    </tr>
+    </RateDetailsTreeGridRow>
   );
 }
 
 function CompareRates() {
-  const treeGridRef = React.useRef<HTMLTableElement>(null);
   const {
     amount,
     amountSource,
@@ -218,14 +175,6 @@ function CompareRates() {
   const tabStopCode = compareRates.some((item) => item.currency.code === preferredTabStopCode)
     ? preferredTabStopCode
     : (compareRates[0]?.currency.code ?? "");
-  const rovingFocus = useRovingTabIndex<HTMLTableRowElement>({
-    containerRef: treeGridRef,
-    itemSelector: "[data-compare-rate-row]",
-    onCurrentElementChange: (row) => {
-      setPreferredTabStopCode(row.dataset.compareRateCode ?? "");
-    },
-    orientation: "vertical",
-  });
 
   function selectCompareCurrency(currency: AvailableCurrency) {
     onCompareCurrencySelect({
@@ -235,26 +184,18 @@ function CompareRates() {
     setPreferredTabStopCode(currency.code);
   }
 
-  function handleTreeGridKeyDown(event: React.KeyboardEvent<HTMLTableElement>) {
-    const target = event.target as HTMLElement;
-
-    if (target.closest("[data-compare-favorite-button]")) {
-      return;
-    }
-
-    rovingFocus.handleKeyDown(event);
-  }
-
   return (
-    <section
+    <RateDetailsList
       aria-label="Compare"
-      className="rounded-20 bg-neutral-700 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:p-250"
-    >
-      <header className="pb-200 uppercase sm:flex sm:items-center sm:justify-between sm:pb-250">
-        <h2
-          id="compare-heading"
-          className="flex min-w-0 flex-wrap gap-x-125 text-preset-4 text-neutral-200"
-        >
+      countClassName="mt-125 sm:mt-0"
+      countSlot={
+        <p className="text-preset-5 text-neutral-50 opacity-70">{compareRates.length} Pairs</p>
+      }
+      headerClassName="block sm:flex sm:items-center sm:justify-between"
+      headingId="compare-heading"
+      headingClassName="flex min-w-0 flex-wrap gap-x-125 text-preset-4 text-neutral-200 items-baseline"
+      headingSlot={
+        <>
           <span>Multi-Currency</span>
           <span className="inline-flex min-w-0 gap-125 text-preset-3-medium text-neutral-50">
             <span className="max-w-[12ch] truncate sm:max-w-none">
@@ -262,20 +203,15 @@ function CompareRates() {
             </span>
             <span className="shrink-0">From {sendCurrency.currencyCode}</span>
           </span>
-        </h2>
-        <p className="mt-125 text-preset-5 text-neutral-50 opacity-70 sm:mt-0">
-          {compareRates.length} Pairs
-        </p>
-      </header>
-      <table
-        aria-labelledby="compare-heading"
-        className="block w-full border-separate border-spacing-y-150"
-        onKeyDown={handleTreeGridKeyDown}
-        ref={treeGridRef}
-        role="treegrid"
-      >
-        <thead className="sr-only">
-          <tr role="row">
+        </>
+      }
+    >
+      <RateDetailsTreeGrid
+        actionSelector="[data-compare-favorite-button]"
+        labelledBy="compare-heading"
+        onCurrentRowIdChange={setPreferredTabStopCode}
+        columns={
+          <>
             <th role="columnheader" scope="col">
               Flag
             </th>
@@ -288,26 +224,25 @@ function CompareRates() {
             <th role="columnheader" scope="col">
               Favorite
             </th>
-          </tr>
-        </thead>
-        <tbody className="flex flex-col gap-150" role="rowgroup">
-          {compareRates.map((item) => (
-            <CompareRateItem
-              key={item.currency.code}
-              amount={item.amount}
-              currency={item.currency}
-              favorites={favorites}
-              fromCurrencyCode={sendCurrency.currencyCode}
-              isSelected={item.currency.code === receiveCurrency.currencyCode}
-              onCompareCurrencySelect={selectCompareCurrency}
-              onFavoriteToggle={onFavoriteToggle}
-              rate={item.rate}
-              tabIndex={item.currency.code === tabStopCode ? 0 : -1}
-            />
-          ))}
-        </tbody>
-      </table>
-    </section>
+          </>
+        }
+      >
+        {compareRates.map((item) => (
+          <CompareRateItem
+            key={item.currency.code}
+            amount={item.amount}
+            currency={item.currency}
+            favorites={favorites}
+            fromCurrencyCode={sendCurrency.currencyCode}
+            isSelected={item.currency.code === receiveCurrency.currencyCode}
+            onCompareCurrencySelect={selectCompareCurrency}
+            onFavoriteToggle={onFavoriteToggle}
+            rate={item.rate}
+            tabIndex={item.currency.code === tabStopCode ? 0 : -1}
+          />
+        ))}
+      </RateDetailsTreeGrid>
+    </RateDetailsList>
   );
 }
 

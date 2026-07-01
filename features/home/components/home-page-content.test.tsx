@@ -47,6 +47,16 @@ const rates = [
   { date: "2026-06-19", base: "EUR", quote: "CAD", rate: 1.6 },
 ];
 
+const historicalRates = [
+  { date: "2026-06-18", base: "EUR", quote: "USD", rate: 1.17 },
+  { date: "2026-06-18", base: "EUR", quote: "GBP", rate: 0.849 },
+  { date: "2026-06-18", base: "EUR", quote: "JPY", rate: 183.1 },
+  { date: "2026-06-18", base: "EUR", quote: "CHF", rate: 0.941 },
+  { date: "2026-06-18", base: "EUR", quote: "AUD", rate: 1.78 },
+  { date: "2026-06-18", base: "EUR", quote: "CAD", rate: 1.59 },
+  ...rates,
+];
+
 const liveRates = [
   { pair: "EUR/USD", rate: "1.1710", change: "-0.14%", direction: "down" as const },
   { pair: "USD/JPY", rate: "156.48", change: "+0.04%", direction: "up" as const },
@@ -82,6 +92,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -109,6 +120,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -129,6 +141,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -158,6 +171,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -186,6 +200,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -216,6 +231,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -256,6 +272,7 @@ describe("HomePageContent", () => {
             toCurrency: "EUR",
           },
         ]}
+        historicalRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >

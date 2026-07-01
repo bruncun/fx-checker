@@ -13,9 +13,14 @@ export type CompareRatesPresentationValue = {
   amountSource: AmountSide;
   availableCurrencies: AvailableCurrency[];
   favorites: Favorite[];
+  historicalRates: FrankfurterRate[];
   rates: FrankfurterRate[];
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
+  onCurrencyPairSelect: (currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) => void;
   onCompareCurrencySelect: (currency: SelectedCurrency) => void;
   onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
 };
