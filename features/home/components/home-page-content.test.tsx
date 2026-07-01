@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { HomePageContent } from "./home-page-content";
@@ -10,12 +10,22 @@ const { routerReplace, testSearchParams } = vi.hoisted(() => ({
   testSearchParams: { current: "" },
 }));
 
+const { createFavorite, deleteFavorite } = vi.hoisted(() => ({
+  createFavorite: vi.fn(),
+  deleteFavorite: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({
     replace: routerReplace,
   }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
+
+vi.mock("@/features/favorites/client", () => ({
+  createFavorite,
+  deleteFavorite,
 }));
 
 const currencies = [
@@ -47,8 +57,21 @@ const liveRates = [
   { pair: "USD/CAD", rate: "1.3664", change: "+0.04%", direction: "up" as const },
 ];
 
+function createDeferred<T>() {
+  let reject!: (reason?: unknown) => void;
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, reject, resolve };
+}
+
 afterEach(() => {
   routerReplace.mockClear();
+  createFavorite.mockReset();
+  deleteFavorite.mockReset();
   testSearchParams.current = "";
   cleanup();
 });
@@ -149,5 +172,102 @@ describe("HomePageContent", () => {
     );
 
     expect(routerReplace).not.toHaveBeenCalled();
+  });
+
+  it("optimistically creates a favorite for the selected converter pair", async () => {
+    createFavorite.mockResolvedValue({
+      createdAt: "2026-06-19T00:00:00.000Z",
+      fromCurrency: "USD",
+      id: "favorite-usd-eur",
+      toCurrency: "EUR",
+    });
+
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
+    });
+    expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("keeps a created favorite optimistic while the API request is pending", async () => {
+    const favorite = {
+      createdAt: "2026-06-19T00:00:00.000Z",
+      fromCurrency: "USD",
+      id: "favorite-usd-eur",
+      toCurrency: "EUR",
+    };
+    const deferredFavorite = createDeferred<typeof favorite>();
+
+    createFavorite.mockReturnValue(deferredFavorite.promise);
+
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
+
+    await act(async () => {
+      deferredFavorite.resolve(favorite);
+      await deferredFavorite.promise;
+    });
+  });
+
+  it("optimistically deletes an existing converter favorite", async () => {
+    deleteFavorite.mockResolvedValue(undefined);
+
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        favorites={[
+          {
+            createdAt: "2026-06-19T00:00:00.000Z",
+            fromCurrency: "USD",
+            id: "favorite-usd-eur",
+            toCurrency: "EUR",
+          },
+        ]}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Favorite USD/EUR" })).toBeTruthy();
+    });
+    expect(deleteFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
   });
 });

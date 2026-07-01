@@ -273,7 +273,7 @@ function RateHistory({ history }: RateHistoryProps) {
 
   return (
     <section aria-label="Rate history" className="uppercase">
-      <div className="mt-200 sm:mt-250 lg:flex lg:items-center lg:justify-between lg:gap-400">
+      <div className="lg:flex lg:items-center lg:justify-between lg:gap-400">
         <div
           className="grid grid-cols-2 gap-125 sm:inline-grid sm:grid-cols-4 sm:gap-200"
           aria-live="polite"

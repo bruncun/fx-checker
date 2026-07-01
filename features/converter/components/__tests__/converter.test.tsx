@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 
 import { Converter, type SelectedCurrency } from "../converter";
@@ -338,5 +338,24 @@ describe("Converter", () => {
       "value",
       "137.76"
     );
+  });
+
+  it("notifies when the selected pair favorite is toggled", () => {
+    const onFavoriteToggle = vi.fn();
+
+    render(
+      <Converter
+        currencies={currencies}
+        rates={rates}
+        sendCurrency={defaultSelectedCurrencies.sendCurrency}
+        receiveCurrency={defaultSelectedCurrencies.receiveCurrency}
+        onFavoriteToggle={onFavoriteToggle}
+        onSelectedCurrenciesChange={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
+
+    expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
   });
 });

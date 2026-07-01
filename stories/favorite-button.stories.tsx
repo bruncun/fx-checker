@@ -31,3 +31,16 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+export const Icon: Story = {
+  args: {
+    variant: "icon",
+  },
+};
+
+export const IconPinned: Story = {
+  args: {
+    pinned: true,
+    variant: "icon",
+  },
+};
