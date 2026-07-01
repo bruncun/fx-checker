@@ -173,6 +173,7 @@ export async function HomePageShell({ children }: HomePageShellProps) {
       availableCurrencies={data.availableCurrencies}
       currencyCount={data.currencyCount}
       favorites={favorites}
+      historicalRates={data.historicalRates}
       liveRates={data.liveRates}
       rates={data.rates}
     >

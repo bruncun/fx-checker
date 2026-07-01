@@ -1,6 +1,7 @@
 "use client";
 
 import { SectionNavigation, type SectionNavigationItem } from "@/components/ui/section-navigation";
+import { useCompareRatesPresentation } from "@/features/compare-rates";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo, type ReactNode } from "react";
 
@@ -9,7 +10,7 @@ export type RateDetailsSection = "compare" | "favorites" | "history" | "log";
 const rateDetailsSectionDefinitions = [
   { href: "/", label: "History", value: "history" },
   { href: "/rate/compare", label: "Compare", value: "compare" },
-  { count: 10, href: "/rate/favorites", label: "Favorites", value: "favorites" },
+  { href: "/rate/favorites", label: "Favorites", value: "favorites" },
   { count: 8, href: "/rate/log", label: "Log", value: "log" },
 ] as const;
 
@@ -38,15 +39,22 @@ function appendSearchParams(href: string, searchParams: string) {
 function RateDetails({ children }: RateDetailsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { favorites } = useCompareRatesPresentation();
   const searchParamsString = searchParams.toString();
   const selectedSection = getRateDetailsSectionFromPathname(pathname);
   const rateDetailsSections: SectionNavigationItem[] = useMemo(
     () =>
       rateDetailsSectionDefinitions.map((section) => ({
         ...section,
+        count:
+          section.value === "favorites"
+            ? favorites.length
+            : "count" in section
+              ? section.count
+              : undefined,
         href: appendSearchParams(section.href, searchParamsString),
       })),
-    [searchParamsString]
+    [favorites.length, searchParamsString]
   );
 
   return (

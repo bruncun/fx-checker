@@ -86,6 +86,40 @@ function getPreviousRatesByDate(latestDate: string, historicalRates: Frankfurter
   return previousDate ? historicalRates.filter((rate) => rate.date === previousDate) : [];
 }
 
+export function deriveLiveRateForPair({
+  base,
+  historicalRates,
+  latestRates,
+  quote,
+}: {
+  base: string;
+  historicalRates: FrankfurterRate[];
+  latestRates: FrankfurterRate[];
+  quote: string;
+}): LiveRate | null {
+  const latestRatesByCurrency = getRateByCurrency(latestRates);
+  const latestDate = latestRates[0]?.date;
+  const previousRates = latestDate ? getPreviousRatesByDate(latestDate, historicalRates) : [];
+  const previousRatesByCurrency = getRateByCurrency(previousRates);
+
+  if (!latestRatesByCurrency || !previousRatesByCurrency) {
+    return null;
+  }
+
+  const currentRate = derivePairRate(latestRatesByCurrency, base, quote);
+  const previousRate = derivePairRate(previousRatesByCurrency, base, quote);
+
+  if (!currentRate || !previousRate) {
+    return null;
+  }
+
+  return {
+    pair: `${base}/${quote}`,
+    rate: formatLiveRate(currentRate),
+    ...formatChangePercent(currentRate, previousRate),
+  };
+}
+
 export function deriveLiveRates({
   historicalRates,
   latestRates,
@@ -93,29 +127,9 @@ export function deriveLiveRates({
   historicalRates: FrankfurterRate[];
   latestRates: FrankfurterRate[];
 }): LiveRate[] {
-  const latestRatesByCurrency = getRateByCurrency(latestRates);
-  const latestDate = latestRates[0]?.date;
-  const previousRates = latestDate ? getPreviousRatesByDate(latestDate, historicalRates) : [];
-  const previousRatesByCurrency = getRateByCurrency(previousRates);
-
-  if (!latestRatesByCurrency || !previousRatesByCurrency) {
-    return [];
-  }
-
   return liveRatePairs.flatMap(([base, quote]) => {
-    const currentRate = derivePairRate(latestRatesByCurrency, base, quote);
-    const previousRate = derivePairRate(previousRatesByCurrency, base, quote);
+    const rate = deriveLiveRateForPair({ base, historicalRates, latestRates, quote });
 
-    if (!currentRate || !previousRate) {
-      return [];
-    }
-
-    return [
-      {
-        pair: `${base}/${quote}`,
-        rate: formatLiveRate(currentRate),
-        ...formatChangePercent(currentRate, previousRate),
-      },
-    ];
+    return rate ? [rate] : [];
   });
 }

@@ -24,6 +24,7 @@ type HomePageContentProps = {
   children: ReactNode;
   currencyCount: number;
   favorites?: Favorite[];
+  historicalRates: FrankfurterRate[];
   liveRates: LiveRate[];
   rates: FrankfurterRate[];
 };
@@ -116,6 +117,7 @@ export function HomePageContent({
   children,
   currencyCount,
   favorites: initialFavorites = [],
+  historicalRates,
   liveRates,
   rates,
 }: HomePageContentProps) {
@@ -294,9 +296,11 @@ export function HomePageContent({
             ...converterAmount,
             availableCurrencies,
             favorites: optimisticFavorites,
+            historicalRates,
             rates,
             receiveCurrency: selectedCurrencies.receiveCurrency,
             sendCurrency: selectedCurrencies.sendCurrency,
+            onCurrencyPairSelect: updateSelectedCurrencies,
             onCompareCurrencySelect: selectCompareCurrency,
             onFavoriteToggle: toggleFavorite,
           }}

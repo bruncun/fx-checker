@@ -1,4 +1,5 @@
 import { CompareRates } from "@/features/compare-rates";
+import { FavoriteRates } from "@/features/favorites";
 import type { RateDetailsSection } from "@/features/rate-details";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -16,7 +17,11 @@ function getRateDetailsContent(section: RateDetailsSection) {
     return <CompareRates />;
   }
 
-  if (section === "favorites" || section === "log") {
+  if (section === "favorites") {
+    return <FavoriteRates />;
+  }
+
+  if (section === "log") {
     return null;
   }
 
