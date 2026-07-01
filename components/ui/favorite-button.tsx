@@ -6,6 +6,7 @@ import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface
 
 export interface FavoriteButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   pinned?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
   variant?: "default" | "icon";
 }
 
@@ -14,6 +15,7 @@ function FavoriteButton({
   className,
   disabled = false,
   pinned = false,
+  ref,
   type = "button",
   variant = "default",
   ...props
@@ -38,6 +40,7 @@ function FavoriteButton({
         className
       )}
       disabled={disabled}
+      ref={ref}
       type={type}
       {...props}
     >

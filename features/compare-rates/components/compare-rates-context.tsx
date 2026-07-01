@@ -16,6 +16,7 @@ export type CompareRatesPresentationValue = {
   rates: FrankfurterRate[];
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
+  onCompareCurrencySelect: (currency: SelectedCurrency) => void;
   onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
 };
 

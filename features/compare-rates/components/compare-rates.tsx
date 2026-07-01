@@ -1,7 +1,10 @@
 "use client";
 
+import * as React from "react";
+
 import { Flag } from "@/components/ui/flag";
 import { FavoriteButton } from "@/components/ui/favorite-button";
+import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import {
   convertAmount,
@@ -52,8 +55,11 @@ type CompareRateItemProps = {
   currency: AvailableCurrency;
   favorites: Favorite[];
   fromCurrencyCode: string;
+  isSelected: boolean;
+  onCompareCurrencySelect: (currency: AvailableCurrency) => void;
   onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
   rate: string;
+  tabIndex: 0 | -1;
 };
 
 type CompareRateItemData = Pick<CompareRateItemProps, "amount" | "currency" | "rate">;
@@ -63,47 +69,114 @@ function CompareRateItem({
   currency,
   favorites,
   fromCurrencyCode,
+  isSelected,
+  onCompareCurrencySelect,
   onFavoriteToggle,
   rate,
+  tabIndex,
 }: CompareRateItemProps) {
+  const favoriteButtonRef = React.useRef<HTMLButtonElement>(null);
   const pair = {
     fromCurrency: fromCurrencyCode,
     toCurrency: currency.code,
   };
   const isFavorited = findFavorite(favorites, pair) !== null;
+  const rowLabel = `Use ${fromCurrencyCode}/${currency.code} in converter, ${amount} ${currency.code} at ${rate}`;
+
+  function selectCompareCurrency() {
+    onCompareCurrencySelect(currency);
+  }
+
+  function handleRowKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      selectCompareCurrency();
+      return;
+    }
+
+    if (event.key === "Tab" && !event.shiftKey) {
+      event.preventDefault();
+      favoriteButtonRef.current?.focus({ preventScroll: true });
+      return;
+    }
+
+    if (event.key === "ArrowRight" || event.key === "F2") {
+      event.preventDefault();
+      favoriteButtonRef.current?.focus({ preventScroll: true });
+    }
+  }
+
+  function handleFavoriteKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (
+      event.key !== "ArrowLeft" &&
+      event.key !== "Escape" &&
+      event.key !== "F2" &&
+      (event.key !== "Tab" || !event.shiftKey)
+    ) {
+      return;
+    }
+
+    const row = event.currentTarget.closest<HTMLTableRowElement>("[data-compare-rate-row]");
+
+    event.preventDefault();
+    row?.focus({ preventScroll: true });
+  }
 
   return (
-    <li>
-      <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-x-125 rounded-16 bg-neutral-600 px-150 py-150 text-left shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:gap-x-250 sm:px-200">
+    <tr
+      aria-label={rowLabel}
+      aria-level={1}
+      aria-selected={isSelected}
+      className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-x-125 rounded-16 bg-neutral-600 px-150 py-150 text-left shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] outline-none hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-300))] focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] sm:gap-x-250 sm:px-200"
+      data-compare-rate-code={currency.code}
+      data-compare-rate-row
+      onClick={selectCompareCurrency}
+      onKeyDown={handleRowKeyDown}
+      role="row"
+      tabIndex={tabIndex}
+    >
+      <td className="block" role="gridcell">
         <Flag className="size-300" countryCode={currency.countryCode} />
-        <span className="max-w-[16ch] min-w-0 sm:max-w-none">
-          <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
-          <span className="mt-075 block truncate text-preset-5 text-neutral-200">
-            {currency.name}
-          </span>
+      </td>
+      <td className="block max-w-[16ch] min-w-0 sm:max-w-none" role="gridcell">
+        <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
+        <span className="mt-075 block truncate text-preset-5 text-neutral-200">
+          {currency.name}
         </span>
-        <span className="max-w-[16ch] min-w-0 text-right sm:max-w-none">
-          <span className="block truncate text-preset-3 text-neutral-50">{amount}</span>
-          <span className="mt-075 block text-preset-6 text-neutral-200">@ {rate}</span>
-        </span>
+      </td>
+      <td className="block max-w-[16ch] min-w-0 text-right sm:max-w-none" role="gridcell">
+        <span className="block truncate text-preset-3 text-neutral-50">{amount}</span>
+        <span className="mt-075 block text-preset-6 text-neutral-200">@ {rate}</span>
+      </td>
+      <td className="block" role="gridcell">
         <FavoriteButton
           aria-label={
             isFavorited
               ? `Remove ${fromCurrencyCode}/${currency.code} from favorites`
               : `Favorite ${fromCurrencyCode}/${currency.code}`
           }
-          onClick={() => {
+          onClick={(event) => {
+            event.stopPropagation();
             onFavoriteToggle(pair);
           }}
+          onKeyDown={handleFavoriteKeyDown}
           pinned={isFavorited}
+          ref={favoriteButtonRef}
+          tabIndex={-1}
           variant="icon"
+          data-compare-favorite-button
         />
-      </div>
-    </li>
+      </td>
+    </tr>
   );
 }
 
 function CompareRates() {
+  const treeGridRef = React.useRef<HTMLTableElement>(null);
   const {
     amount,
     amountSource,
@@ -112,8 +185,12 @@ function CompareRates() {
     rates,
     receiveCurrency,
     sendCurrency,
+    onCompareCurrencySelect,
     onFavoriteToggle,
   } = useCompareRatesPresentation();
+  const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
+    receiveCurrency.currencyCode
+  );
   const selectedExchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
@@ -138,6 +215,35 @@ function CompareRates() {
       };
     })
     .filter((item): item is CompareRateItemData => item !== null);
+  const tabStopCode = compareRates.some((item) => item.currency.code === preferredTabStopCode)
+    ? preferredTabStopCode
+    : (compareRates[0]?.currency.code ?? "");
+  const rovingFocus = useRovingTabIndex<HTMLTableRowElement>({
+    containerRef: treeGridRef,
+    itemSelector: "[data-compare-rate-row]",
+    onCurrentElementChange: (row) => {
+      setPreferredTabStopCode(row.dataset.compareRateCode ?? "");
+    },
+    orientation: "vertical",
+  });
+
+  function selectCompareCurrency(currency: AvailableCurrency) {
+    onCompareCurrencySelect({
+      countryCode: currency.countryCode,
+      currencyCode: currency.code,
+    });
+    setPreferredTabStopCode(currency.code);
+  }
+
+  function handleTreeGridKeyDown(event: React.KeyboardEvent<HTMLTableElement>) {
+    const target = event.target as HTMLElement;
+
+    if (target.closest("[data-compare-favorite-button]")) {
+      return;
+    }
+
+    rovingFocus.handleKeyDown(event);
+  }
 
   return (
     <section
@@ -161,19 +267,46 @@ function CompareRates() {
           {compareRates.length} Pairs
         </p>
       </header>
-      <ul className="flex flex-col gap-150">
-        {compareRates.map((item) => (
-          <CompareRateItem
-            key={item.currency.code}
-            amount={item.amount}
-            currency={item.currency}
-            favorites={favorites}
-            fromCurrencyCode={sendCurrency.currencyCode}
-            onFavoriteToggle={onFavoriteToggle}
-            rate={item.rate}
-          />
-        ))}
-      </ul>
+      <table
+        aria-labelledby="compare-heading"
+        className="block w-full border-separate border-spacing-y-150"
+        onKeyDown={handleTreeGridKeyDown}
+        ref={treeGridRef}
+        role="treegrid"
+      >
+        <thead className="sr-only">
+          <tr role="row">
+            <th role="columnheader" scope="col">
+              Flag
+            </th>
+            <th role="columnheader" scope="col">
+              Currency
+            </th>
+            <th role="columnheader" scope="col">
+              Converted amount
+            </th>
+            <th role="columnheader" scope="col">
+              Favorite
+            </th>
+          </tr>
+        </thead>
+        <tbody className="flex flex-col gap-150" role="rowgroup">
+          {compareRates.map((item) => (
+            <CompareRateItem
+              key={item.currency.code}
+              amount={item.amount}
+              currency={item.currency}
+              favorites={favorites}
+              fromCurrencyCode={sendCurrency.currencyCode}
+              isSelected={item.currency.code === receiveCurrency.currencyCode}
+              onCompareCurrencySelect={selectCompareCurrency}
+              onFavoriteToggle={onFavoriteToggle}
+              rate={item.rate}
+              tabIndex={item.currency.code === tabStopCode ? 0 : -1}
+            />
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }

@@ -207,6 +207,13 @@ export function HomePageContent({
     updateSelectedCurrencies({ sendCurrency, receiveCurrency });
   }
 
+  function selectCompareCurrency(receiveCurrency: SelectedCurrency) {
+    updateSelectedCurrencies({
+      sendCurrency: selectedCurrencies.sendCurrency,
+      receiveCurrency,
+    });
+  }
+
   function toggleFavorite(pair: FavoriteCurrencyPair) {
     const normalizedPair = normalizeFavoritePair(pair);
     const existingFavorite = findFavorite(optimisticFavorites, normalizedPair);
@@ -290,6 +297,7 @@ export function HomePageContent({
             rates,
             receiveCurrency: selectedCurrencies.receiveCurrency,
             sendCurrency: selectedCurrencies.sendCurrency,
+            onCompareCurrencySelect: selectCompareCurrency,
             onFavoriteToggle: toggleFavorite,
           }}
         >
