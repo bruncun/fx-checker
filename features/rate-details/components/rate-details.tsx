@@ -50,13 +50,15 @@ function RateDetails({ children }: RateDetailsProps) {
   );
 
   return (
-    <section aria-label="Rate details" className="uppercase">
+    <section aria-label="Rate details">
       <SectionNavigation
         aria-label="Rate details sections"
         items={rateDetailsSections}
         value={selectedSection}
       />
-      <div key={pathname}>{children}</div>
+      <div className="mt-200 sm:mt-250" key={pathname}>
+        {children}
+      </div>
     </section>
   );
 }
