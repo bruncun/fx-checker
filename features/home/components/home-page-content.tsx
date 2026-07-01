@@ -1,7 +1,9 @@
 "use client";
 
+import { CompareRatesProvider } from "@/features/compare-rates";
 import { Converter, type SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
+import type { AmountSide } from "@/features/converter/exchange";
 import { Header } from "@/features/header";
 import { LiveRateList, type LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -128,6 +130,13 @@ export function HomePageContent({
     optimisticSelectedCurrencies.urlKey === selectedCurrencyPairUrlKey
       ? optimisticSelectedCurrencies.currencies
       : selectedCurrencyPairFromUrl;
+  const [converterAmount, setConverterAmount] = useState<{
+    amount: string;
+    amountSource: AmountSide;
+  }>({
+    amount: "1000",
+    amountSource: "send",
+  });
 
   function updateSelectedCurrencies(currencies: {
     receiveCurrency: SelectedCurrency;
@@ -174,13 +183,26 @@ export function HomePageContent({
       <LiveRateList rates={liveRates} onRateSelect={selectLiveRate} />
       <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">
         <Converter
+          amount={converterAmount.amount}
+          amountSource={converterAmount.amountSource}
           currencies={availableCurrencies}
           rates={rates}
           sendCurrency={selectedCurrencies.sendCurrency}
           receiveCurrency={selectedCurrencies.receiveCurrency}
+          onAmountChange={setConverterAmount}
           onSelectedCurrenciesChange={updateSelectedCurrencies}
         />
-        <div className="mt-500 lg:mt-400">{children}</div>
+        <CompareRatesProvider
+          value={{
+            ...converterAmount,
+            availableCurrencies,
+            rates,
+            receiveCurrency: selectedCurrencies.receiveCurrency,
+            sendCurrency: selectedCurrencies.sendCurrency,
+          }}
+        >
+          <div className="mt-500 lg:mt-400">{children}</div>
+        </CompareRatesProvider>
       </div>
     </main>
   );

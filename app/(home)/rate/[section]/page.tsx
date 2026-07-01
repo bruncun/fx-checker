@@ -1,3 +1,4 @@
+import { CompareRates } from "@/features/compare-rates";
 import type { RateDetailsSection } from "@/features/rate-details";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -10,19 +11,12 @@ type RateDetailsRoutePageProps = {
   }>;
 };
 
-function RateDetailsPlaceholder({ label }: { label: string }) {
-  return (
-    <section
-      aria-label={label}
-      className="mt-200 min-h-[760px] rounded-16 bg-neutral-700 px-250 py-300 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))]"
-    >
-      {label}
-    </section>
-  );
-}
-
 function getRateDetailsContent(section: RateDetailsSection) {
-  if (section === "compare" || section === "favorites" || section === "log") {
+  if (section === "compare") {
+    return <CompareRates />;
+  }
+
+  if (section === "favorites" || section === "log") {
     return null;
   }
 

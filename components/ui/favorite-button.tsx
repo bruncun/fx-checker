@@ -29,6 +29,7 @@ function FavoriteButton({
       className={cn(
         interactiveSurfaceClassName,
         isIconVariant ? "p-100" : "px-150 py-100 text-preset-5-medium text-neutral-50 uppercase",
+        pinned && isIconVariant && "shadow-[inset_0_0_0_1px_hsl(var(--lime-500))]",
         className
       )}
       disabled={disabled}
