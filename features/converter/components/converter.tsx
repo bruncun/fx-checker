@@ -7,6 +7,7 @@ import { ExchangeButton } from "@/components/ui/exchange-button";
 import { FavoriteButton } from "@/components/ui/favorite-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
+import type { FavoriteCurrencyPair } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { AvailableCurrency } from "../currencies";
 import { convertAmount, getExchangeRate, formatExchangeRate, MoneyDecimal } from "../exchange";
@@ -25,7 +26,9 @@ type ConverterProps = {
   receiveCurrency: SelectedCurrency;
   rates: FrankfurterRate[];
   sendCurrency: SelectedCurrency;
+  isFavorite?: boolean;
   onAmountChange?: (value: { amount: string; amountSource: AmountSide }) => void;
+  onFavoriteToggle?: (pair: FavoriteCurrencyPair) => void;
   onSelectedCurrenciesChange: (currencies: {
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
@@ -98,7 +101,9 @@ function Converter({
   receiveCurrency,
   rates,
   sendCurrency,
+  isFavorite = false,
   onAmountChange,
+  onFavoriteToggle,
   onSelectedCurrenciesChange,
 }: ConverterProps) {
   const [internalAmount, setInternalAmount] = React.useState("");
@@ -196,7 +201,20 @@ function Converter({
               : `1 ${sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${receiveCurrency.currencyCode}`}
           </p>
           <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
-            <FavoriteButton disabled />
+            <FavoriteButton
+              aria-label={
+                isFavorite
+                  ? `Remove ${sendCurrency.currencyCode}/${receiveCurrency.currencyCode} from favorites`
+                  : `Favorite ${sendCurrency.currencyCode}/${receiveCurrency.currencyCode}`
+              }
+              pinned={isFavorite}
+              onClick={() => {
+                onFavoriteToggle?.({
+                  fromCurrency: sendCurrency.currencyCode,
+                  toCurrency: receiveCurrency.currencyCode,
+                });
+              }}
+            />
             <LogConversionButton disabled />
           </div>
         </div>

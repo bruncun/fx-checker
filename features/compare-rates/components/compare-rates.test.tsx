@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { CompareRatesProvider } from "./compare-rates-context";
 import { CompareRates, getCompareCurrencies } from "./compare-rates";
@@ -41,6 +41,15 @@ describe("CompareRates", () => {
           amount: "1000",
           amountSource: "send",
           availableCurrencies,
+          favorites: [
+            {
+              createdAt: "2026-06-19T00:00:00.000Z",
+              fromCurrency: "USD",
+              id: "favorite-gbp",
+              toCurrency: "GBP",
+            },
+          ],
+          onFavoriteToggle: vi.fn(),
           rates,
           receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
           sendCurrency: { countryCode: "us", currencyCode: "USD" },
@@ -59,8 +68,33 @@ describe("CompareRates", () => {
     expect(screen.getByText("British Pound")).toBeTruthy();
     expect(screen.getByText("736")).toBeTruthy();
     expect(screen.getByText("@ 0.7360")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Remove GBP from favorites" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Favorite CHF" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Remove USD/GBP from favorites" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Favorite USD/CHF" })).toBeTruthy();
+  });
+
+  it("notifies when a compare favorite is toggled", () => {
+    const onFavoriteToggle = vi.fn();
+
+    render(
+      <CompareRatesProvider
+        value={{
+          amount: "1000",
+          amountSource: "send",
+          availableCurrencies,
+          favorites: [],
+          onFavoriteToggle,
+          rates,
+          receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
+          sendCurrency: { countryCode: "us", currencyCode: "USD" },
+        }}
+      >
+        <CompareRates />
+      </CompareRatesProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
+
+    expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
   });
 
   it("prefers preset currencies and skips the send currency", () => {

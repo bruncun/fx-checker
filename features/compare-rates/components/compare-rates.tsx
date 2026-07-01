@@ -9,10 +9,10 @@ import {
   getExchangeRate,
   MoneyDecimal,
 } from "@/features/converter/exchange";
+import { findFavorite, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
 import { useCompareRatesPresentation } from "./compare-rates-context";
 
 const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];
-const PLACEHOLDER_FAVORITES = new Set(["GBP", "JPY", "INR", "BDT"]);
 
 function formatMoneyValue(value: string, fallback = "0") {
   if (!value) {
@@ -50,11 +50,27 @@ function getCompareCurrencies(currencies: AvailableCurrency[], sendCurrencyCode:
 type CompareRateItemProps = {
   amount: string;
   currency: AvailableCurrency;
+  favorites: Favorite[];
+  fromCurrencyCode: string;
+  onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
   rate: string;
 };
 
-function CompareRateItem({ amount, currency, rate }: CompareRateItemProps) {
-  const isFavorited = PLACEHOLDER_FAVORITES.has(currency.code);
+type CompareRateItemData = Pick<CompareRateItemProps, "amount" | "currency" | "rate">;
+
+function CompareRateItem({
+  amount,
+  currency,
+  favorites,
+  fromCurrencyCode,
+  onFavoriteToggle,
+  rate,
+}: CompareRateItemProps) {
+  const pair = {
+    fromCurrency: fromCurrencyCode,
+    toCurrency: currency.code,
+  };
+  const isFavorited = findFavorite(favorites, pair) !== null;
 
   return (
     <li>
@@ -72,8 +88,13 @@ function CompareRateItem({ amount, currency, rate }: CompareRateItemProps) {
         </span>
         <FavoriteButton
           aria-label={
-            isFavorited ? `Remove ${currency.code} from favorites` : `Favorite ${currency.code}`
+            isFavorited
+              ? `Remove ${fromCurrencyCode}/${currency.code} from favorites`
+              : `Favorite ${fromCurrencyCode}/${currency.code}`
           }
+          onClick={() => {
+            onFavoriteToggle(pair);
+          }}
           pinned={isFavorited}
           variant="icon"
         />
@@ -83,8 +104,16 @@ function CompareRateItem({ amount, currency, rate }: CompareRateItemProps) {
 }
 
 function CompareRates() {
-  const { amount, amountSource, availableCurrencies, rates, receiveCurrency, sendCurrency } =
-    useCompareRatesPresentation();
+  const {
+    amount,
+    amountSource,
+    availableCurrencies,
+    favorites,
+    rates,
+    receiveCurrency,
+    sendCurrency,
+    onFavoriteToggle,
+  } = useCompareRatesPresentation();
   const selectedExchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
@@ -108,7 +137,7 @@ function CompareRates() {
         rate: formatExchangeRate(rate),
       };
     })
-    .filter((item): item is CompareRateItemProps => item !== null);
+    .filter((item): item is CompareRateItemData => item !== null);
 
   return (
     <section
@@ -138,6 +167,9 @@ function CompareRates() {
             key={item.currency.code}
             amount={item.amount}
             currency={item.currency}
+            favorites={favorites}
+            fromCurrencyCode={sendCurrency.currencyCode}
+            onFavoriteToggle={onFavoriteToggle}
             rate={item.rate}
           />
         ))}
