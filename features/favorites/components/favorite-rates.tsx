@@ -147,9 +147,7 @@ function FavoriteRates() {
         <p className="text-preset-5 text-neutral-50 opacity-70">{favorites.length} Favorites</p>
       }
       headingId="favorites-heading"
-      headingSlot={
-        <span className="block text-preset-3-medium text-neutral-50">Pinned Pairs</span>
-      }
+      headingSlot={<span className="block text-preset-3-medium text-neutral-50">Pinned Pairs</span>}
     >
       {favoriteRates.length > 0 ? (
         <RateDetailsTreeGrid
