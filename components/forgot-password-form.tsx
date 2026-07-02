@@ -37,17 +37,13 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 
   return (
     <div className={cn("flex flex-col", className)} {...props}>
-      {success ? (
+      {true ? (
         <>
           <CardTitle>Check Your Email</CardTitle>
-          <Card>
-            <CardContent>
-              <p className="text-center text-preset-4 text-neutral-200">
-                If you registered using your email and password, you will receive a password reset
-                email.
-              </p>
-            </CardContent>
-          </Card>
+          <p className="text-preset-3-mobile text-center text-neutral-200">
+            If you registered using your email and password, you will receive a password reset
+            email.
+          </p>
         </>
       ) : (
         <>
