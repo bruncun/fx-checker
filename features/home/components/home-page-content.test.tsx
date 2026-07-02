@@ -151,35 +151,7 @@ describe("HomePageContent", () => {
     );
   });
 
-  it("updates the converter optimistically and writes URL state when a live rate is selected", () => {
-    render(
-      <HomePageContent
-        availableCurrencies={currencies}
-        currencyCount={56}
-        historicalRates={historicalRates}
-        liveRates={liveRates}
-        rates={rates}
-      >
-        <section aria-label="Rate details" />
-      </HomePageContent>
-    );
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Use GBP/USD in converter, rate 1.3776, down -0.22%",
-      })
-    );
-
-    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
-      "GBP"
-    );
-    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
-      "USD"
-    );
-    expect(routerReplace).toHaveBeenCalledWith("/?from=GBP&to=USD", { scroll: false });
-  });
-
-  it("does not replace the URL when the selected pair already matches URL state", () => {
+  it("does not replace the URL on initial render when URL state is present", () => {
     testSearchParams.current = "from=GBP&to=USD";
 
     render(
@@ -192,12 +164,6 @@ describe("HomePageContent", () => {
       >
         <section aria-label="Rate details" />
       </HomePageContent>
-    );
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Use GBP/USD in converter, rate 1.3776, down -0.22%",
-      })
     );
 
     expect(routerReplace).not.toHaveBeenCalled();

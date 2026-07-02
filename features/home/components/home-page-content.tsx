@@ -225,23 +225,6 @@ export function HomePageContent({
     }
   }
 
-  function selectLiveRate(rate: LiveRate) {
-    const [sendCurrencyCode, receiveCurrencyCode] = rate.pair.split("/");
-
-    if (!sendCurrencyCode || !receiveCurrencyCode) {
-      return;
-    }
-
-    const sendCurrency = getCurrencyByCode(availableCurrencies, sendCurrencyCode);
-    const receiveCurrency = getCurrencyByCode(availableCurrencies, receiveCurrencyCode);
-
-    if (!sendCurrency || !receiveCurrency) {
-      return;
-    }
-
-    updateSelectedCurrencies({ sendCurrency, receiveCurrency });
-  }
-
   function selectCompareCurrency(receiveCurrency: SelectedCurrency) {
     updateSelectedCurrencies({
       sendCurrency: selectedCurrencies.sendCurrency,
@@ -391,7 +374,7 @@ export function HomePageContent({
   return (
     <main className="text-white min-h-screen bg-neutral-900">
       <Header currencyCount={currencyCount} />
-      <LiveRateList rates={liveRates} onRateSelect={selectLiveRate} />
+      <LiveRateList rates={liveRates} />
       <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">
         <Converter
           amount={converterAmount.amount}
