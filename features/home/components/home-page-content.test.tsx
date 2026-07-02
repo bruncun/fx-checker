@@ -115,7 +115,7 @@ describe("HomePageContent", () => {
       </HomePageContent>
     );
 
-    expect(screen.getByRole("link", { name: "FX Checker" })).toBeTruthy();
+    expect(screen.getByAltText("FX Checker")).toBeTruthy();
     expect(screen.getByRole("list", { name: "Exchange rate data stats" }).textContent).toContain(
       "56 Currencies"
     );

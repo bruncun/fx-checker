@@ -26,7 +26,7 @@ describe("home page", () => {
 
       cy.visit("/");
 
-      cy.findByRole("link", { name: "FX Checker" }).should("be.visible");
+      cy.findByAltText("FX Checker").should("be.visible");
       cy.findByRole("list", { name: "Exchange rate data stats" }).within(() => {
         cy.contains(`${currencyCount} Currencies`).should("be.visible");
         cy.contains("EOD").should("be.visible");
