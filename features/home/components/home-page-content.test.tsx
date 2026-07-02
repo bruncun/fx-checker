@@ -15,6 +15,12 @@ const { createFavorite, deleteFavorite } = vi.hoisted(() => ({
   deleteFavorite: vi.fn(),
 }));
 
+const { createConversion, deleteAllConversions, deleteConversion } = vi.hoisted(() => ({
+  createConversion: vi.fn(),
+  deleteAllConversions: vi.fn(),
+  deleteConversion: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({
@@ -26,6 +32,12 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/favorites/client", () => ({
   createFavorite,
   deleteFavorite,
+}));
+
+vi.mock("@/features/conversion-log/client", () => ({
+  createConversion,
+  deleteAllConversions,
+  deleteConversion,
 }));
 
 const currencies = [
@@ -81,6 +93,9 @@ function createDeferred<T>() {
 afterEach(() => {
   routerReplace.mockClear();
   createFavorite.mockReset();
+  createConversion.mockReset();
+  deleteAllConversions.mockReset();
+  deleteConversion.mockReset();
   deleteFavorite.mockReset();
   testSearchParams.current = "";
   cleanup();
@@ -286,5 +301,42 @@ describe("HomePageContent", () => {
       expect(screen.getByRole("button", { name: "Favorite USD/EUR" })).toBeTruthy();
     });
     expect(deleteFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("logs the current converter amounts optimistically", async () => {
+    createConversion.mockResolvedValue({
+      createdAt: "2026-06-19T00:00:00.000Z",
+      fromCurrency: "USD",
+      id: "conversion-usd-eur",
+      receiveAmount: "85.4",
+      sendAmount: "100",
+      toCurrency: "EUR",
+    });
+
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        historicalRates={historicalRates}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <section aria-label="Rate details" />
+      </HomePageContent>
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "100" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Log 100 USD to 85.4 EUR" }));
+
+    await waitFor(() => {
+      expect(createConversion).toHaveBeenCalledWith({
+        fromCurrency: "USD",
+        receiveAmount: "85.4",
+        sendAmount: "100",
+        toCurrency: "EUR",
+      });
+    });
   });
 });

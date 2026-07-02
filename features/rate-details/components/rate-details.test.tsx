@@ -30,6 +30,7 @@ function renderRateDetails(children: ReactNode, favoritesCount = 0) {
         amount: "1000",
         amountSource: "send",
         availableCurrencies: [],
+        conversions: [],
         favorites: Array.from({ length: favoritesCount }, (_, index) => ({
           createdAt: "2026-06-19T00:00:00.000Z",
           fromCurrency: "USD",
@@ -38,6 +39,10 @@ function renderRateDetails(children: ReactNode, favoritesCount = 0) {
         })),
         historicalRates: [],
         onCompareCurrencySelect: vi.fn(),
+        onConversionCreate: vi.fn(),
+        onConversionDelete: vi.fn(),
+        onConversionsClear: vi.fn(),
+        onConversionSelect: vi.fn(),
         onCurrencyPairSelect: vi.fn(),
         onFavoriteToggle: vi.fn(),
         rates: [],

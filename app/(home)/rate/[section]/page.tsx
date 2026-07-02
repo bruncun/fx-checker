@@ -1,4 +1,5 @@
 import { CompareRates } from "@/features/compare-rates";
+import { ConversionLog } from "@/features/conversion-log";
 import { FavoriteRates } from "@/features/favorites";
 import type { RateDetailsSection } from "@/features/rate-details";
 import { notFound } from "next/navigation";
@@ -22,7 +23,7 @@ function getRateDetailsContent(section: RateDetailsSection) {
   }
 
   if (section === "log") {
-    return null;
+    return <ConversionLog />;
   }
 
   notFound();
