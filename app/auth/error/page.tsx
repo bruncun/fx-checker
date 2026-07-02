@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthShell } from "@/components/auth-shell";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Suspense } from "react";
 
 async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: string }> }) {
@@ -7,9 +8,9 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: s
   return (
     <>
       {params?.error ? (
-        <p className="text-sm text-muted-foreground">Code error: {params.error}</p>
+        <p className="text-center text-preset-4 text-neutral-200">Code error: {params.error}</p>
       ) : (
-        <p className="text-sm text-muted-foreground">An unspecified error occurred.</p>
+        <p className="text-center text-preset-4 text-neutral-200">An unspecified error occurred.</p>
       )}
     </>
   );
@@ -17,21 +18,17 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: s
 
 export default function Page({ searchParams }: { searchParams: Promise<{ error: string }> }) {
   return (
-    <div className="p-6 md:p-10 flex min-h-svh w-full items-center justify-center">
-      <div className="w-full max-w-sm">
-        <div className="gap-6 flex flex-col">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Sorry, something went wrong.</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Suspense>
-                <ErrorContent searchParams={searchParams} />
-              </Suspense>
-            </CardContent>
-          </Card>
-        </div>
+    <AuthShell>
+      <div className="flex flex-col">
+        <CardTitle>Sorry, something went wrong.</CardTitle>
+        <Card>
+          <CardContent>
+            <Suspense>
+              <ErrorContent searchParams={searchParams} />
+            </Suspense>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </AuthShell>
   );
 }

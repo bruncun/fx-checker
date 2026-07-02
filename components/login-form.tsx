@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -47,16 +47,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   };
 
   return (
-    <div className={cn("gap-6 flex flex-col", className)} {...props}>
+    <div className={cn("flex flex-col", className)} {...props}>
+      <CardTitle>Login</CardTitle>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
-        </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
-            <div className="gap-6 flex flex-col">
-              <div className="gap-2 grid">
+            <div className="flex flex-col gap-250">
+              <div className="flex flex-col gap-100">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -67,12 +64,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="gap-2 grid">
-                <div className="flex items-center">
+              <div className="flex flex-col gap-100">
+                <div className="flex items-center justify-between pe-100">
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="text-sm ml-auto inline-block underline-offset-4 hover:underline"
+                    className="ml-auto inline-block rounded-4 text-preset-5-medium text-neutral-50 underline-offset-4 hover:underline hover:decoration-neutral-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500"
                   >
                     Forgot your password?
                   </Link>
@@ -85,19 +82,35 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
+              <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <div className="mt-4 text-sm text-center">
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/sign-up" className="underline underline-offset-4">
-                Sign up
-              </Link>
-            </div>
           </form>
         </CardContent>
+        <svg width="100%" height="1">
+          <line
+            x1="0"
+            y1="0"
+            x2="100%"
+            y2="0"
+            className="stroke-neutral-500"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+        </svg>
+        <CardFooter>
+          <p className="w-full text-center text-preset-5-medium text-neutral-200">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/auth/sign-up"
+              className="rounded-4 text-neutral-50 underline-offset-4 hover:underline hover:decoration-neutral-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500"
+            >
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

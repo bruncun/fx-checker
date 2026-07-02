@@ -8,16 +8,34 @@ export type LogoProps = Omit<
   "alt" | "height" | "src" | "width"
 > & {
   alt?: string;
+  variant?: "full" | "mark";
 };
 
-function Logo({ alt = "FX Checker", className, ...props }: LogoProps) {
+const logoVariants = {
+  full: {
+    className: "h-250 w-auto sm:h-[26px]",
+    height: 26,
+    src: "/images/logo.svg",
+    width: 139,
+  },
+  mark: {
+    className: "size-[26px]",
+    height: 26,
+    src: "/images/auth-logo.svg",
+    width: 26,
+  },
+} as const;
+
+function Logo({ alt = "FX Checker", className, variant = "full", ...props }: LogoProps) {
+  const logo = logoVariants[variant];
+
   return (
     <Image
       alt={alt}
-      className={cn("h-250 w-auto sm:h-[26px]", className)}
-      height={26}
-      src="/images/logo.svg"
-      width={139}
+      className={cn(logo.className, className)}
+      height={logo.height}
+      src={logo.src}
+      width={logo.width}
       {...props}
     />
   );

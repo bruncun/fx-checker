@@ -18,7 +18,7 @@ function SearchInput({
   return (
     <div
       className={cn(
-        "flex items-center gap-125 rounded-6 border border-neutral-200 p-150 transition-colors focus-within:border-lime-500",
+        "flex items-center gap-125 rounded-6 border border-neutral-200 p-150 focus-within:border-lime-500",
         "has-[:disabled]:opacity-50",
         className
       )}

@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -48,16 +48,13 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   };
 
   return (
-    <div className={cn("gap-6 flex flex-col", className)} {...props}>
+    <div className={cn("flex flex-col", className)} {...props}>
+      <CardTitle>Sign up</CardTitle>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
-        </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
-            <div className="gap-6 flex flex-col">
-              <div className="gap-2 grid">
+            <div className="flex flex-col gap-250">
+              <div className="flex flex-col gap-100">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -68,10 +65,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="gap-2 grid">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+              <div className="flex flex-col gap-100">
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -80,10 +75,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div className="gap-2 grid">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
+              <div className="flex flex-col gap-100">
+                <Label htmlFor="repeat-password">Repeat Password</Label>
                 <Input
                   id="repeat-password"
                   type="password"
@@ -92,19 +85,35 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
+              <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
-            <div className="mt-4 text-sm text-center">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
-              </Link>
-            </div>
           </form>
         </CardContent>
+        <svg width="100%" height="1">
+          <line
+            x1="0"
+            y1="0"
+            x2="100%"
+            y2="0"
+            className="stroke-neutral-500"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+        </svg>
+        <CardFooter>
+          <p className="w-full text-center text-preset-5-medium text-neutral-200">
+            Already have an account?{" "}
+            <Link
+              href="/auth/login"
+              className="rounded-4 text-neutral-50 underline underline-offset-4 hover:decoration-neutral-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500"
+            >
+              Login
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

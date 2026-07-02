@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Button } from "./ui/button";
+import { buttonVariants } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
+import { cn } from "@/lib/utils";
 
 export async function AuthButton() {
   const supabase = await createClient();
@@ -18,12 +19,12 @@ export async function AuthButton() {
     </div>
   ) : (
     <div className="gap-2 flex">
-      <Button asChild size="sm" variant={"outline"}>
-        <Link href="/auth/login">Sign in</Link>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <Link href="/auth/sign-up">Sign up</Link>
-      </Button>
+      <Link className={cn(buttonVariants({ size: "sm", variant: "outline" }))} href="/auth/login">
+        Sign in
+      </Link>
+      <Link className={cn(buttonVariants({ size: "sm", variant: "default" }))} href="/auth/sign-up">
+        Sign up
+      </Link>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
@@ -34,16 +34,13 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
   };
 
   return (
-    <div className={cn("gap-6 flex flex-col", className)} {...props}>
+    <div className={cn("flex flex-col", className)} {...props}>
+      <CardTitle>Reset Your Password</CardTitle>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-          <CardDescription>Please enter your new password below.</CardDescription>
-        </CardHeader>
         <CardContent>
           <form onSubmit={handleForgotPassword}>
-            <div className="gap-6 flex flex-col">
-              <div className="gap-2 grid">
+            <div className="flex flex-col gap-250">
+              <div className="flex flex-col gap-100">
                 <Label htmlFor="password">New password</Label>
                 <Input
                   id="password"
@@ -54,8 +51,8 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
+              <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Saving..." : "Save new password"}
               </Button>
             </div>

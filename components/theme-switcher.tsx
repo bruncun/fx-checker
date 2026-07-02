@@ -1,13 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
@@ -33,34 +26,29 @@ const ThemeSwitcher = () => {
   }
 
   const ICON_SIZE = 16;
+  const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Laptop;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"}>
-          {theme === "light" ? (
-            <Sun key="light" size={ICON_SIZE} className={"text-muted-foreground"} />
-          ) : theme === "dark" ? (
-            <Moon key="dark" size={ICON_SIZE} className={"text-muted-foreground"} />
-          ) : (
-            <Laptop key="system" size={ICON_SIZE} className={"text-muted-foreground"} />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-content" align="start">
-        <DropdownMenuRadioGroup value={theme} onValueChange={(e) => setTheme(e)}>
-          <DropdownMenuRadioItem className="gap-2 flex" value="light">
-            <Sun size={ICON_SIZE} className="text-muted-foreground" /> <span>Light</span>
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem className="gap-2 flex" value="dark">
-            <Moon size={ICON_SIZE} className="text-muted-foreground" /> <span>Dark</span>
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem className="gap-2 flex" value="system">
-            <Laptop size={ICON_SIZE} className="text-muted-foreground" /> <span>System</span>
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <label
+      className={cn(
+        "relative inline-flex h-500 items-center rounded-8 bg-neutral-500 pr-050 pl-150 text-neutral-100",
+        "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400",
+        "focus-within:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))]"
+      )}
+    >
+      <span className="sr-only">Theme</span>
+      <Icon size={ICON_SIZE} aria-hidden="true" className="mr-100 text-neutral-100" />
+      <select
+        aria-label="Theme"
+        className="h-full appearance-none bg-transparent pr-250 pl-0 text-preset-5-medium text-neutral-50 outline-none"
+        value={theme}
+        onChange={(event) => setTheme(event.target.value)}
+      >
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="system">System</option>
+      </select>
+    </label>
   );
 };
 
