@@ -238,6 +238,22 @@ describe("CurrencyPicker", () => {
     expect(screen.queryByRole("button", { name: "JPY, Japanese Yen" })).toBeNull();
   });
 
+  it("only shows currency group headers before searching", () => {
+    const { trigger } = renderCurrencyPicker();
+
+    fireEvent.click(trigger);
+    const searchInput = screen.getByRole("searchbox", { name: "Search currencies" });
+
+    expect(screen.getByText("Popular")).toBeTruthy();
+    expect(screen.getByText("Other currencies")).toBeTruthy();
+
+    fireEvent.change(searchInput, { target: { value: "dollar" } });
+
+    expect(screen.queryByText("Popular")).toBeNull();
+    expect(screen.queryByText("Other currencies")).toBeNull();
+    expect(screen.getByRole("button", { name: "USD, United States Dollar" })).toBeTruthy();
+  });
+
   it("shows an empty state when no currencies match", () => {
     const { trigger } = renderCurrencyPicker();
 

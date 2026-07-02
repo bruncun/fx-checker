@@ -129,6 +129,7 @@ function CurrencyPicker({
       }),
     }))
     .filter((group) => group.currencies.length > 0);
+  const showCurrencyGroupHeaders = normalizedQuery.length === 0;
   const visibleCurrencies = filteredCurrencyGroups.flatMap((group) => group.currencies);
   const activeCurrency =
     visibleCurrencies.find((currency) => currency.code === activeCurrencyCode) ??
@@ -370,10 +371,12 @@ function CurrencyPicker({
           >
             {filteredCurrencyGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
-                <div className="mx-100 mb-050 flex items-center justify-between p-100 text-preset-5 text-neutral-200 uppercase shadow-[inset_0_-1px_0_0_hsl(var(--neutral-500))]">
-                  <h3>{group.label}</h3>
-                  <span>{normalizedQuery ? group.currencies.length : group.count}</span>
-                </div>
+                {showCurrencyGroupHeaders ? (
+                  <div className="mx-100 mb-050 flex items-center justify-between p-100 text-preset-5 text-neutral-200 uppercase shadow-[inset_0_-1px_0_0_hsl(var(--neutral-500))]">
+                    <h3>{group.label}</h3>
+                    <span>{group.count}</span>
+                  </div>
+                ) : null}
 
                 <ul>
                   {group.currencies.map((currency) => {
