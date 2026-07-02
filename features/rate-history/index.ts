@@ -4,6 +4,7 @@ export {
   getDateYearsBefore,
   getRateHistoryRangePoints,
   getRateHistoryStats,
+  historyRanges,
   type HistoryRange,
   type RateHistoryData,
   type RateHistoryPoint,

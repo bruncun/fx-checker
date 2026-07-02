@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { RateHistory } from "./rate-history";
@@ -24,8 +24,8 @@ afterEach(() => {
 });
 
 describe("RateHistory", () => {
-  it("updates stats and chart details when a range tab is selected", () => {
-    render(<RateHistory history={history} pair="USD/EUR" />);
+  it("renders stats and chart details for the selected range", () => {
+    render(<RateHistory history={history} pair="USD/EUR" selectedRange="1M" />);
 
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.8500").length).toBeGreaterThan(0);
@@ -39,8 +39,8 @@ describe("RateHistory", () => {
       "polite"
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "3M" }));
-
+    cleanup();
+    render(<RateHistory history={history} pair="USD/EUR" selectedRange="3M" />);
     expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.9000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("-0.0400").length).toBeGreaterThan(0);
