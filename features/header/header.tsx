@@ -1,5 +1,6 @@
 import { Logo } from "@/components/logo";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
+import { SignOutLink } from "./sign-out-link";
 
 type AppHeaderProps = {
   currencyCount: number;
@@ -16,8 +17,10 @@ function ExchangeRateStats({ currencyCount }: AppHeaderProps) {
           EOD
         </abbr>,
         <span key="ecb">
-          <abbr title="European Central Bank">ECB</abbr> data
+          <abbr title="European Central Bank">ECB</abbr>{" "}
+          <span className="hidden sm:inline">data</span>
         </span>,
+        <SignOutLink key="sign-out" />,
       ]}
     />
   );

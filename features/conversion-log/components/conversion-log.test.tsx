@@ -121,7 +121,7 @@ describe("ConversionLog", () => {
         /Every conversion is recorded here automatically when you tap LOG CONVERSION/
       )
     ).toBeTruthy();
-    expect(screen.getByText(/Your log is private to this session and this browser/)).toBeTruthy();
+    expect(screen.getByText(/Your log is private to your account/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversion log" })).toBeNull();
     expect(screen.queryByRole("treegrid", { name: "Conversion Log" })).toBeNull();
   });

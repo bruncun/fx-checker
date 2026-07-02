@@ -24,6 +24,8 @@ const { createConversion, deleteAllConversions, deleteConversion } = vi.hoisted(
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
     replace: routerReplace,
   }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
@@ -119,6 +121,7 @@ describe("HomePageContent", () => {
     expect(screen.getByRole("list", { name: "Exchange rate data stats" }).textContent).toContain(
       "56 Currencies"
     );
+    expect(screen.getByRole("link", { name: "Sign out" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
       "USD"
     );

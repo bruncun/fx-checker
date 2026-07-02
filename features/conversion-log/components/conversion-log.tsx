@@ -144,7 +144,7 @@ function ConversionLog() {
           <>
             Every conversion is recorded here automatically when you tap LOG CONVERSION.
             <br />
-            Your log is private to this session and this browser.
+            Your log is private to your account.
           </>
         }
       />
