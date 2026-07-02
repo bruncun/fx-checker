@@ -64,7 +64,7 @@ function CurrencyItem({ currency, isActive, isSelected, onSelect }: CurrencyItem
         aria-current={isSelected ? "true" : undefined}
         aria-label={`${currency.code}, ${currency.name}`}
         className={cn(
-          "flex w-full items-center gap-150 rounded-4 border-y border-transparent px-200 py-150 text-left text-neutral-50",
+          "flex w-full cursor-pointer items-center gap-150 rounded-4 border-y border-transparent px-200 py-150 text-left text-neutral-50",
           "hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
         )}
         data-currency-code={currency.code}
