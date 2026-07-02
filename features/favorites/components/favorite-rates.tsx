@@ -10,6 +10,7 @@ import {
   RateDetailsTreeGrid,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
+import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { useCompareRatesPresentation } from "@/features/compare-rates";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
@@ -140,6 +141,21 @@ function FavoriteRates() {
     ? preferredTabStopPair
     : (favoriteRates[0]?.rate.pair ?? "");
 
+  if (favoriteRates.length === 0) {
+    return (
+      <TabEmptyState
+        title="No pinned pairs yet"
+        lead={
+          <>
+            Pin a pair to track its rate here. Tap the star
+            <br />
+            icon on any conversion or comparison row.
+          </>
+        }
+      />
+    );
+  }
+
   return (
     <RateDetailsList
       aria-label="Favorites"
@@ -149,40 +165,34 @@ function FavoriteRates() {
       headingId="favorites-heading"
       headingSlot={<span className="block text-preset-3-medium text-neutral-50">Pinned Pairs</span>}
     >
-      {favoriteRates.length > 0 ? (
-        <RateDetailsTreeGrid
-          actionSelector="[data-favorite-rate-button]"
-          labelledBy="favorites-heading"
-          onCurrentRowIdChange={setPreferredTabStopPair}
-          columns={
-            <>
-              <th role="columnheader" scope="col">
-                Pair
-              </th>
-              <th role="columnheader" scope="col">
-                Rate change
-              </th>
-              <th role="columnheader" scope="col">
-                Favorite
-              </th>
-            </>
-          }
-        >
-          {favoriteRates.map((item) => (
-            <FavoriteRateItem
-              key={item.favorite.id}
-              {...item}
-              onFavoriteToggle={onFavoriteToggle}
-              onPairSelect={onCurrencyPairSelect}
-              tabIndex={item.rate.pair === tabStopPair ? 0 : -1}
-            />
-          ))}
-        </RateDetailsTreeGrid>
-      ) : (
-        <p className="rounded-16 bg-neutral-600 px-150 py-200 text-preset-5 text-neutral-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:px-200">
-          No favorite pairs yet.
-        </p>
-      )}
+      <RateDetailsTreeGrid
+        actionSelector="[data-favorite-rate-button]"
+        labelledBy="favorites-heading"
+        onCurrentRowIdChange={setPreferredTabStopPair}
+        columns={
+          <>
+            <th role="columnheader" scope="col">
+              Pair
+            </th>
+            <th role="columnheader" scope="col">
+              Rate change
+            </th>
+            <th role="columnheader" scope="col">
+              Favorite
+            </th>
+          </>
+        }
+      >
+        {favoriteRates.map((item) => (
+          <FavoriteRateItem
+            key={item.favorite.id}
+            {...item}
+            onFavoriteToggle={onFavoriteToggle}
+            onPairSelect={onCurrencyPairSelect}
+            tabIndex={item.rate.pair === tabStopPair ? 0 : -1}
+          />
+        ))}
+      </RateDetailsTreeGrid>
     </RateDetailsList>
   );
 }

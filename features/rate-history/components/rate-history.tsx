@@ -5,6 +5,7 @@ import * as React from "react";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import { RangePicker, type RangePickerOption } from "@/components/ui/range-picker";
 import { RateChange } from "@/components/ui/rate-change";
+import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import {
   getRateHistoryRangePoints,
   getRateHistoryStats,
@@ -259,17 +260,38 @@ function toChartPoints(points: RateHistoryPoint[]): ChartPoint[] {
 }
 
 type RateHistoryProps = {
-  history: RateHistoryData;
+  history: RateHistoryData | null;
+  pair: string;
 };
 
-function RateHistory({ history }: RateHistoryProps) {
+function RateHistory({ history, pair }: RateHistoryProps) {
   const [selectedRange, setSelectedRange] = React.useState<HistoryRange>("1M");
   const selectedPoints = React.useMemo(
-    () => getRateHistoryRangePoints(history.points, selectedRange),
-    [history.points, selectedRange]
+    () => (history ? getRateHistoryRangePoints(history.points, selectedRange) : []),
+    [history, selectedRange]
   );
   const selectedRateHistory = React.useMemo(() => toChartPoints(selectedPoints), [selectedPoints]);
   const stats = React.useMemo(() => getRateHistoryStats(selectedPoints), [selectedPoints]);
+  const hasRateHistoryData =
+    Boolean(history?.points.length) &&
+    selectedPoints.length > 0 &&
+    selectedRateHistory.length > 0 &&
+    stats.length > 0;
+
+  if (!hasRateHistoryData) {
+    return (
+      <TabEmptyState
+        title="No chart data available"
+        lead={
+          <>
+            We couldn&apos;t load rate history for {pair} right now.
+            <br />
+            This usually clears up in a minute.
+          </>
+        }
+      />
+    );
+  }
 
   return (
     <section aria-label="Rate history" className="uppercase">
@@ -311,7 +333,11 @@ function RateHistory({ history }: RateHistoryProps) {
         />
       </div>
       <div className="mt-200 sm:mt-250">
-        <RateHistoryChart pair={history.pair} points={selectedRateHistory} range={selectedRange} />
+        <RateHistoryChart
+          pair={history?.pair ?? pair}
+          points={selectedRateHistory}
+          range={selectedRange}
+        />
       </div>
     </section>
   );

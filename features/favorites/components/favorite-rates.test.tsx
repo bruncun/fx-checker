@@ -42,9 +42,11 @@ const favorites = [
 afterEach(cleanup);
 
 function renderFavoriteRates({
+  favorites: selectedFavorites = favorites,
   onCurrencyPairSelect = vi.fn(),
   onFavoriteToggle = vi.fn(),
 }: {
+  favorites?: ComponentProps<typeof CompareRatesProvider>["value"]["favorites"];
   onCurrencyPairSelect?: ComponentProps<
     typeof CompareRatesProvider
   >["value"]["onCurrencyPairSelect"];
@@ -57,7 +59,7 @@ function renderFavoriteRates({
         amountSource: "send",
         availableCurrencies,
         conversions: [],
-        favorites,
+        favorites: selectedFavorites,
         historicalRates,
         onCompareCurrencySelect: vi.fn(),
         onConversionCreate: vi.fn(),
@@ -113,6 +115,16 @@ describe("FavoriteRates", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
 
     expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("renders the pinned pairs empty state when no favorites exist", () => {
+    renderFavoriteRates({ favorites: [] });
+
+    expect(screen.getByText("No pinned pairs yet")).toBeTruthy();
+    expect(screen.getByText(/Pin a pair to track its rate here. Tap the star/)).toBeTruthy();
+    expect(screen.getByText(/icon on any conversion or comparison row/)).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Favorites" })).toBeNull();
+    expect(screen.queryByRole("treegrid", { name: "Pinned Pairs" })).toBeNull();
   });
 
   it("moves from a focused favorite row to the star action and back", () => {

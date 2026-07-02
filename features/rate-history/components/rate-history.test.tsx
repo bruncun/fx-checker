@@ -25,7 +25,7 @@ afterEach(() => {
 
 describe("RateHistory", () => {
   it("updates stats and chart details when a range tab is selected", () => {
-    render(<RateHistory history={history} />);
+    render(<RateHistory history={history} pair="USD/EUR" />);
 
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.8500").length).toBeGreaterThan(0);
@@ -46,5 +46,22 @@ describe("RateHistory", () => {
     expect(screen.getAllByText("-0.0400").length).toBeGreaterThan(0);
     expect(screen.getAllByText("-4.44%").length).toBeGreaterThan(0);
     expect(screen.getByRole("img", { name: "3M USD/EUR rate history chart" })).toBeTruthy();
+  });
+
+  it("renders the tab empty state with the selected pair when history data is missing", () => {
+    render(<RateHistory history={null} pair="GBP/JPY" />);
+
+    expect(screen.getByText("No chart data available")).toBeTruthy();
+    expect(screen.getByText(/GBP\/JPY/)).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
+    expect(screen.queryByRole("img", { name: /rate history chart/ })).toBeNull();
+  });
+
+  it("renders the tab empty state when history points are empty", () => {
+    render(<RateHistory history={{ pair: "CAD/CHF", points: [] }} pair="CAD/CHF" />);
+
+    expect(screen.getByText("No chart data available")).toBeTruthy();
+    expect(screen.getByText(/CAD\/CHF/)).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
   });
 });

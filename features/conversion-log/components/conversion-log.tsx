@@ -10,6 +10,7 @@ import {
   RateDetailsTreeGrid,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
+import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { useCompareRatesPresentation } from "@/features/compare-rates";
 import type { Conversion } from "@/features/conversion-log";
 import { MoneyDecimal } from "@/features/converter/exchange";
@@ -135,6 +136,21 @@ function ConversionLog() {
     ? preferredTabStopId
     : (conversions[0]?.id ?? "");
 
+  if (conversions.length === 0) {
+    return (
+      <TabEmptyState
+        title="No conversions logged yet"
+        lead={
+          <>
+            Every conversion is recorded here automatically when you tap LOG CONVERSION.
+            <br />
+            Your log is private to this session and this browser.
+          </>
+        }
+      />
+    );
+  }
+
   return (
     <RateDetailsList
       aria-label="Conversion log"
@@ -156,46 +172,40 @@ function ConversionLog() {
         <span className="block text-preset-3-medium text-neutral-50">Conversion Log</span>
       }
     >
-      {conversions.length > 0 ? (
-        <RateDetailsTreeGrid
-          actionSelector="[data-conversion-delete-button]"
-          labelledBy="conversion-log-heading"
-          onCurrentRowIdChange={setPreferredTabStopId}
-          columns={
-            <>
-              <th role="columnheader" scope="col">
-                Created
-              </th>
-              <th role="columnheader" scope="col">
-                Pair
-              </th>
-              <th role="columnheader" scope="col">
-                Send
-              </th>
-              <th role="columnheader" scope="col">
-                Receive
-              </th>
-              <th role="columnheader" scope="col">
-                Delete
-              </th>
-            </>
-          }
-        >
-          {conversions.map((conversion) => (
-            <ConversionLogItem
-              key={conversion.id}
-              conversion={conversion}
-              onConversionDelete={onConversionDelete}
-              onConversionSelect={onConversionSelect}
-              tabIndex={conversion.id === tabStopId ? 0 : -1}
-            />
-          ))}
-        </RateDetailsTreeGrid>
-      ) : (
-        <p className="rounded-16 bg-neutral-600 px-150 py-200 text-preset-5 text-neutral-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:px-200">
-          No conversions logged yet.
-        </p>
-      )}
+      <RateDetailsTreeGrid
+        actionSelector="[data-conversion-delete-button]"
+        labelledBy="conversion-log-heading"
+        onCurrentRowIdChange={setPreferredTabStopId}
+        columns={
+          <>
+            <th role="columnheader" scope="col">
+              Created
+            </th>
+            <th role="columnheader" scope="col">
+              Pair
+            </th>
+            <th role="columnheader" scope="col">
+              Send
+            </th>
+            <th role="columnheader" scope="col">
+              Receive
+            </th>
+            <th role="columnheader" scope="col">
+              Delete
+            </th>
+          </>
+        }
+      >
+        {conversions.map((conversion) => (
+          <ConversionLogItem
+            key={conversion.id}
+            conversion={conversion}
+            onConversionDelete={onConversionDelete}
+            onConversionSelect={onConversionSelect}
+            tabIndex={conversion.id === tabStopId ? 0 : -1}
+          />
+        ))}
+      </RateDetailsTreeGrid>
     </RateDetailsList>
   );
 }

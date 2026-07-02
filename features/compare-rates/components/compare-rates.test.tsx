@@ -48,10 +48,12 @@ const historicalRates = [
 afterEach(cleanup);
 
 function renderCompareRates({
+  amount = "1000",
   favorites = [],
   onCompareCurrencySelect = vi.fn(),
   onFavoriteToggle = vi.fn(),
 }: {
+  amount?: string;
   favorites?: ComponentProps<typeof CompareRatesProvider>["value"]["favorites"];
   onCompareCurrencySelect?: ComponentProps<
     typeof CompareRatesProvider
@@ -61,7 +63,7 @@ function renderCompareRates({
   render(
     <CompareRatesProvider
       value={{
-        amount: "1000",
+        amount,
         amountSource: "send",
         availableCurrencies,
         conversions: [],
@@ -119,6 +121,16 @@ describe("CompareRates", () => {
     fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
 
     expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
+  });
+
+  it("renders the comparison empty state when no converter amount is entered", () => {
+    renderCompareRates({ amount: "0" });
+
+    expect(screen.getByText("No comparison available")).toBeTruthy();
+    expect(screen.getByText(/Enter an amount in SEND above to see what your money/)).toBeTruthy();
+    expect(screen.getByText(/is worth in other currencies/)).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Compare" })).toBeNull();
+    expect(screen.queryByRole("treegrid", { name: /Multi-Currency/ })).toBeNull();
   });
 
   it("selects compare rows to load the receive currency into the converter", () => {

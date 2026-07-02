@@ -28,23 +28,14 @@ async function HomeContent({ searchParams }: HomeProps) {
     return null;
   }
 
-  const history =
-    deriveRateHistoryData({
-      baseCurrency: sendCurrency,
-      quoteCurrency: receiveCurrency,
-      rates: data.historicalRates,
-    }) ??
-    deriveRateHistoryData({
-      baseCurrency: DEFAULT_SEND_CURRENCY,
-      quoteCurrency: DEFAULT_RECEIVE_CURRENCY,
-      rates: data.historicalRates,
-    });
+  const pair = `${sendCurrency}/${receiveCurrency}`;
+  const history = deriveRateHistoryData({
+    baseCurrency: sendCurrency,
+    quoteCurrency: receiveCurrency,
+    rates: data.historicalRates,
+  });
 
-  if (!history) {
-    return null;
-  }
-
-  return <RateHistory history={history} />;
+  return <RateHistory history={history} pair={pair} />;
 }
 
 export default function Home({ searchParams }: HomeProps) {

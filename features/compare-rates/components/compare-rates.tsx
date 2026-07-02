@@ -9,6 +9,7 @@ import {
   RateDetailsTreeGrid,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
+import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import {
   convertAmount,
@@ -157,6 +158,7 @@ function CompareRates() {
     selectedExchangeRate === null ? null : new MoneyDecimal(1).div(selectedExchangeRate);
   const sendAmount =
     amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate) || "";
+  const hasCompareAmount = sendAmount.trim() !== "0";
   const compareRates = getCompareCurrencies(availableCurrencies, sendCurrency.currencyCode)
     .map((currency) => {
       const rate = getExchangeRate(rates, sendCurrency.currencyCode, currency.code);
@@ -182,6 +184,21 @@ function CompareRates() {
       currencyCode: currency.code,
     });
     setPreferredTabStopCode(currency.code);
+  }
+
+  if (!hasCompareAmount) {
+    return (
+      <TabEmptyState
+        title="No comparison available"
+        lead={
+          <>
+            Enter an amount in SEND above to see what your money
+            <br />
+            is worth in other currencies.
+          </>
+        }
+      />
+    );
   }
 
   return (

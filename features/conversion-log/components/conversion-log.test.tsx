@@ -37,10 +37,12 @@ const conversions = [
 afterEach(cleanup);
 
 function renderConversionLog({
+  conversions: selectedConversions = conversions,
   onConversionDelete = vi.fn(),
   onConversionSelect = vi.fn(),
   onConversionsClear = vi.fn(),
 }: {
+  conversions?: ComponentProps<typeof CompareRatesProvider>["value"]["conversions"];
   onConversionDelete?: ComponentProps<typeof CompareRatesProvider>["value"]["onConversionDelete"];
   onConversionSelect?: ComponentProps<typeof CompareRatesProvider>["value"]["onConversionSelect"];
   onConversionsClear?: ComponentProps<typeof CompareRatesProvider>["value"]["onConversionsClear"];
@@ -51,7 +53,7 @@ function renderConversionLog({
         amount: "1000",
         amountSource: "send",
         availableCurrencies,
-        conversions,
+        conversions: selectedConversions,
         favorites: [],
         historicalRates: rates,
         onCompareCurrencySelect: vi.fn(),
@@ -108,6 +110,20 @@ describe("ConversionLog", () => {
 
     expect(onConversionDelete).toHaveBeenCalledWith("conversion-usd-eur");
     expect(onConversionsClear).toHaveBeenCalled();
+  });
+
+  it("renders the conversion log empty state when no conversions exist", () => {
+    renderConversionLog({ conversions: [] });
+
+    expect(screen.getByText("No conversions logged yet")).toBeTruthy();
+    expect(
+      screen.getByText(
+        /Every conversion is recorded here automatically when you tap LOG CONVERSION/
+      )
+    ).toBeTruthy();
+    expect(screen.getByText(/Your log is private to this session and this browser/)).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Conversion log" })).toBeNull();
+    expect(screen.queryByRole("treegrid", { name: "Conversion Log" })).toBeNull();
   });
 
   it("formats relative timestamps for recent and older conversions", () => {
