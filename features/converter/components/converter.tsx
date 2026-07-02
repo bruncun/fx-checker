@@ -7,6 +7,7 @@ import { ExchangeButton } from "@/components/ui/exchange-button";
 import { FavoriteButton } from "@/components/ui/favorite-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
+import type { CreateConversionInput } from "@/features/conversion-log";
 import type { FavoriteCurrencyPair } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { AvailableCurrency } from "../currencies";
@@ -29,6 +30,7 @@ type ConverterProps = {
   isFavorite?: boolean;
   onAmountChange?: (value: { amount: string; amountSource: AmountSide }) => void;
   onFavoriteToggle?: (pair: FavoriteCurrencyPair) => void;
+  onConversionLogCreate?: (conversion: CreateConversionInput) => void;
   onSelectedCurrenciesChange: (currencies: {
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
@@ -103,6 +105,7 @@ function Converter({
   sendCurrency,
   isFavorite = false,
   onAmountChange,
+  onConversionLogCreate,
   onFavoriteToggle,
   onSelectedCurrenciesChange,
 }: ConverterProps) {
@@ -215,7 +218,20 @@ function Converter({
                 });
               }}
             />
-            <LogConversionButton disabled />
+            <LogConversionButton
+              aria-label={`Log ${sendAmount || "0"} ${sendCurrency.currencyCode} to ${
+                receiveAmount || "0"
+              } ${receiveCurrency.currencyCode}`}
+              disabled={!sendAmount || !receiveAmount || exchangeRate === null}
+              onClick={() => {
+                onConversionLogCreate?.({
+                  fromCurrency: sendCurrency.currencyCode,
+                  receiveAmount,
+                  sendAmount,
+                  toCurrency: receiveCurrency.currencyCode,
+                });
+              }}
+            />
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ const rateDetailsSectionDefinitions = [
   { href: "/", label: "History", value: "history" },
   { href: "/rate/compare", label: "Compare", value: "compare" },
   { href: "/rate/favorites", label: "Favorites", value: "favorites" },
-  { count: 8, href: "/rate/log", label: "Log", value: "log" },
+  { href: "/rate/log", label: "Log", value: "log" },
 ] as const;
 
 function isRateDetailsSection(value: string | null | undefined): value is RateDetailsSection {
@@ -39,7 +39,7 @@ function appendSearchParams(href: string, searchParams: string) {
 function RateDetails({ children }: RateDetailsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { favorites } = useCompareRatesPresentation();
+  const { conversions, favorites } = useCompareRatesPresentation();
   const searchParamsString = searchParams.toString();
   const selectedSection = getRateDetailsSectionFromPathname(pathname);
   const rateDetailsSections: SectionNavigationItem[] = useMemo(
@@ -49,12 +49,12 @@ function RateDetails({ children }: RateDetailsProps) {
         count:
           section.value === "favorites"
             ? favorites.length
-            : "count" in section
-              ? section.count
+            : section.value === "log"
+              ? conversions.length
               : undefined,
         href: appendSearchParams(section.href, searchParamsString),
       })),
-    [favorites.length, searchParamsString]
+    [conversions.length, favorites.length, searchParamsString]
   );
 
   return (

@@ -117,6 +117,7 @@ type RateDetailsTreeGridRowProps = {
   children: React.ReactNode;
   className?: string;
   gridClassName: string;
+  actionClassName?: string;
   isSelected?: boolean;
   onSelect: () => void;
   rowId: string;
@@ -126,6 +127,7 @@ type RateDetailsTreeGridRowProps = {
 function RateDetailsTreeGridRow({
   "aria-label": ariaLabel,
   action,
+  actionClassName,
   children,
   className,
   gridClassName,
@@ -193,7 +195,7 @@ function RateDetailsTreeGridRow({
       tabIndex={tabIndex}
     >
       {children}
-      <td className="block" role="gridcell">
+      <td className={cn("block", actionClassName)} role="gridcell">
         {action({
           onKeyDown: handleActionKeyDown,
           ref: actionRef,

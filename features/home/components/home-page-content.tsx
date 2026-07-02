@@ -1,6 +1,16 @@
 "use client";
 
 import { CompareRatesProvider } from "@/features/compare-rates";
+import {
+  normalizeConversionInput,
+  type Conversion,
+  type CreateConversionInput,
+} from "@/features/conversion-log";
+import {
+  createConversion,
+  deleteAllConversions,
+  deleteConversion,
+} from "@/features/conversion-log/client";
 import { Converter, type SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import type { AmountSide } from "@/features/converter/exchange";
@@ -22,6 +32,7 @@ import { startTransition, useMemo, useOptimistic, useState } from "react";
 type HomePageContentProps = {
   availableCurrencies: AvailableCurrency[];
   children: ReactNode;
+  conversions?: Conversion[];
   currencyCount: number;
   favorites?: Favorite[];
   historicalRates: FrankfurterRate[];
@@ -115,6 +126,7 @@ function getSelectedCurrencyPairKey({
 export function HomePageContent({
   availableCurrencies,
   children,
+  conversions: initialConversions = [],
   currencyCount,
   favorites: initialFavorites = [],
   historicalRates,
@@ -150,6 +162,7 @@ export function HomePageContent({
     amountSource: "send",
   });
   const [favorites, setFavorites] = useState(initialFavorites);
+  const [conversions, setConversions] = useState(initialConversions);
   const [optimisticFavorites, updateOptimisticFavorites] = useOptimistic(
     favorites,
     (
@@ -167,6 +180,26 @@ export function HomePageContent({
       }
 
       return [...currentFavorites, action.favorite];
+    }
+  );
+  const [optimisticConversions, updateOptimisticConversions] = useOptimistic(
+    conversions,
+    (
+      currentConversions,
+      action:
+        | { conversion: Conversion; type: "add" }
+        | { id: string; type: "remove" }
+        | { type: "clear" }
+    ) => {
+      if (action.type === "remove") {
+        return currentConversions.filter((conversion) => conversion.id !== action.id);
+      }
+
+      if (action.type === "clear") {
+        return [];
+      }
+
+      return [action.conversion, ...currentConversions];
     }
   );
 
@@ -269,6 +302,87 @@ export function HomePageContent({
     });
   }
 
+  function logConversion(input: CreateConversionInput) {
+    const normalizedInput = normalizeConversionInput(input);
+
+    if (!normalizedInput.sendAmount || !normalizedInput.receiveAmount) {
+      return;
+    }
+
+    const pendingConversion: Conversion = {
+      ...normalizedInput,
+      createdAt: new Date().toISOString(),
+      id: `optimistic:${crypto.randomUUID()}`,
+    };
+
+    startTransition(async () => {
+      updateOptimisticConversions({ conversion: pendingConversion, type: "add" });
+
+      try {
+        const createdConversion = await createConversion(normalizedInput);
+
+        setConversions((currentConversions) => [
+          createdConversion,
+          ...currentConversions.filter((conversion) => conversion.id !== pendingConversion.id),
+        ]);
+      } catch (error) {
+        console.error("Failed to log conversion", error);
+        setConversions((currentConversions) =>
+          currentConversions.filter((conversion) => conversion.id !== pendingConversion.id)
+        );
+      }
+    });
+  }
+
+  function removeConversion(id: string) {
+    startTransition(async () => {
+      updateOptimisticConversions({ id, type: "remove" });
+
+      try {
+        await deleteConversion(id);
+        setConversions((currentConversions) =>
+          currentConversions.filter((conversion) => conversion.id !== id)
+        );
+      } catch (error) {
+        console.error("Failed to delete conversion", error);
+        setConversions((currentConversions) => [...currentConversions]);
+      }
+    });
+  }
+
+  function clearConversions() {
+    if (optimisticConversions.length === 0) {
+      return;
+    }
+
+    startTransition(async () => {
+      updateOptimisticConversions({ type: "clear" });
+
+      try {
+        await deleteAllConversions();
+        setConversions([]);
+      } catch (error) {
+        console.error("Failed to clear conversions", error);
+        setConversions((currentConversions) => [...currentConversions]);
+      }
+    });
+  }
+
+  function selectConversion(conversion: Conversion) {
+    const sendCurrency = getCurrencyByCode(availableCurrencies, conversion.fromCurrency);
+    const receiveCurrency = getCurrencyByCode(availableCurrencies, conversion.toCurrency);
+
+    if (!sendCurrency || !receiveCurrency) {
+      return;
+    }
+
+    updateSelectedCurrencies({ sendCurrency, receiveCurrency });
+    setConverterAmount({
+      amount: conversion.sendAmount,
+      amountSource: "send",
+    });
+  }
+
   const selectedFavoritePair = {
     fromCurrency: selectedCurrencies.sendCurrency.currencyCode,
     toCurrency: selectedCurrencies.receiveCurrency.currencyCode,
@@ -288,6 +402,7 @@ export function HomePageContent({
           receiveCurrency={selectedCurrencies.receiveCurrency}
           isFavorite={findFavorite(optimisticFavorites, selectedFavoritePair) !== null}
           onAmountChange={setConverterAmount}
+          onConversionLogCreate={logConversion}
           onFavoriteToggle={toggleFavorite}
           onSelectedCurrenciesChange={updateSelectedCurrencies}
         />
@@ -295,6 +410,7 @@ export function HomePageContent({
           value={{
             ...converterAmount,
             availableCurrencies,
+            conversions: optimisticConversions,
             favorites: optimisticFavorites,
             historicalRates,
             rates,
@@ -302,6 +418,10 @@ export function HomePageContent({
             sendCurrency: selectedCurrencies.sendCurrency,
             onCurrencyPairSelect: updateSelectedCurrencies,
             onCompareCurrencySelect: selectCompareCurrency,
+            onConversionCreate: logConversion,
+            onConversionDelete: removeConversion,
+            onConversionsClear: clearConversions,
+            onConversionSelect: selectConversion,
             onFavoriteToggle: toggleFavorite,
           }}
         >

@@ -5,6 +5,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import type { AmountSide } from "@/features/converter/exchange";
+import type { Conversion, CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite, FavoriteCurrencyPair } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
@@ -12,6 +13,7 @@ export type CompareRatesPresentationValue = {
   amount: string;
   amountSource: AmountSide;
   availableCurrencies: AvailableCurrency[];
+  conversions: Conversion[];
   favorites: Favorite[];
   historicalRates: FrankfurterRate[];
   rates: FrankfurterRate[];
@@ -22,6 +24,10 @@ export type CompareRatesPresentationValue = {
     sendCurrency: SelectedCurrency;
   }) => void;
   onCompareCurrencySelect: (currency: SelectedCurrency) => void;
+  onConversionCreate: (conversion: CreateConversionInput) => void;
+  onConversionDelete: (id: string) => void;
+  onConversionsClear: () => void;
+  onConversionSelect: (conversion: Conversion) => void;
   onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
 };
 

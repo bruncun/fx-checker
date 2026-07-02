@@ -1,4 +1,5 @@
 import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/converter/currencies";
+import { getServerConversions } from "@/features/conversion-log/server";
 import { getServerFavorites } from "@/features/favorites/server";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
@@ -155,10 +156,15 @@ type HomePageShellProps = {
 };
 
 export async function HomePageShell({ children }: HomePageShellProps) {
-  const [data, favorites] = await Promise.all([
+  const [data, favorites, conversions] = await Promise.all([
     getHomePageData(),
     getServerFavorites().catch((error) => {
       console.error("Failed to retrieve favorites", error);
+
+      return [];
+    }),
+    getServerConversions().catch((error) => {
+      console.error("Failed to retrieve conversions", error);
 
       return [];
     }),
@@ -171,6 +177,7 @@ export async function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
       availableCurrencies={data.availableCurrencies}
+      conversions={conversions}
       currencyCount={data.currencyCount}
       favorites={favorites}
       historicalRates={data.historicalRates}
