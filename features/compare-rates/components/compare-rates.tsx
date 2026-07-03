@@ -17,8 +17,18 @@ import {
   getExchangeRate,
   MoneyDecimal,
 } from "@/features/converter/exchange";
-import { findFavorite, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
-import { useCompareRatesPresentation } from "./compare-rates-context";
+import type { SelectedCurrency } from "@/features/converter";
+import {
+  findFavorite,
+  getFavoritePairKey,
+  normalizeFavoritePair,
+  type Favorite,
+  type FavoriteCurrencyPair,
+} from "@/features/favorites";
+import { createFavorite, deleteFavorite } from "@/features/favorites/client";
+import { getCurrencyPairUrl } from "@/features/home/url-state";
+import type { FrankfurterRate } from "@/lib/frankfurter";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];
 
@@ -134,18 +144,30 @@ function CompareRateItem({
   );
 }
 
-function CompareRates() {
-  const {
-    amount,
-    amountSource,
-    availableCurrencies,
-    favorites,
-    rates,
-    receiveCurrency,
-    sendCurrency,
-    onCompareCurrencySelect,
-    onFavoriteToggle,
-  } = useCompareRatesPresentation();
+type CompareRatesProps = {
+  amount: string;
+  amountSource: "send" | "receive";
+  availableCurrencies: AvailableCurrency[];
+  favorites: Favorite[];
+  rates: FrankfurterRate[];
+  receiveCurrency: SelectedCurrency;
+  sendCurrency: SelectedCurrency;
+};
+
+function CompareRates({
+  amount,
+  amountSource,
+  availableCurrencies,
+  favorites: initialFavorites,
+  rates,
+  receiveCurrency,
+  sendCurrency,
+}: CompareRatesProps) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const [favorites, setFavorites] = React.useState(initialFavorites);
   const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
     receiveCurrency.currencyCode
   );
@@ -179,11 +201,70 @@ function CompareRates() {
     : (compareRates[0]?.currency.code ?? "");
 
   function selectCompareCurrency(currency: AvailableCurrency) {
-    onCompareCurrencySelect({
-      countryCode: currency.countryCode,
-      currencyCode: currency.code,
+    const nextUrl = getCurrencyPairUrl({
+      pathname,
+      receiveCurrency: {
+        countryCode: currency.countryCode,
+        currencyCode: currency.code,
+      },
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency,
     });
+
+    router.replace(nextUrl, { scroll: false });
     setPreferredTabStopCode(currency.code);
+  }
+
+  function toggleFavorite(pair: FavoriteCurrencyPair) {
+    const normalizedPair = normalizeFavoritePair(pair);
+    const existingFavorite = findFavorite(favorites, normalizedPair);
+
+    React.startTransition(async () => {
+      if (existingFavorite) {
+        setFavorites((currentFavorites) =>
+          currentFavorites.filter(
+            (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(normalizedPair)
+          )
+        );
+
+        try {
+          await deleteFavorite(normalizedPair);
+          router.refresh();
+        } catch (error) {
+          console.error("Failed to delete favorite", error);
+          setFavorites((currentFavorites) => [...currentFavorites, existingFavorite]);
+        }
+
+        return;
+      }
+
+      const pendingFavorite: Favorite = {
+        ...normalizedPair,
+        createdAt: new Date().toISOString(),
+        id: `optimistic:${getFavoritePairKey(normalizedPair)}`,
+      };
+
+      setFavorites((currentFavorites) => [...currentFavorites, pendingFavorite]);
+
+      try {
+        const createdFavorite = await createFavorite(normalizedPair);
+
+        setFavorites((currentFavorites) => [
+          ...currentFavorites.filter(
+            (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(createdFavorite)
+          ),
+          createdFavorite,
+        ]);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to create favorite", error);
+        setFavorites((currentFavorites) =>
+          currentFavorites.filter(
+            (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(normalizedPair)
+          )
+        );
+      }
+    });
   }
 
   if (!hasCompareAmount) {
@@ -253,7 +334,7 @@ function CompareRates() {
             fromCurrencyCode={sendCurrency.currencyCode}
             isSelected={item.currency.code === receiveCurrency.currencyCode}
             onCompareCurrencySelect={selectCompareCurrency}
-            onFavoriteToggle={onFavoriteToggle}
+            onFavoriteToggle={toggleFavorite}
             rate={item.rate}
             tabIndex={item.currency.code === tabStopCode ? 0 : -1}
           />

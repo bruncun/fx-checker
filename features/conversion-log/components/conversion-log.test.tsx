@@ -4,16 +4,36 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CompareRatesProvider } from "@/features/compare-rates";
 import { ConversionLog, formatRelativeTime } from "./conversion-log";
+
+const { deleteAllConversions, deleteConversion, routerRefresh, routerReplace, testSearchParams } =
+  vi.hoisted(() => ({
+    deleteAllConversions: vi.fn(),
+    deleteConversion: vi.fn(),
+    routerRefresh: vi.fn(),
+    routerReplace: vi.fn(),
+    testSearchParams: { current: "" },
+  }));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/rate/log",
+  useRouter: () => ({
+    refresh: routerRefresh,
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
+
+vi.mock("@/features/conversion-log/client", () => ({
+  deleteAllConversions,
+  deleteConversion,
+}));
 
 const availableCurrencies = [
   { code: "USD", countryCode: "us" as const, name: "United States Dollar" },
   { code: "EUR", countryCode: "eu" as const, name: "Euro" },
   { code: "JPY", countryCode: "jp" as const, name: "Japanese Yen" },
 ];
-
-const rates = [{ date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.25 }];
 
 const conversions = [
   {
@@ -34,42 +54,22 @@ const conversions = [
   },
 ];
 
-afterEach(cleanup);
+afterEach(() => {
+  deleteAllConversions.mockReset();
+  deleteConversion.mockReset();
+  routerRefresh.mockClear();
+  routerReplace.mockClear();
+  testSearchParams.current = "";
+  cleanup();
+});
 
 function renderConversionLog({
   conversions: selectedConversions = conversions,
-  onConversionDelete = vi.fn(),
-  onConversionSelect = vi.fn(),
-  onConversionsClear = vi.fn(),
 }: {
-  conversions?: ComponentProps<typeof CompareRatesProvider>["value"]["conversions"];
-  onConversionDelete?: ComponentProps<typeof CompareRatesProvider>["value"]["onConversionDelete"];
-  onConversionSelect?: ComponentProps<typeof CompareRatesProvider>["value"]["onConversionSelect"];
-  onConversionsClear?: ComponentProps<typeof CompareRatesProvider>["value"]["onConversionsClear"];
+  conversions?: ComponentProps<typeof ConversionLog>["conversions"];
 } = {}) {
   render(
-    <CompareRatesProvider
-      value={{
-        amount: "1000",
-        amountSource: "send",
-        availableCurrencies,
-        conversions: selectedConversions,
-        favoriteRates: [],
-        favorites: [],
-        onCompareCurrencySelect: vi.fn(),
-        onConversionCreate: vi.fn(),
-        onConversionDelete,
-        onConversionsClear,
-        onConversionSelect,
-        onCurrencyPairSelect: vi.fn(),
-        onFavoriteToggle: vi.fn(),
-        rates,
-        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
-        sendCurrency: { countryCode: "us", currencyCode: "USD" },
-      }}
-    >
-      <ConversionLog />
-    </CompareRatesProvider>
+    <ConversionLog availableCurrencies={availableCurrencies} conversions={selectedConversions} />
   );
 }
 
@@ -86,9 +86,7 @@ describe("ConversionLog", () => {
   });
 
   it("loads a conversion into the converter when its row is selected", () => {
-    const onConversionSelect = vi.fn();
-
-    renderConversionLog({ onConversionSelect });
+    renderConversionLog();
 
     fireEvent.click(
       screen.getByRole("row", {
@@ -96,20 +94,23 @@ describe("ConversionLog", () => {
       })
     );
 
-    expect(onConversionSelect).toHaveBeenCalledWith(conversions[0]);
+    expect(routerReplace).toHaveBeenCalledWith(
+      "/rate/log?from=USD&to=EUR&amount=1000.00&amountSource=send",
+      { scroll: false }
+    );
   });
 
   it("deletes individual conversions and clears all conversions", () => {
-    const onConversionDelete = vi.fn();
-    const onConversionsClear = vi.fn();
+    deleteAllConversions.mockResolvedValue(undefined);
+    deleteConversion.mockResolvedValue(undefined);
 
-    renderConversionLog({ onConversionDelete, onConversionsClear });
+    renderConversionLog();
 
     fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
     fireEvent.click(screen.getByRole("button", { name: "Clear all conversions" }));
 
-    expect(onConversionDelete).toHaveBeenCalledWith("conversion-usd-eur");
-    expect(onConversionsClear).toHaveBeenCalled();
+    expect(deleteConversion).toHaveBeenCalledWith("conversion-usd-eur");
+    expect(deleteAllConversions).toHaveBeenCalled();
   });
 
   it("renders the conversion log empty state when no conversions exist", () => {

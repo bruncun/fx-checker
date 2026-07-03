@@ -1,12 +1,20 @@
 "use client";
 
+import * as React from "react";
+
 import type { FlagCountryCode } from "@/components/ui/flag";
-import type { CreateConversionInput } from "@/features/conversion-log";
-import type { FavoriteCurrencyPair } from "@/features/favorites";
+import { normalizeConversionInput, type CreateConversionInput } from "@/features/conversion-log";
+import { createConversion } from "@/features/conversion-log/client";
+import {
+  getConverterAmountFromParams,
+  getCurrencyPairUrl,
+  getSelectedCurrencyPairFromParams,
+  getSelectedCurrencyPairKey,
+} from "@/features/home/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AvailableCurrency } from "../currencies";
 import { getExchangeRate, formatExchangeRate } from "../exchange";
-import type { AmountSide } from "../exchange";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
 export type SelectedCurrency = {
@@ -16,32 +24,32 @@ export type SelectedCurrency = {
 
 type ConverterProps = {
   currencies: AvailableCurrency[];
-  initialAmount?: string;
-  initialAmountSource?: AmountSide;
-  receiveCurrency: SelectedCurrency;
   rates: FrankfurterRate[];
-  sendCurrency: SelectedCurrency;
-  isFavorite?: boolean;
-  onFavoriteToggle?: (pair: FavoriteCurrencyPair) => void;
-  onConversionLogCreate?: (conversion: CreateConversionInput) => void;
-  onSelectedCurrenciesChange: (currencies: {
-    receiveCurrency: SelectedCurrency;
-    sendCurrency: SelectedCurrency;
-  }) => void;
 };
 
-function Converter({
-  currencies,
-  initialAmount,
-  initialAmountSource,
-  receiveCurrency,
-  rates,
-  sendCurrency,
-  isFavorite = false,
-  onConversionLogCreate,
-  onFavoriteToggle,
-  onSelectedCurrenciesChange,
-}: ConverterProps) {
+function Converter({ currencies, rates }: ConverterProps) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const selectedCurrencyPairFromUrl = React.useMemo(
+    () => getSelectedCurrencyPairFromParams(currencies, new URLSearchParams(searchParamsString)),
+    [currencies, searchParamsString]
+  );
+  const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
+  const converterAmount = React.useMemo(
+    () => getConverterAmountFromParams(new URLSearchParams(searchParamsString)),
+    [searchParamsString]
+  );
+  const [optimisticSelectedCurrencies, setOptimisticSelectedCurrencies] = React.useState(() => ({
+    currencies: selectedCurrencyPairFromUrl,
+    urlKey: selectedCurrencyPairUrlKey,
+  }));
+  const selectedCurrencies =
+    optimisticSelectedCurrencies.urlKey === selectedCurrencyPairUrlKey
+      ? optimisticSelectedCurrencies.currencies
+      : selectedCurrencyPairFromUrl;
+  const { receiveCurrency, sendCurrency } = selectedCurrencies;
   const exchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
@@ -52,6 +60,45 @@ function Converter({
       ? `Rate unavailable for ${sendCurrency.currencyCode}/${receiveCurrency.currencyCode}`
       : `1 ${sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${receiveCurrency.currencyCode}`;
 
+  function updateSelectedCurrencies(currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) {
+    setOptimisticSelectedCurrencies({
+      currencies,
+      urlKey: selectedCurrencyPairUrlKey,
+    });
+
+    const nextUrl = getCurrencyPairUrl({
+      pathname,
+      receiveCurrency: currencies.receiveCurrency,
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency: currencies.sendCurrency,
+    });
+    const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
+
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }
+
+  function logConversion(input: CreateConversionInput) {
+    const normalizedInput = normalizeConversionInput(input);
+
+    if (!normalizedInput.sendAmount || !normalizedInput.receiveAmount) {
+      return;
+    }
+
+    React.startTransition(async () => {
+      try {
+        await createConversion(normalizedInput);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to log conversion", error);
+      }
+    });
+  }
+
   return (
     <section aria-labelledby="converter-heading">
       <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
@@ -61,15 +108,13 @@ function Converter({
         <ConverterAmountControls
           currencies={currencies}
           exchangeRateLabel={exchangeRateLabel}
-          initialAmount={initialAmount}
-          initialAmountSource={initialAmountSource}
-          isFavorite={isFavorite}
+          initialAmount={converterAmount.amount}
+          initialAmountSource={converterAmount.amountSource}
           rates={rates}
           receiveCurrency={receiveCurrency}
           sendCurrency={sendCurrency}
-          onConversionLogCreate={onConversionLogCreate}
-          onFavoriteToggle={onFavoriteToggle}
-          onSelectedCurrenciesChange={onSelectedCurrenciesChange}
+          onConversionLogCreate={logConversion}
+          onSelectedCurrenciesChange={updateSelectedCurrencies}
         />
       </div>
     </section>

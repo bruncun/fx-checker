@@ -1,10 +1,15 @@
 import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/converter/currencies";
 import { getServerConversions } from "@/features/conversion-log/server";
 import { getServerFavorites } from "@/features/favorites/server";
+import { ExchangeRateStats } from "@/features/header/header";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
-import { cache, type ReactNode } from "react";
+import { cache, Suspense, type ReactNode } from "react";
+import { Converter } from "@/features/converter";
+import { LiveRateList } from "@/features/live-rates";
+import { RateDetails } from "@/features/rate-details";
+import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
 import { HomePageContent } from "./components/home-page-content";
 
 const RATE_HISTORY_YEARS = 5;
@@ -231,58 +236,88 @@ export const getHistoryPageData = cache(async (): Promise<HistoryPageData> => {
   }
 });
 
-function DataUnavailable() {
-  return (
-    <main className="text-white min-h-screen bg-neutral-900">
-      <section className="mx-auto flex min-h-[calc(100vh-88px)] max-w-[520px] flex-col items-center justify-center px-300 text-center">
-        <h1 className="text-preset-2">Exchange rate data is unavailable</h1>
-        <p className="mt-150 text-preset-4 text-neutral-200">
-          We could not load the latest currency data. Please refresh the page in a moment.
-        </p>
-      </section>
-    </main>
-  );
-}
-
 type HomePageShellProps = {
   children: ReactNode;
 };
 
-export async function HomePageShell({ children }: HomePageShellProps) {
-  const [currencyReferenceData, latestRatesData, liveRatesData, favorites, conversions] =
-    await Promise.all([
-      getCurrencyReferenceData(),
-      getLatestRatesData(),
-      getLiveRatesData(),
-      getServerFavorites().catch((error) => {
-        console.error("Failed to retrieve favorites", error);
+async function HeaderStats() {
+  const currencyReferenceData = await getCurrencyReferenceData();
 
-        return [];
-      }),
-      getServerConversions().catch((error) => {
-        console.error("Failed to retrieve conversions", error);
+  if (currencyReferenceData.status === "unavailable") {
+    return null;
+  }
 
-        return [];
-      }),
-    ]);
+  return <ExchangeRateStats currencyCount={currencyReferenceData.currencyCount} />;
+}
+
+async function LiveRates() {
+  const liveRatesData = await getLiveRatesData();
+
+  if (liveRatesData.status === "unavailable") {
+    return null;
+  }
+
+  return <LiveRateList rates={liveRatesData.liveRates} />;
+}
+
+async function ConverterSlot() {
+  const [currencyReferenceData, latestRatesData] = await Promise.all([
+    getCurrencyReferenceData(),
+    getLatestRatesData(),
+  ]);
 
   if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
-    return <DataUnavailable />;
+    return null;
   }
 
   return (
-    <HomePageContent
-      availableCurrencies={currencyReferenceData.availableCurrencies}
-      conversions={conversions}
-      currencyCount={currencyReferenceData.currencyCount}
-      favorites={favorites}
-      liveRateHistoryRates={
-        liveRatesData.status === "available" ? liveRatesData.liveRateHistoryRates : []
-      }
-      liveRates={liveRatesData.status === "available" ? liveRatesData.liveRates : []}
+    <Converter
+      currencies={currencyReferenceData.availableCurrencies}
       rates={latestRatesData.rates}
-    >
-      {children}
-    </HomePageContent>
+    />
+  );
+}
+
+async function RateDetailsNavigationSlot() {
+  const [favorites, conversions] = await Promise.all([
+    getServerFavorites().catch(() => []),
+    getServerConversions().catch(() => []),
+  ]);
+
+  return (
+    <RateDetailsNavigation conversionCount={conversions.length} favoriteCount={favorites.length} />
+  );
+}
+
+export function HomePageShell({ children }: HomePageShellProps) {
+  return (
+    <HomePageContent
+      converterSlot={
+        <Suspense fallback={null}>
+          <ConverterSlot />
+        </Suspense>
+      }
+      headerStatsSlot={
+        <Suspense fallback={null}>
+          <HeaderStats />
+        </Suspense>
+      }
+      liveRatesSlot={
+        <Suspense fallback={null}>
+          <LiveRates />
+        </Suspense>
+      }
+      rateDetailsSlot={
+        <RateDetails
+          navigationSlot={
+            <Suspense fallback={null}>
+              <RateDetailsNavigationSlot />
+            </Suspense>
+          }
+        >
+          {children}
+        </RateDetails>
+      }
+    />
   );
 }

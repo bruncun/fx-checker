@@ -11,9 +11,12 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
-import { useCompareRatesPresentation } from "@/features/compare-rates";
 import type { Conversion } from "@/features/conversion-log";
+import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/client";
+import type { AvailableCurrency } from "@/features/converter/currencies";
 import { MoneyDecimal } from "@/features/converter/exchange";
+import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/url-state";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 function formatAmount(amount: string) {
   try {
@@ -128,13 +131,85 @@ function ConversionLogItem({
   );
 }
 
-function ConversionLog() {
-  const { conversions, onConversionDelete, onConversionSelect, onConversionsClear } =
-    useCompareRatesPresentation();
+type ConversionLogProps = {
+  availableCurrencies: AvailableCurrency[];
+  conversions: Conversion[];
+};
+
+function ConversionLog({
+  availableCurrencies,
+  conversions: initialConversions,
+}: ConversionLogProps) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const [conversions, setConversions] = React.useState(initialConversions);
   const [preferredTabStopId, setPreferredTabStopId] = React.useState(conversions[0]?.id ?? "");
   const tabStopId = conversions.some((conversion) => conversion.id === preferredTabStopId)
     ? preferredTabStopId
     : (conversions[0]?.id ?? "");
+
+  function selectConversion(conversion: Conversion) {
+    const sendCurrency = getCurrencyByCode(availableCurrencies, conversion.fromCurrency);
+    const receiveCurrency = getCurrencyByCode(availableCurrencies, conversion.toCurrency);
+
+    if (!sendCurrency || !receiveCurrency) {
+      return;
+    }
+
+    const nextUrl = getCurrencyPairUrl({
+      amount: conversion.sendAmount,
+      amountSource: "send",
+      pathname,
+      receiveCurrency,
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency,
+    });
+
+    router.replace(nextUrl, { scroll: false });
+  }
+
+  function removeConversion(id: string) {
+    const removedConversion = conversions.find((conversion) => conversion.id === id);
+
+    React.startTransition(async () => {
+      setConversions((currentConversions) =>
+        currentConversions.filter((conversion) => conversion.id !== id)
+      );
+
+      try {
+        await deleteConversion(id);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete conversion", error);
+
+        if (removedConversion) {
+          setConversions((currentConversions) => [removedConversion, ...currentConversions]);
+        }
+      }
+    });
+  }
+
+  function clearConversions() {
+    if (conversions.length === 0) {
+      return;
+    }
+
+    const previousConversions = conversions;
+
+    React.startTransition(async () => {
+      setConversions([]);
+
+      try {
+        await deleteAllConversions();
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to clear conversions", error);
+        setConversions(previousConversions);
+      }
+    });
+  }
 
   if (conversions.length === 0) {
     return (
@@ -162,7 +237,7 @@ function ConversionLog() {
           <ClearButton
             aria-label="Clear all conversions"
             disabled={conversions.length === 0}
-            onClick={onConversionsClear}
+            onClick={clearConversions}
           />
         </div>
       }
@@ -200,8 +275,8 @@ function ConversionLog() {
           <ConversionLogItem
             key={conversion.id}
             conversion={conversion}
-            onConversionDelete={onConversionDelete}
-            onConversionSelect={onConversionSelect}
+            onConversionDelete={removeConversion}
+            onConversionSelect={selectConversion}
             tabIndex={conversion.id === tabStopId ? 0 : -1}
           />
         ))}

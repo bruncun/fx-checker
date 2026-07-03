@@ -4,8 +4,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CompareRatesProvider } from "@/features/compare-rates";
 import { RateDetails } from "./rate-details";
+import { RateDetailsNavigation } from "./rate-details-navigation";
 
 const { testPathname, testSearchParams } = vi.hoisted(() => ({
   testPathname: { current: "/" },
@@ -25,33 +25,11 @@ afterEach(() => {
 
 function renderRateDetails(children: ReactNode, favoritesCount = 0) {
   render(
-    <CompareRatesProvider
-      value={{
-        amount: "1000",
-        amountSource: "send",
-        availableCurrencies: [],
-        conversions: [],
-        favoriteRates: [],
-        favorites: Array.from({ length: favoritesCount }, (_, index) => ({
-          createdAt: "2026-06-19T00:00:00.000Z",
-          fromCurrency: "USD",
-          id: `favorite-${index}`,
-          toCurrency: "EUR",
-        })),
-        onCompareCurrencySelect: vi.fn(),
-        onConversionCreate: vi.fn(),
-        onConversionDelete: vi.fn(),
-        onConversionsClear: vi.fn(),
-        onConversionSelect: vi.fn(),
-        onCurrencyPairSelect: vi.fn(),
-        onFavoriteToggle: vi.fn(),
-        rates: [],
-        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
-        sendCurrency: { countryCode: "us", currencyCode: "USD" },
-      }}
+    <RateDetails
+      navigationSlot={<RateDetailsNavigation conversionCount={0} favoriteCount={favoritesCount} />}
     >
-      <RateDetails>{children}</RateDetails>
-    </CompareRatesProvider>
+      {children}
+    </RateDetails>
   );
 }
 

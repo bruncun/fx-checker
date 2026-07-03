@@ -6,6 +6,36 @@ import {
   type FavoriteCurrencyPair,
 } from "./favorites";
 
+const FAVORITES_SELECT = "id, from_currency, to_currency, created_at";
+
+export async function getFavorites(): Promise<Favorite[]> {
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  if (!user) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("favorites")
+    .select(FAVORITES_SELECT)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(mapFavorite);
+}
+
 export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
   const supabase = createClient();
   const {
@@ -29,7 +59,7 @@ export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favori
       to_currency: normalizedPair.toCurrency,
       user_id: user.id,
     })
-    .select("id, from_currency, to_currency, created_at")
+    .select(FAVORITES_SELECT)
     .single();
 
   if (error) {
