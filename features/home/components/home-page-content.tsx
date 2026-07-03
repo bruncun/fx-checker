@@ -23,7 +23,7 @@ import {
 } from "@/features/favorites";
 import { createFavorite, deleteFavorite } from "@/features/favorites/client";
 import { Header } from "@/features/header";
-import { LiveRateList, type LiveRate } from "@/features/live-rates";
+import { deriveLiveRateForPair, LiveRateList, type LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
@@ -35,7 +35,7 @@ type HomePageContentProps = {
   conversions?: Conversion[];
   currencyCount: number;
   favorites?: Favorite[];
-  historicalRates: FrankfurterRate[];
+  liveRateHistoryRates: FrankfurterRate[];
   liveRates: LiveRate[];
   rates: FrankfurterRate[];
 };
@@ -129,7 +129,7 @@ export function HomePageContent({
   conversions: initialConversions = [],
   currencyCount,
   favorites: initialFavorites = [],
-  historicalRates,
+  liveRateHistoryRates,
   liveRates,
   rates,
 }: HomePageContentProps) {
@@ -370,6 +370,16 @@ export function HomePageContent({
     fromCurrency: selectedCurrencies.sendCurrency.currencyCode,
     toCurrency: selectedCurrencies.receiveCurrency.currencyCode,
   };
+  const favoriteRates = optimisticFavorites.flatMap((favorite) => {
+    const rate = deriveLiveRateForPair({
+      base: favorite.fromCurrency,
+      historicalRates: liveRateHistoryRates,
+      latestRates: rates,
+      quote: favorite.toCurrency,
+    });
+
+    return rate ? [rate] : [];
+  });
 
   return (
     <main className="text-white min-h-screen bg-neutral-900">
@@ -394,8 +404,8 @@ export function HomePageContent({
             ...converterAmount,
             availableCurrencies,
             conversions: optimisticConversions,
+            favoriteRates,
             favorites: optimisticFavorites,
-            historicalRates,
             rates,
             receiveCurrency: selectedCurrencies.receiveCurrency,
             sendCurrency: selectedCurrencies.sendCurrency,

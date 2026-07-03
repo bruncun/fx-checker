@@ -109,7 +109,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -138,7 +138,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -161,7 +161,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -184,7 +184,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -215,7 +215,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -256,7 +256,7 @@ describe("HomePageContent", () => {
             toCurrency: "EUR",
           },
         ]}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >
@@ -286,7 +286,7 @@ describe("HomePageContent", () => {
       <HomePageContent
         availableCurrencies={currencies}
         currencyCount={56}
-        historicalRates={historicalRates}
+        liveRateHistoryRates={historicalRates}
         liveRates={liveRates}
         rates={rates}
       >

@@ -7,6 +7,7 @@ import type { AvailableCurrency } from "@/features/converter/currencies";
 import type { AmountSide } from "@/features/converter/exchange";
 import type { Conversion, CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite, FavoriteCurrencyPair } from "@/features/favorites";
+import type { LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
 export type CompareRatesPresentationValue = {
@@ -14,8 +15,8 @@ export type CompareRatesPresentationValue = {
   amountSource: AmountSide;
   availableCurrencies: AvailableCurrency[];
   conversions: Conversion[];
+  favoriteRates: LiveRate[];
   favorites: Favorite[];
-  historicalRates: FrankfurterRate[];
   rates: FrankfurterRate[];
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;

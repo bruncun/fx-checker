@@ -8,22 +8,36 @@ import { cache, type ReactNode } from "react";
 import { HomePageContent } from "./components/home-page-content";
 
 const RATE_HISTORY_YEARS = 5;
+const LIVE_RATE_LOOKBACK_DAYS = 7;
 
 type DateRange = {
   from: string;
   to: string;
 };
 
-export type HomePageData =
-  | {
+type DataResult<T> =
+  | ({
       status: "available";
-      availableCurrencies: AvailableCurrency[];
-      currencyCount: number;
-      historicalRates: FrankfurterRate[];
-      liveRates: LiveRate[];
-      rates: FrankfurterRate[];
-    }
+    } & T)
   | { status: "unavailable" };
+
+export type CurrencyReferenceData = DataResult<{
+  availableCurrencies: AvailableCurrency[];
+  currencyCount: number;
+}>;
+
+export type LatestRatesData = DataResult<{
+  rates: FrankfurterRate[];
+}>;
+
+export type LiveRatesData = DataResult<{
+  liveRateHistoryRates: FrankfurterRate[];
+  liveRates: LiveRate[];
+}>;
+
+export type HistoryPageData = DataResult<{
+  historicalRates: FrankfurterRate[];
+}>;
 
 function parseIsoDate(date: string) {
   const [year, month, day] = date.split("-").map(Number);
@@ -53,6 +67,20 @@ function getPreviousDate(date: Date) {
   previousDate.setUTCDate(previousDate.getUTCDate() - 1);
 
   return previousDate;
+}
+
+function subtractDays(date: Date, days: number) {
+  const previousDate = new Date(date);
+
+  previousDate.setUTCDate(previousDate.getUTCDate() - days);
+
+  return previousDate;
+}
+
+function getDateDaysBefore(date: string, days: number) {
+  const targetDate = parseIsoDate(date);
+
+  return targetDate ? formatIsoDate(subtractDays(targetDate, days)) : null;
 }
 
 export function getYearlyDateRanges({
@@ -100,10 +128,89 @@ async function getHistoricalRatesByYear({ from, to }: DateRange) {
   return rateGroups.flat();
 }
 
-export const getHomePageData = cache(async (): Promise<HomePageData> => {
+export const getLatestRatesData = cache(async (): Promise<LatestRatesData> => {
   try {
-    const [currencies, rates] = await Promise.all([getCurrencies(), getRates()]);
-    const latestDate = rates[0]?.date;
+    const rates = await getRates();
+
+    return rates.length > 0 ? { status: "available", rates } : { status: "unavailable" };
+  } catch {
+    return { status: "unavailable" };
+  }
+});
+
+export const getCurrencyReferenceData = cache(async (): Promise<CurrencyReferenceData> => {
+  try {
+    const [currencies, latestRatesData] = await Promise.all([
+      getCurrencies(),
+      getLatestRatesData(),
+    ]);
+
+    if (latestRatesData.status === "unavailable") {
+      return { status: "unavailable" };
+    }
+
+    const availableCurrencies = deriveAvailableCurrencies(currencies, latestRatesData.rates);
+
+    if (availableCurrencies.length < 2) {
+      return { status: "unavailable" };
+    }
+
+    return {
+      status: "available",
+      availableCurrencies,
+      currencyCount: availableCurrencies.length,
+    };
+  } catch {
+    return { status: "unavailable" };
+  }
+});
+
+export const getLiveRatesData = cache(async (): Promise<LiveRatesData> => {
+  try {
+    const latestRatesData = await getLatestRatesData();
+
+    if (latestRatesData.status === "unavailable") {
+      return { status: "unavailable" };
+    }
+
+    const latestDate = latestRatesData.rates[0]?.date;
+    const lookbackStartDate = latestDate
+      ? getDateDaysBefore(latestDate, LIVE_RATE_LOOKBACK_DAYS)
+      : null;
+
+    if (!latestDate || !lookbackStartDate) {
+      return { status: "unavailable" };
+    }
+
+    const recentRates = await getRates({
+      from: lookbackStartDate,
+      to: latestDate,
+    });
+    const liveRateHistoryRates = recentRates.filter((rate) => rate.date < latestDate);
+    const liveRates = deriveLiveRates({
+      historicalRates: liveRateHistoryRates,
+      latestRates: latestRatesData.rates,
+    });
+
+    return {
+      status: "available",
+      liveRateHistoryRates,
+      liveRates,
+    };
+  } catch {
+    return { status: "unavailable" };
+  }
+});
+
+export const getHistoryPageData = cache(async (): Promise<HistoryPageData> => {
+  try {
+    const latestRatesData = await getLatestRatesData();
+
+    if (latestRatesData.status === "unavailable") {
+      return { status: "unavailable" };
+    }
+
+    const latestDate = latestRatesData.rates[0]?.date;
     const historyStartDate = latestDate ? getDateYearsBefore(latestDate, RATE_HISTORY_YEARS) : null;
 
     if (!latestDate || !historyStartDate) {
@@ -114,24 +221,10 @@ export const getHomePageData = cache(async (): Promise<HomePageData> => {
       from: historyStartDate,
       to: latestDate,
     });
-    const availableCurrencies = deriveAvailableCurrencies(currencies, rates);
-
-    if (availableCurrencies.length < 2) {
-      return { status: "unavailable" };
-    }
-
-    const liveRates = deriveLiveRates({
-      historicalRates: [...historicalRates, ...rates],
-      latestRates: rates,
-    });
 
     return {
       status: "available",
-      availableCurrencies,
-      currencyCount: availableCurrencies.length,
       historicalRates,
-      liveRates,
-      rates,
     };
   } catch {
     return { status: "unavailable" };
@@ -156,33 +249,38 @@ type HomePageShellProps = {
 };
 
 export async function HomePageShell({ children }: HomePageShellProps) {
-  const [data, favorites, conversions] = await Promise.all([
-    getHomePageData(),
-    getServerFavorites().catch((error) => {
-      console.error("Failed to retrieve favorites", error);
+  const [currencyReferenceData, latestRatesData, liveRatesData, favorites, conversions] =
+    await Promise.all([
+      getCurrencyReferenceData(),
+      getLatestRatesData(),
+      getLiveRatesData(),
+      getServerFavorites().catch((error) => {
+        console.error("Failed to retrieve favorites", error);
 
-      return [];
-    }),
-    getServerConversions().catch((error) => {
-      console.error("Failed to retrieve conversions", error);
+        return [];
+      }),
+      getServerConversions().catch((error) => {
+        console.error("Failed to retrieve conversions", error);
 
-      return [];
-    }),
-  ]);
+        return [];
+      }),
+    ]);
 
-  if (data.status === "unavailable") {
+  if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
     return <DataUnavailable />;
   }
 
   return (
     <HomePageContent
-      availableCurrencies={data.availableCurrencies}
+      availableCurrencies={currencyReferenceData.availableCurrencies}
       conversions={conversions}
-      currencyCount={data.currencyCount}
+      currencyCount={currencyReferenceData.currencyCount}
       favorites={favorites}
-      historicalRates={data.historicalRates}
-      liveRates={data.liveRates}
-      rates={data.rates}
+      liveRateHistoryRates={
+        liveRatesData.status === "available" ? liveRatesData.liveRateHistoryRates : []
+      }
+      liveRates={liveRatesData.status === "available" ? liveRatesData.liveRates : []}
+      rates={latestRatesData.rates}
     >
       {children}
     </HomePageContent>

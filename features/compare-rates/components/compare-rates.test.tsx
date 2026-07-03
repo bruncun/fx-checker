@@ -32,19 +32,6 @@ const rates = [
   { date: "2026-06-19", base: "EUR", quote: "BDT", rate: 153.65 },
 ];
 
-const historicalRates = [
-  { date: "2026-06-18", base: "EUR", quote: "USD", rate: 1.24 },
-  { date: "2026-06-18", base: "EUR", quote: "GBP", rate: 0.91 },
-  { date: "2026-06-18", base: "EUR", quote: "JPY", rate: 197 },
-  { date: "2026-06-18", base: "EUR", quote: "CHF", rate: 1.13 },
-  { date: "2026-06-18", base: "EUR", quote: "CAD", rate: 1.72 },
-  { date: "2026-06-18", base: "EUR", quote: "AUD", rate: 1.73 },
-  { date: "2026-06-18", base: "EUR", quote: "INR", rate: 118 },
-  { date: "2026-06-18", base: "EUR", quote: "CNY", rate: 9 },
-  { date: "2026-06-18", base: "EUR", quote: "BDT", rate: 153 },
-  ...rates,
-];
-
 afterEach(cleanup);
 
 function renderCompareRates({
@@ -67,8 +54,8 @@ function renderCompareRates({
         amountSource: "send",
         availableCurrencies,
         conversions: [],
+        favoriteRates: [],
         favorites,
-        historicalRates,
         onConversionCreate: vi.fn(),
         onConversionDelete: vi.fn(),
         onConversionsClear: vi.fn(),

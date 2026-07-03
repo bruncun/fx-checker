@@ -15,7 +15,7 @@ import { useCompareRatesPresentation } from "@/features/compare-rates";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import type { Favorite, FavoriteCurrencyPair } from "@/features/favorites";
-import { deriveLiveRateForPair, type LiveRate } from "@/features/live-rates";
+import type { LiveRate } from "@/features/live-rates";
 
 type FavoriteRateItemData = {
   favorite: Favorite;
@@ -107,9 +107,8 @@ function FavoriteRateItem({
 function FavoriteRates() {
   const {
     availableCurrencies,
+    favoriteRates: liveRates,
     favorites,
-    historicalRates,
-    rates,
     onCurrencyPairSelect,
     onFavoriteToggle,
   } = useCompareRatesPresentation();
@@ -128,12 +127,9 @@ function FavoriteRates() {
       return [];
     }
 
-    const rate = deriveLiveRateForPair({
-      base: favorite.fromCurrency,
-      historicalRates,
-      latestRates: rates,
-      quote: favorite.toCurrency,
-    });
+    const rate = liveRates.find(
+      (liveRate) => liveRate.pair === `${favorite.fromCurrency}/${favorite.toCurrency}`
+    );
 
     return rate ? [{ favorite, fromCurrency, rate, toCurrency }] : [];
   });

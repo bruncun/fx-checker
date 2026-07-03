@@ -18,10 +18,9 @@ const rates = [
   { date: "2026-06-19", base: "EUR", quote: "GBP", rate: 0.92 },
 ];
 
-const historicalRates = [
-  { date: "2026-06-18", base: "EUR", quote: "USD", rate: 1.24 },
-  { date: "2026-06-18", base: "EUR", quote: "GBP", rate: 0.91 },
-  ...rates,
+const favoriteRates = [
+  { pair: "USD/EUR", rate: "0.8000", change: "-0.80%", direction: "down" as const },
+  { pair: "GBP/USD", rate: "1.3587", change: "+0.61%", direction: "up" as const },
 ];
 
 const favorites = [
@@ -59,8 +58,8 @@ function renderFavoriteRates({
         amountSource: "send",
         availableCurrencies,
         conversions: [],
+        favoriteRates,
         favorites: selectedFavorites,
-        historicalRates,
         onCompareCurrencySelect: vi.fn(),
         onConversionCreate: vi.fn(),
         onConversionDelete: vi.fn(),

@@ -1,4 +1,4 @@
-import { getHomePageData } from "@/features/home/home-page";
+import { getHistoryPageData } from "@/features/home/home-page";
 import {
   RateHistory,
   deriveRateHistoryData,
@@ -33,7 +33,7 @@ async function HomeContent({ searchParams }: HomeProps) {
   const sendCurrency = normalizeCurrencyCode(params.from, DEFAULT_SEND_CURRENCY);
   const receiveCurrency = normalizeCurrencyCode(params.to, DEFAULT_RECEIVE_CURRENCY);
   const selectedRange = normalizeHistoryRange(params.range);
-  const data = await getHomePageData();
+  const data = await getHistoryPageData();
 
   if (data.status === "unavailable") {
     return null;
