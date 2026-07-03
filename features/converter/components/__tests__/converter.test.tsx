@@ -8,6 +8,19 @@ import { Converter, type SelectedCurrency } from "../converter";
 import type { AvailableCurrency } from "../../currencies";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
+const { routerReplace, testSearchParams } = vi.hoisted(() => ({
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
+
 const rates: FrankfurterRate[] = [
   { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.171 },
   { date: "2026-06-19", base: "EUR", quote: "JPY", rate: 183.24 },
@@ -54,6 +67,9 @@ function renderConverter({
 }
 
 afterEach(() => {
+  routerReplace.mockClear();
+  testSearchParams.current = "";
+  vi.useRealTimers();
   cleanup();
 });
 
@@ -357,5 +373,59 @@ describe("Converter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
 
     expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("debounces amount updates into the search params", () => {
+    vi.useFakeTimers();
+
+    render(
+      <Converter
+        currencies={currencies}
+        initialAmount="1000"
+        initialAmountSource="send"
+        rates={rates}
+        sendCurrency={defaultSelectedCurrencies.sendCurrency}
+        receiveCurrency={defaultSelectedCurrencies.receiveCurrency}
+        onSelectedCurrenciesChange={vi.fn()}
+      />
+    );
+
+    vi.advanceTimersByTime(300);
+    expect(routerReplace).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "100" },
+    });
+
+    vi.advanceTimersByTime(299);
+    expect(routerReplace).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(routerReplace).toHaveBeenCalledWith("/?amount=100&amountSource=send", {
+      scroll: false,
+    });
+  });
+
+  it("does not update search params for formatting-only amount input changes", () => {
+    vi.useFakeTimers();
+
+    render(
+      <Converter
+        currencies={currencies}
+        initialAmount="100"
+        initialAmountSource="send"
+        rates={rates}
+        sendCurrency={defaultSelectedCurrencies.sendCurrency}
+        receiveCurrency={defaultSelectedCurrencies.receiveCurrency}
+        onSelectedCurrenciesChange={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "1,00" },
+    });
+    vi.advanceTimersByTime(300);
+
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 });

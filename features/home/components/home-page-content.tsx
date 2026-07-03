@@ -29,6 +29,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { startTransition, useMemo, useOptimistic, useState } from "react";
 
+const DEFAULT_CONVERTER_AMOUNT = "1000";
+const DEFAULT_CONVERTER_AMOUNT_SOURCE: AmountSide = "send";
+
 type HomePageContentProps = {
   availableCurrencies: AvailableCurrency[];
   children: ReactNode;
@@ -93,11 +96,15 @@ function getSelectedCurrencyPairFromParams(
 }
 
 function getCurrencyPairUrl({
+  amount,
+  amountSource,
   pathname,
   receiveCurrency,
   searchParams,
   sendCurrency,
 }: {
+  amount?: string;
+  amountSource?: AmountSide;
   pathname: string;
   receiveCurrency: SelectedCurrency;
   searchParams: URLSearchParams;
@@ -107,6 +114,14 @@ function getCurrencyPairUrl({
 
   nextSearchParams.set("from", sendCurrency.currencyCode);
   nextSearchParams.set("to", receiveCurrency.currencyCode);
+
+  if (amount !== undefined) {
+    nextSearchParams.set("amount", amount);
+  }
+
+  if (amountSource !== undefined) {
+    nextSearchParams.set("amountSource", amountSource);
+  }
 
   const queryString = nextSearchParams.toString();
 
@@ -121,6 +136,19 @@ function getSelectedCurrencyPairKey({
   sendCurrency: SelectedCurrency;
 }) {
   return `${sendCurrency.currencyCode}/${receiveCurrency.currencyCode}`;
+}
+
+function getConverterAmountFromParams(searchParams: URLSearchParams) {
+  const amount = searchParams.has("amount")
+    ? (searchParams.get("amount") ?? "")
+    : DEFAULT_CONVERTER_AMOUNT;
+  const amountSource =
+    searchParams.get("amountSource") === "receive" ? "receive" : DEFAULT_CONVERTER_AMOUNT_SOURCE;
+
+  return {
+    amount,
+    amountSource,
+  } satisfies { amount: string; amountSource: AmountSide };
 }
 
 export function HomePageContent({
@@ -146,6 +174,10 @@ export function HomePageContent({
     [availableCurrencies, searchParamsString]
   );
   const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
+  const converterAmount = useMemo(
+    () => getConverterAmountFromParams(new URLSearchParams(searchParamsString)),
+    [searchParamsString]
+  );
   const [optimisticSelectedCurrencies, setOptimisticSelectedCurrencies] = useState(() => ({
     currencies: selectedCurrencyPairFromUrl,
     urlKey: selectedCurrencyPairUrlKey,
@@ -154,13 +186,6 @@ export function HomePageContent({
     optimisticSelectedCurrencies.urlKey === selectedCurrencyPairUrlKey
       ? optimisticSelectedCurrencies.currencies
       : selectedCurrencyPairFromUrl;
-  const [converterAmount, setConverterAmount] = useState<{
-    amount: string;
-    amountSource: AmountSide;
-  }>({
-    amount: "1000",
-    amountSource: "send",
-  });
   const [favorites, setFavorites] = useState(initialFavorites);
   const [conversions, setConversions] = useState(initialConversions);
   const [optimisticFavorites, updateOptimisticFavorites] = useOptimistic(
@@ -203,20 +228,32 @@ export function HomePageContent({
     }
   );
 
-  function updateSelectedCurrencies(currencies: {
+  function updateSelectedCurrencies({
+    amount,
+    amountSource,
+    receiveCurrency,
+    sendCurrency,
+  }: {
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
+    amount?: string;
+    amountSource?: AmountSide;
   }) {
     setOptimisticSelectedCurrencies({
-      currencies,
+      currencies: {
+        receiveCurrency,
+        sendCurrency,
+      },
       urlKey: selectedCurrencyPairUrlKey,
     });
 
     const nextUrl = getCurrencyPairUrl({
+      amount,
+      amountSource,
       pathname,
-      receiveCurrency: currencies.receiveCurrency,
+      receiveCurrency,
       searchParams: new URLSearchParams(searchParamsString),
-      sendCurrency: currencies.sendCurrency,
+      sendCurrency,
     });
     const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
 
@@ -359,8 +396,9 @@ export function HomePageContent({
       return;
     }
 
-    updateSelectedCurrencies({ sendCurrency, receiveCurrency });
-    setConverterAmount({
+    updateSelectedCurrencies({
+      sendCurrency,
+      receiveCurrency,
       amount: conversion.sendAmount,
       amountSource: "send",
     });
@@ -387,14 +425,14 @@ export function HomePageContent({
       <LiveRateList rates={liveRates} />
       <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">
         <Converter
-          amount={converterAmount.amount}
-          amountSource={converterAmount.amountSource}
+          key={`${converterAmount.amountSource}:${converterAmount.amount}`}
           currencies={availableCurrencies}
+          initialAmount={converterAmount.amount}
+          initialAmountSource={converterAmount.amountSource}
           rates={rates}
           sendCurrency={selectedCurrencies.sendCurrency}
           receiveCurrency={selectedCurrencies.receiveCurrency}
           isFavorite={findFavorite(optimisticFavorites, selectedFavoritePair) !== null}
-          onAmountChange={setConverterAmount}
           onConversionLogCreate={logConversion}
           onFavoriteToggle={toggleFavorite}
           onSelectedCurrenciesChange={updateSelectedCurrencies}

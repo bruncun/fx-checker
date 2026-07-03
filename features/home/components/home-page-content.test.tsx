@@ -3,6 +3,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { CompareRates } from "@/features/compare-rates";
 import { HomePageContent } from "./home-page-content";
 
 const { routerReplace, testSearchParams } = vi.hoisted(() => ({
@@ -152,6 +153,26 @@ describe("HomePageContent", () => {
     expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
       "USD"
     );
+  });
+
+  it("shares converter amount state with compare from URL state", () => {
+    testSearchParams.current = "from=USD&to=EUR&amount=200&amountSource=send";
+
+    render(
+      <HomePageContent
+        availableCurrencies={currencies}
+        currencyCount={56}
+        liveRateHistoryRates={historicalRates}
+        liveRates={liveRates}
+        rates={rates}
+      >
+        <CompareRates />
+      </HomePageContent>
+    );
+
+    expect(screen.getByRole("treegrid", { name: /Multi-Currency/ })).toBeTruthy();
+    expect(screen.getByText("200")).toBeTruthy();
+    expect(screen.getByText("From USD")).toBeTruthy();
   });
 
   it("does not replace the URL on initial render when URL state is present", () => {
