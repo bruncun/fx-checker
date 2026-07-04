@@ -9,6 +9,9 @@ import {
 } from "./home-page";
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({
+  cacheLife: vi.fn(),
+}));
 
 const { getCurrencies, getRates } = vi.hoisted(() => ({
   getCurrencies: vi.fn(),
