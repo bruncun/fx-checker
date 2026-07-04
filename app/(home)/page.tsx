@@ -5,6 +5,7 @@ import {
   historyRanges,
   type HistoryRange,
 } from "@/features/rate-history";
+import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
 
 const DEFAULT_SEND_CURRENCY = "USD";
@@ -51,7 +52,7 @@ async function HomeContent({ searchParams }: HomeProps) {
 
 export default function Home({ searchParams }: HomeProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RateHistoryFallback />}>
       <HomeContent searchParams={searchParams} />
     </Suspense>
   );

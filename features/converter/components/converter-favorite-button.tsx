@@ -11,36 +11,20 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites";
-import { createFavorite, deleteFavorite, getFavorites } from "@/features/favorites/client";
+import { createFavorite, deleteFavorite } from "@/features/favorites/actions";
 
 type ConverterFavoriteButtonProps = {
+  favoritesPromise: Promise<Favorite[]>;
   pair: FavoriteCurrencyPair;
 };
 
-function ConverterFavoriteButton({ pair }: ConverterFavoriteButtonProps) {
+function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteButtonProps) {
   const router = useRouter();
-  const [favorites, setFavorites] = React.useState<Favorite[]>([]);
+  const initialFavorites = React.use(favoritesPromise);
+  const [favorites, setFavorites] = React.useState(initialFavorites);
   const normalizedPair = normalizeFavoritePair(pair);
   const existingFavorite = findFavorite(favorites, normalizedPair);
   const isFavorite = existingFavorite !== null;
-
-  React.useEffect(() => {
-    let isMounted = true;
-
-    getFavorites()
-      .then((loadedFavorites) => {
-        if (isMounted) {
-          setFavorites(loadedFavorites);
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to retrieve favorites", error);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   function toggleFavorite() {
     if (existingFavorite) {

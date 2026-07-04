@@ -14,7 +14,7 @@ import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
-import { deleteFavorite } from "@/features/favorites/client";
+import { deleteFavorite } from "@/features/favorites/actions";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { LiveRate } from "@/features/live-rates";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";

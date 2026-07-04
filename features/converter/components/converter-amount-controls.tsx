@@ -8,6 +8,7 @@ import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import type { CreateConversionInput } from "@/features/conversion-log";
+import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { AvailableCurrency } from "../currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../exchange";
@@ -33,6 +34,7 @@ type ConverterAmountPanelProps = {
 type ConverterAmountControlsProps = {
   currencies: AvailableCurrency[];
   exchangeRateLabel: string;
+  favoritesPromise: Promise<Favorite[]>;
   initialAmount?: string;
   initialAmountSource?: AmountSide;
   rates: FrankfurterRate[];
@@ -44,6 +46,37 @@ type ConverterAmountControlsProps = {
     sendCurrency: SelectedCurrency;
   }) => void;
 };
+
+function EmptyFavoriteControlSpace() {
+  return (
+    <span
+      aria-hidden
+      className="invisible inline-flex items-center justify-center gap-100 px-150 py-100 text-preset-5-medium uppercase"
+    >
+      <span className="size-200" />
+      <span>Favorite</span>
+    </span>
+  );
+}
+
+function EmptyLogControlSpace() {
+  return (
+    <span
+      aria-hidden
+      className="invisible inline-flex h-400 items-center justify-center px-150 py-100 text-preset-5-medium uppercase"
+    >
+      Log conversion
+    </span>
+  );
+}
+
+function isPositiveAmount(amount: string) {
+  try {
+    return new MoneyDecimal(getAmountValue(amount)).gt(0);
+  } catch {
+    return false;
+  }
+}
 
 function usePersistedConverterAmount({
   initialAmount,
@@ -151,6 +184,7 @@ function ConverterAmountPanel({
 function ConverterAmountControls({
   currencies,
   exchangeRateLabel,
+  favoritesPromise,
   initialAmount,
   initialAmountSource,
   rates,
@@ -171,6 +205,8 @@ function ConverterAmountControls({
   const inverseExchangeRate = exchangeRate === null ? null : new MoneyDecimal(1).div(exchangeRate);
   const sendAmount = amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate);
   const receiveAmount = amountSource === "receive" ? amount : convertAmount(amount, exchangeRate);
+  const canLogConversion =
+    exchangeRate !== null && isPositiveAmount(sendAmount) && isPositiveAmount(receiveAmount);
 
   function updateSendAmount(nextAmount: string) {
     setAmountState({ amount: nextAmount, amountSource: "send" });
@@ -236,26 +272,30 @@ function ConverterAmountControls({
           {exchangeRateLabel}
         </p>
         <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
-          <ConverterFavoriteButton
-            pair={{
-              fromCurrency: sendCurrency.currencyCode,
-              toCurrency: receiveCurrency.currencyCode,
-            }}
-          />
-          <LogConversionButton
-            aria-label={`Log ${sendAmount || "0"} ${sendCurrency.currencyCode} to ${
-              receiveAmount || "0"
-            } ${receiveCurrency.currencyCode}`}
-            disabled={!sendAmount || !receiveAmount || exchangeRate === null}
-            onClick={() => {
-              onConversionLogCreate?.({
+          <React.Suspense fallback={<EmptyFavoriteControlSpace />}>
+            <ConverterFavoriteButton
+              favoritesPromise={favoritesPromise}
+              pair={{
                 fromCurrency: sendCurrency.currencyCode,
-                receiveAmount,
-                sendAmount,
                 toCurrency: receiveCurrency.currencyCode,
-              });
-            }}
-          />
+              }}
+            />
+          </React.Suspense>
+          {canLogConversion ? (
+            <LogConversionButton
+              aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
+              onClick={() => {
+                onConversionLogCreate?.({
+                  fromCurrency: sendCurrency.currencyCode,
+                  receiveAmount,
+                  sendAmount,
+                  toCurrency: receiveCurrency.currencyCode,
+                });
+              }}
+            />
+          ) : (
+            <EmptyLogControlSpace />
+          )}
         </div>
       </div>
     </>

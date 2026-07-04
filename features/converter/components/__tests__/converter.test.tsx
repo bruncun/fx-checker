@@ -1,21 +1,19 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Converter, type SelectedCurrency } from "../converter";
 import type { AvailableCurrency } from "../../currencies";
+import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
-const { createFavorite, getFavorites, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(
-  () => ({
-    createFavorite: vi.fn(),
-    getFavorites: vi.fn(),
-    routerRefresh: vi.fn(),
-    routerReplace: vi.fn(),
-    testSearchParams: { current: "" },
-  })
-);
+const { createFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
+  createFavorite: vi.fn(),
+  routerRefresh: vi.fn(),
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -26,10 +24,9 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/client", () => ({
+vi.mock("@/features/favorites/actions", () => ({
   createFavorite,
   deleteFavorite: vi.fn(),
-  getFavorites,
 }));
 
 vi.mock("@/features/conversion-log/client", () => ({
@@ -52,18 +49,23 @@ const defaultSelectedCurrencies = {
   receiveCurrency: { countryCode: "eu", currencyCode: "EUR" } satisfies SelectedCurrency,
 };
 
-beforeEach(() => {
-  getFavorites.mockResolvedValue([]);
-});
+function fulfilledPromise<T>(value: T) {
+  return Object.assign(Promise.resolve(value), {
+    status: "fulfilled" as const,
+    value,
+  });
+}
 
 function renderConverter({
   converterCurrencies = currencies,
   converterRates = rates,
+  favorites = [],
   initialSelectedCurrencies = defaultSelectedCurrencies,
   searchParams,
 }: {
   converterCurrencies?: AvailableCurrency[];
   converterRates?: FrankfurterRate[];
+  favorites?: Favorite[];
   initialSelectedCurrencies?: {
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
@@ -76,12 +78,17 @@ function renderConverter({
     testSearchParams.current = `from=${initialSelectedCurrencies.sendCurrency.currencyCode}&to=${initialSelectedCurrencies.receiveCurrency.currencyCode}`;
   }
 
-  return render(<Converter currencies={converterCurrencies} rates={converterRates} />);
+  return render(
+    <Converter
+      currencies={converterCurrencies}
+      favoritesPromise={fulfilledPromise(favorites)}
+      rates={converterRates}
+    />
+  );
 }
 
 afterEach(() => {
   createFavorite.mockReset();
-  getFavorites.mockReset();
   routerRefresh.mockClear();
   routerReplace.mockClear();
   testSearchParams.current = "";

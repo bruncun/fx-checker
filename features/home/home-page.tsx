@@ -5,11 +5,18 @@ import { ExchangeRateStats } from "@/features/header/header";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
-import { cache, Suspense, type ReactNode } from "react";
+import { cacheLife } from "next/cache";
+import { Suspense, type ReactNode } from "react";
 import { Converter } from "@/features/converter";
 import { LiveRateList } from "@/features/live-rates";
 import { RateDetails } from "@/features/rate-details";
+import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
+import {
+  ConverterFallback,
+  HeaderStatsFallback,
+  LiveRatesFallback,
+} from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 
 const RATE_HISTORY_YEARS = 5;
@@ -133,7 +140,10 @@ async function getHistoricalRatesByYear({ from, to }: DateRange) {
   return rateGroups.flat();
 }
 
-export const getLatestRatesData = cache(async (): Promise<LatestRatesData> => {
+export async function getLatestRatesData(): Promise<LatestRatesData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const rates = await getRates();
 
@@ -141,9 +151,12 @@ export const getLatestRatesData = cache(async (): Promise<LatestRatesData> => {
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
-export const getCurrencyReferenceData = cache(async (): Promise<CurrencyReferenceData> => {
+export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const [currencies, latestRatesData] = await Promise.all([
       getCurrencies(),
@@ -168,9 +181,12 @@ export const getCurrencyReferenceData = cache(async (): Promise<CurrencyReferenc
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
-export const getLiveRatesData = cache(async (): Promise<LiveRatesData> => {
+export async function getLiveRatesData(): Promise<LiveRatesData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -205,9 +221,12 @@ export const getLiveRatesData = cache(async (): Promise<LiveRatesData> => {
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
-export const getHistoryPageData = cache(async (): Promise<HistoryPageData> => {
+export async function getHistoryPageData(): Promise<HistoryPageData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -234,7 +253,7 @@ export const getHistoryPageData = cache(async (): Promise<HistoryPageData> => {
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
 type HomePageShellProps = {
   children: ReactNode;
@@ -261,6 +280,7 @@ async function LiveRates() {
 }
 
 async function ConverterSlot() {
+  const favoritesPromise = getServerFavorites().catch(() => []);
   const [currencyReferenceData, latestRatesData] = await Promise.all([
     getCurrencyReferenceData(),
     getLatestRatesData(),
@@ -273,6 +293,7 @@ async function ConverterSlot() {
   return (
     <Converter
       currencies={currencyReferenceData.availableCurrencies}
+      favoritesPromise={favoritesPromise}
       rates={latestRatesData.rates}
     />
   );
@@ -293,24 +314,24 @@ export function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
       converterSlot={
-        <Suspense fallback={null}>
+        <Suspense fallback={<ConverterFallback />}>
           <ConverterSlot />
         </Suspense>
       }
       headerStatsSlot={
-        <Suspense fallback={null}>
+        <Suspense fallback={<HeaderStatsFallback />}>
           <HeaderStats />
         </Suspense>
       }
       liveRatesSlot={
-        <Suspense fallback={null}>
+        <Suspense fallback={<LiveRatesFallback />}>
           <LiveRates />
         </Suspense>
       }
       rateDetailsSlot={
         <RateDetails
           navigationSlot={
-            <Suspense fallback={null}>
+            <Suspense fallback={<RateDetailsNavigationFallback />}>
               <RateDetailsNavigationSlot />
             </Suspense>
           }

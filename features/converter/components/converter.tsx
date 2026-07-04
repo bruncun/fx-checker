@@ -5,6 +5,7 @@ import * as React from "react";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { normalizeConversionInput, type CreateConversionInput } from "@/features/conversion-log";
 import { createConversion } from "@/features/conversion-log/client";
+import type { Favorite } from "@/features/favorites";
 import {
   getConverterAmountFromParams,
   getCurrencyPairUrl,
@@ -24,10 +25,11 @@ export type SelectedCurrency = {
 
 type ConverterProps = {
   currencies: AvailableCurrency[];
+  favoritesPromise: Promise<Favorite[]>;
   rates: FrankfurterRate[];
 };
 
-function Converter({ currencies, rates }: ConverterProps) {
+function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,6 +112,7 @@ function Converter({ currencies, rates }: ConverterProps) {
           exchangeRateLabel={exchangeRateLabel}
           initialAmount={converterAmount.amount}
           initialAmountSource={converterAmount.amountSource}
+          favoritesPromise={favoritesPromise}
           rates={rates}
           receiveCurrency={receiveCurrency}
           sendCurrency={sendCurrency}

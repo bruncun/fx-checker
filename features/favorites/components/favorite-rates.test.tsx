@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/client", () => ({
+vi.mock("@/features/favorites/actions", () => ({
   deleteFavorite,
 }));
 

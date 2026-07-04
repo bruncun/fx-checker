@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { Favorite } from "@/features/favorites";
 import { CompareRates, getCompareCurrencies } from "./compare-rates";
 
 const { createFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/client", () => ({
+vi.mock("@/features/favorites/actions", () => ({
   createFavorite,
   deleteFavorite: vi.fn(),
 }));
@@ -65,19 +65,26 @@ function renderCompareRates({
   favorites = [],
 }: {
   amount?: string;
-  favorites?: ComponentProps<typeof CompareRates>["favorites"];
+  favorites?: Favorite[];
 } = {}) {
   render(
     <CompareRates
       amount={amount}
       amountSource="send"
       availableCurrencies={availableCurrencies}
-      favorites={favorites}
+      favoritesPromise={fulfilledPromise(favorites)}
       rates={rates}
       receiveCurrency={{ countryCode: "eu", currencyCode: "EUR" }}
       sendCurrency={{ countryCode: "us", currencyCode: "USD" }}
     />
   );
+}
+
+function fulfilledPromise<T>(value: T) {
+  return Object.assign(Promise.resolve(value), {
+    status: "fulfilled" as const,
+    value,
+  });
 }
 
 describe("CompareRates", () => {

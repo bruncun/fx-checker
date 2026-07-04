@@ -5,6 +5,7 @@ import {
   getSelectedCurrencyPairFromParams,
 } from "@/features/home/url-state";
 import { getServerFavorites } from "@/features/favorites/server";
+import { RateDetailsRowsFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
 
 type CompareRatesPageProps = {
@@ -17,11 +18,11 @@ type CompareRatesPageProps = {
 };
 
 async function CompareRatesContent({ searchParams }: CompareRatesPageProps) {
-  const [params, currencyReferenceData, latestRatesData, favorites] = await Promise.all([
-    searchParams,
+  const params = await searchParams;
+  const favoritesPromise = getServerFavorites().catch(() => []);
+  const [currencyReferenceData, latestRatesData] = await Promise.all([
     getCurrencyReferenceData(),
     getLatestRatesData(),
-    getServerFavorites().catch(() => []),
   ]);
 
   if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
@@ -40,7 +41,7 @@ async function CompareRatesContent({ searchParams }: CompareRatesPageProps) {
       {...converterAmount}
       {...selectedCurrencies}
       availableCurrencies={currencyReferenceData.availableCurrencies}
-      favorites={favorites}
+      favoritesPromise={favoritesPromise}
       rates={latestRatesData.rates}
     />
   );
@@ -48,7 +49,7 @@ async function CompareRatesContent({ searchParams }: CompareRatesPageProps) {
 
 export default function CompareRatesPage({ searchParams }: CompareRatesPageProps) {
   return (
-    <Suspense fallback={<section aria-label="Rate details" />}>
+    <Suspense fallback={<RateDetailsRowsFallback label="Compare" rowCount={8} variant="compare" />}>
       <CompareRatesContent searchParams={searchParams} />
     </Suspense>
   );
