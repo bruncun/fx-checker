@@ -3,8 +3,17 @@
 import * as React from "react";
 
 import type { FlagCountryCode } from "@/components/ui/flag";
-import { normalizeConversionInput, type CreateConversionInput } from "@/features/conversion-log";
+import {
+  normalizeConversionInput,
+  type Conversion,
+  type CreateConversionInput,
+} from "@/features/conversion-log";
 import { createConversion } from "@/features/conversion-log/client";
+import {
+  addOptimisticConversion,
+  removeOptimisticConversion,
+  replaceOptimisticConversion,
+} from "@/features/conversion-log/optimistic-conversions";
 import type { Favorite } from "@/features/favorites";
 import {
   getConverterAmountFromParams,
@@ -28,6 +37,10 @@ type ConverterProps = {
   favoritesPromise: Promise<Favorite[]>;
   rates: FrankfurterRate[];
 };
+
+function getOptimisticId() {
+  return `optimistic:${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+}
 
 function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   const pathname = usePathname() ?? "/";
@@ -91,12 +104,23 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
       return;
     }
 
+    const pendingConversion: Conversion = {
+      ...normalizedInput,
+      createdAt: new Date().toISOString(),
+      id: getOptimisticId(),
+    };
+
+    addOptimisticConversion(pendingConversion);
+
     React.startTransition(async () => {
       try {
-        await createConversion(normalizedInput);
+        const createdConversion = await createConversion(normalizedInput);
+
+        replaceOptimisticConversion(pendingConversion.id, createdConversion);
         router.refresh();
       } catch (error) {
         console.error("Failed to log conversion", error);
+        removeOptimisticConversion(pendingConversion.id);
       }
     });
   }

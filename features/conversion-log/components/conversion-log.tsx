@@ -13,6 +13,12 @@ import {
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import type { Conversion } from "@/features/conversion-log";
 import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/client";
+import {
+  clearOptimisticConversions,
+  removeOptimisticConversion,
+  setConversionSnapshot,
+  useOptimisticConversions,
+} from "@/features/conversion-log/optimistic-conversions";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { MoneyDecimal } from "@/features/converter/exchange";
 import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/url-state";
@@ -144,7 +150,7 @@ function ConversionLog({
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const [conversions, setConversions] = React.useState(initialConversions);
+  const conversions = useOptimisticConversions(initialConversions);
   const [preferredTabStopId, setPreferredTabStopId] = React.useState(conversions[0]?.id ?? "");
   const tabStopId = conversions.some((conversion) => conversion.id === preferredTabStopId)
     ? preferredTabStopId
@@ -173,11 +179,9 @@ function ConversionLog({
   function removeConversion(id: string) {
     const removedConversion = conversions.find((conversion) => conversion.id === id);
 
-    React.startTransition(async () => {
-      setConversions((currentConversions) =>
-        currentConversions.filter((conversion) => conversion.id !== id)
-      );
+    removeOptimisticConversion(id);
 
+    React.startTransition(async () => {
       try {
         await deleteConversion(id);
         router.refresh();
@@ -185,7 +189,7 @@ function ConversionLog({
         console.error("Failed to delete conversion", error);
 
         if (removedConversion) {
-          setConversions((currentConversions) => [removedConversion, ...currentConversions]);
+          setConversionSnapshot(conversions);
         }
       }
     });
@@ -198,15 +202,15 @@ function ConversionLog({
 
     const previousConversions = conversions;
 
-    React.startTransition(async () => {
-      setConversions([]);
+    clearOptimisticConversions();
 
+    React.startTransition(async () => {
       try {
         await deleteAllConversions();
         router.refresh();
       } catch (error) {
         console.error("Failed to clear conversions", error);
-        setConversions(previousConversions);
+        setConversionSnapshot(previousConversions);
       }
     });
   }

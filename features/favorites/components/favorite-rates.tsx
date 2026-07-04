@@ -15,6 +15,11 @@ import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
 import { deleteFavorite } from "@/features/favorites/actions";
+import {
+  addOptimisticFavorite,
+  removeOptimisticFavorite,
+  useOptimisticFavorites,
+} from "@/features/favorites/optimistic-favorites";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { LiveRate } from "@/features/live-rates";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -121,7 +126,7 @@ function FavoriteRates({
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const [favorites, setFavorites] = React.useState(initialFavorites);
+  const favorites = useOptimisticFavorites(initialFavorites);
   const [preferredTabStopPair, setPreferredTabStopPair] = React.useState(
     favorites[0] ? `${favorites[0].fromCurrency}/${favorites[0].toCurrency}` : ""
   );
@@ -170,19 +175,15 @@ function FavoriteRates({
       return;
     }
 
-    React.startTransition(async () => {
-      setFavorites((currentFavorites) =>
-        currentFavorites.filter(
-          (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(pair)
-        )
-      );
+    removeOptimisticFavorite(pair);
 
+    React.startTransition(async () => {
       try {
         await deleteFavorite(pair);
         router.refresh();
       } catch (error) {
         console.error("Failed to delete favorite", error);
-        setFavorites((currentFavorites) => [...currentFavorites, existingFavorite]);
+        addOptimisticFavorite(existingFavorite);
       }
     });
   }

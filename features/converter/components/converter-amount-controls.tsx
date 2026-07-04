@@ -280,22 +280,22 @@ function ConverterAmountControls({
                 toCurrency: receiveCurrency.currencyCode,
               }}
             />
+            {canLogConversion ? (
+              <LogConversionButton
+                aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
+                onClick={() => {
+                  onConversionLogCreate?.({
+                    fromCurrency: sendCurrency.currencyCode,
+                    receiveAmount,
+                    sendAmount,
+                    toCurrency: receiveCurrency.currencyCode,
+                  });
+                }}
+              />
+            ) : (
+              <EmptyLogControlSpace />
+            )}
           </React.Suspense>
-          {canLogConversion ? (
-            <LogConversionButton
-              aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
-              onClick={() => {
-                onConversionLogCreate?.({
-                  fromCurrency: sendCurrency.currencyCode,
-                  receiveAmount,
-                  sendAmount,
-                  toCurrency: receiveCurrency.currencyCode,
-                });
-              }}
-            />
-          ) : (
-            <EmptyLogControlSpace />
-          )}
         </div>
       </div>
     </>

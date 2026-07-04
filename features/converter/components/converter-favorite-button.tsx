@@ -12,6 +12,12 @@ import {
   type FavoriteCurrencyPair,
 } from "@/features/favorites";
 import { createFavorite, deleteFavorite } from "@/features/favorites/actions";
+import {
+  addOptimisticFavorite,
+  removeOptimisticFavorite,
+  replaceOptimisticFavorite,
+  useOptimisticFavorites,
+} from "@/features/favorites/optimistic-favorites";
 
 type ConverterFavoriteButtonProps = {
   favoritesPromise: Promise<Favorite[]>;
@@ -21,26 +27,22 @@ type ConverterFavoriteButtonProps = {
 function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteButtonProps) {
   const router = useRouter();
   const initialFavorites = React.use(favoritesPromise);
-  const [favorites, setFavorites] = React.useState(initialFavorites);
+  const favorites = useOptimisticFavorites(initialFavorites);
   const normalizedPair = normalizeFavoritePair(pair);
   const existingFavorite = findFavorite(favorites, normalizedPair);
   const isFavorite = existingFavorite !== null;
 
   function toggleFavorite() {
     if (existingFavorite) {
-      React.startTransition(async () => {
-        setFavorites((currentFavorites) =>
-          currentFavorites.filter(
-            (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(normalizedPair)
-          )
-        );
+      removeOptimisticFavorite(normalizedPair);
 
+      React.startTransition(async () => {
         try {
           await deleteFavorite(normalizedPair);
           router.refresh();
         } catch (error) {
           console.error("Failed to delete favorite", error);
-          setFavorites((currentFavorites) => [...currentFavorites, existingFavorite]);
+          addOptimisticFavorite(existingFavorite);
         }
       });
 
@@ -53,26 +55,17 @@ function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteBu
       id: `optimistic:${getFavoritePairKey(normalizedPair)}`,
     };
 
-    React.startTransition(async () => {
-      setFavorites((currentFavorites) => [...currentFavorites, pendingFavorite]);
+    addOptimisticFavorite(pendingFavorite);
 
+    React.startTransition(async () => {
       try {
         const createdFavorite = await createFavorite(normalizedPair);
 
-        setFavorites((currentFavorites) => [
-          ...currentFavorites.filter(
-            (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(createdFavorite)
-          ),
-          createdFavorite,
-        ]);
+        replaceOptimisticFavorite(pendingFavorite, createdFavorite);
         router.refresh();
       } catch (error) {
         console.error("Failed to create favorite", error);
-        setFavorites((currentFavorites) =>
-          currentFavorites.filter(
-            (favorite) => getFavoritePairKey(favorite) !== getFavoritePairKey(normalizedPair)
-          )
-        );
+        removeOptimisticFavorite(normalizedPair);
       }
     });
   }
