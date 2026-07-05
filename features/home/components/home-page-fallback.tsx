@@ -9,6 +9,23 @@ function EmptySpace({ className }: { className: string }) {
   return <span aria-hidden className={cn("block", className)} />;
 }
 
+function FallbackAmountInput({ label }: { label: string }) {
+  return (
+    <input
+      aria-label={`${label} amount`}
+      className={cn(
+        "field-sizing-content h-[40px] max-w-full min-w-0 border-b border-neutral-600 text-preset-1 text-neutral-50 caret-neutral-50 outline-none placeholder:text-neutral-200",
+        "hover:border-neutral-200 focus-visible:-me-050 focus-visible:rounded-8 focus-visible:border-transparent focus-visible:bg-neutral-600 focus-visible:pe-050 focus-visible:caret-neutral-50 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] lg:h-[41px]"
+      )}
+      inputMode="decimal"
+      readOnly
+      tabIndex={-1}
+      type="text"
+      value=""
+    />
+  );
+}
+
 function HeaderStatsFallback() {
   return (
     <InlineMetaList
@@ -113,7 +130,7 @@ function ConverterAmountPanelFallback({ label }: { label: string }) {
     <section className="flex flex-col justify-between rounded-16 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:min-w-0 sm:flex-1 sm:p-250">
       <h2 className="mb-250 text-preset-4 text-neutral-100 uppercase">{label}</h2>
       <div className="flex items-end justify-between gap-200">
-        <EmptySpace className="h-[40px] w-800 lg:h-[41px]" key="amount" />,
+        <FallbackAmountInput label={label} />
         <CurrencyButton
           aria-label={`Select ${label.toLowerCase()} currency`}
           countryCode={label === "Send" ? "us" : "eu"}
