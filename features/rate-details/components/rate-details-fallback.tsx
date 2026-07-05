@@ -1,7 +1,8 @@
+import Image from "next/image";
+
 import { TabButton } from "@/components/ui/tab-button";
 import { cn } from "@/lib/utils";
 import { rateDetailsSectionDefinitions } from "./rate-details-navigation-state";
-import Image from "next/image";
 
 const fallbackHistoryRanges = ["1D", "1W", "1M", "3M", "1Y", "5Y"];
 const fallbackSelectedHistoryRange = "1M";
@@ -176,9 +177,10 @@ function RateDetailsNavigationFallback() {
       <button
         aria-hidden={true}
         className={cn(
-          "flex h-500 w-full items-center justify-between gap-200 rounded-4 rounded-8 bg-neutral-700 px-150 py-125 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:hidden",
+          "flex h-500 w-full items-center justify-between gap-200 rounded-8 bg-neutral-700 px-150 py-125 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:hidden",
           "hover:bg-neutral-600 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
         )}
+        tabIndex={-1}
         type="button"
       >
         <span className="inline-flex items-center gap-100">
