@@ -1,139 +1,26 @@
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
-import type { HistoryRange, RateHistoryPoint } from "@/features/rate-history/rate-history";
-import { scaleLinear, scaleUtc } from "d3-scale";
-import { area, line } from "d3-shape";
-
-type ChartPoint = {
-  date: Date;
-  rate: number;
-};
-
-type RateHistoryXAxisLabel = {
-  label: string;
-  tabletOnly?: boolean;
-  x: number;
-};
+import type { HistoryRange, RateHistoryChartModel } from "@/features/rate-history/rate-history";
 
 const chartWidth = 267;
-const chartHeight = 272;
-
-const dateFormatter = new Intl.DateTimeFormat("en", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
-
-function formatRateAxisLabel(value: number) {
-  return value.toFixed(4);
-}
-
-function formatDateAxisLabel(date: Date) {
-  return dateFormatter.format(date);
-}
-
-function getDateAtProgress(startDate: Date, endDate: Date, progress: number) {
-  return new Date(startDate.getTime() + (endDate.getTime() - startDate.getTime()) * progress);
-}
-
-function getRateExtent(points: ChartPoint[]) {
-  const rates = points.map((point) => point.rate);
-  const max = Math.max(...rates);
-  const min = Math.min(...rates);
-
-  if (max === min) {
-    const padding = Math.max(max * 0.001, 0.0001);
-
-    return {
-      max: max + padding,
-      min: Math.max(0, min - padding),
-    };
-  }
-
-  return { max, min };
-}
-
-function getRateHistoryChartModel(points: ChartPoint[]) {
-  const firstPoint = points[0];
-  const lastPoint = points.at(-1);
-
-  if (!firstPoint || !lastPoint) {
-    return null;
-  }
-
-  const rateExtent = getRateExtent(points);
-  const midRate = (rateExtent.max + rateExtent.min) / 2;
-  const xScale = scaleUtc().domain([firstPoint.date, lastPoint.date]).range([0, chartWidth]);
-  const yScale = scaleLinear().domain([rateExtent.min, rateExtent.max]).range([chartHeight, 0]);
-  const xAxisLabels: RateHistoryXAxisLabel[] = [
-    { label: formatDateAxisLabel(firstPoint.date), x: xScale(firstPoint.date) },
-    {
-      label: formatDateAxisLabel(getDateAtProgress(firstPoint.date, lastPoint.date, 0.25)),
-      tabletOnly: true,
-      x: chartWidth * 0.25,
-    },
-    {
-      label: formatDateAxisLabel(getDateAtProgress(firstPoint.date, lastPoint.date, 0.5)),
-      x: chartWidth * 0.5,
-    },
-    {
-      label: formatDateAxisLabel(getDateAtProgress(firstPoint.date, lastPoint.date, 0.75)),
-      tabletOnly: true,
-      x: chartWidth * 0.75,
-    },
-    { label: formatDateAxisLabel(lastPoint.date), x: xScale(lastPoint.date) },
-  ];
-  const linePath =
-    line<ChartPoint>()
-      .x((point) => xScale(point.date))
-      .y((point) => yScale(point.rate))(points) ?? "";
-  const areaPath =
-    area<ChartPoint>()
-      .x((point) => xScale(point.date))
-      .y0(chartHeight)
-      .y1((point) => yScale(point.rate))(points) ?? "";
-
-  return {
-    areaPath,
-    linePath,
-    xAxisLabels,
-    yAxisLabels: [
-      { label: formatRateAxisLabel(rateExtent.max), y: yScale(rateExtent.max) },
-      { label: formatRateAxisLabel(midRate), y: yScale(midRate) },
-      { label: formatRateAxisLabel(rateExtent.min), y: yScale(rateExtent.min) },
-    ],
-  };
-}
-
-function toChartPoints(points: RateHistoryPoint[]): ChartPoint[] {
-  return points.map((point) => ({
-    date: new Date(`${point.date}T00:00:00.000Z`),
-    rate: point.rate,
-  }));
-}
 
 type RateHistoryChartProps = {
+  chart: RateHistoryChartModel;
   pair: string;
-  points: RateHistoryPoint[];
   range: HistoryRange;
 };
 
-function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
-  const chartPoints = toChartPoints(points);
-  const chart = getRateHistoryChartModel(chartPoints);
-  const firstPoint = chartPoints[0];
-  const lastPoint = chartPoints.at(-1);
-
-  if (!chart || !firstPoint || !lastPoint) {
-    return null;
-  }
+function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
+  const chartId = `rate-history-chart-${range.toLowerCase()}`;
+  const gradientId = `rate-history-area-${range.toLowerCase()}`;
+  const summaryId = `rate-history-chart-summary-${range.toLowerCase()}`;
 
   return (
     <section
-      aria-labelledby="rate-history-chart-heading"
+      aria-labelledby={chartId}
       className="rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:p-250"
     >
       <div className="flex h-[19px] items-center justify-between gap-150 uppercase">
-        <h2 id="rate-history-chart-heading" className="text-preset-3-medium text-neutral-50">
+        <h2 id={chartId} className="text-preset-3-medium text-neutral-50">
           {pair}
         </h2>
         <InlineMetaList
@@ -142,11 +29,11 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
           aria-live="polite"
           className="justify-end text-right text-preset-5 text-neutral-100"
           separatorClassName="text-neutral-200"
-          items={[lastPoint.rate.toFixed(4), `${formatDateAxisLabel(lastPoint.date)} 16:00 CET`]}
+          items={[chart.lastRate, `${chart.lastDateLabel} 16:00 CET`]}
         />
       </div>
       <div
-        aria-describedby="rate-history-chart-summary"
+        aria-describedby={summaryId}
         aria-label={`${range} ${pair} rate history chart`}
         role="img"
         className="mt-250 grid grid-cols-[36px_1fr] gap-x-200"
@@ -180,7 +67,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
           >
             <defs>
               <linearGradient
-                id="rate-history-area"
+                id={gradientId}
                 x1="0"
                 x2="0"
                 y1="0"
@@ -205,7 +92,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
             </g>
             <path
               d={chart.areaPath}
-              fill="url(#rate-history-area)"
+              fill={`url(#${gradientId})`}
               vectorEffect="non-scaling-stroke"
             />
             <path
@@ -230,12 +117,10 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
           ))}
         </div>
       </div>
-      <p id="rate-history-chart-summary" className="sr-only" aria-live="polite" aria-atomic="true">
-        {range} {pair} moved from {firstPoint.rate.toFixed(4)} on{" "}
-        {formatDateAxisLabel(firstPoint.date)} to {lastPoint.rate.toFixed(4)} on{" "}
-        {formatDateAxisLabel(lastPoint.date)}. The highest displayed rate is{" "}
-        {chart.yAxisLabels[0]?.label}, and the lowest displayed rate is{" "}
-        {chart.yAxisLabels[2]?.label}.
+      <p id={summaryId} className="sr-only" aria-live="polite" aria-atomic="true">
+        {range} {pair} moved from {chart.firstRate} on {chart.firstDateLabel} to {chart.lastRate} on{" "}
+        {chart.lastDateLabel}. The highest displayed rate is {chart.yAxisLabels[0]?.label}, and the
+        lowest displayed rate is {chart.yAxisLabels[2]?.label}.
       </p>
     </section>
   );

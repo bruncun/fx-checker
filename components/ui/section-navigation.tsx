@@ -172,6 +172,7 @@ function SectionNavigation({
                     data-section-value={item.value}
                     href={item.href}
                     onClick={() => closeMenu()}
+                    prefetch
                     scroll={false}
                     tabIndex={isCurrent ? 0 : -1}
                   >

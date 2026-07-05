@@ -1,22 +1,15 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RateHistory } from "./rate-history";
 import type { RateHistoryData } from "../rate-history";
-
-const { routerReplace, testSearchParams } = vi.hoisted(() => ({
-  routerReplace: vi.fn(),
-  testSearchParams: { current: "" },
-}));
+import { deriveRateHistoryViewModel } from "../rate-history-chart-model";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useRouter: () => ({
-    replace: routerReplace,
-  }),
-  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 const history: RateHistoryData = {
@@ -33,14 +26,12 @@ const history: RateHistoryData = {
 };
 
 afterEach(() => {
-  routerReplace.mockClear();
-  testSearchParams.current = "";
   cleanup();
 });
 
 describe("RateHistory", () => {
   it("renders stats and chart details for the selected range", () => {
-    render(<RateHistory history={history} pair="USD/EUR" selectedRange="1M" />);
+    render(<RateHistory model={deriveRateHistoryViewModel(history)} selectedRange="1M" />);
 
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.8500").length).toBeGreaterThan(0);
@@ -50,12 +41,15 @@ describe("RateHistory", () => {
     expect(screen.getByRole("list", { name: "Chart details" }).getAttribute("aria-live")).toBe(
       "polite"
     );
-    expect(document.querySelector("#rate-history-chart-summary")?.getAttribute("aria-live")).toBe(
-      "polite"
-    );
+    expect(
+      document.querySelector("#rate-history-chart-summary-1m")?.getAttribute("aria-live")
+    ).toBe("polite");
 
-    cleanup();
-    render(<RateHistory history={history} pair="USD/EUR" selectedRange="3M" />);
+    expect(
+      screen.getAllByRole("img", { name: /USD\/EUR rate history chart/, hidden: true })
+    ).toHaveLength(6);
+
+    fireEvent.click(screen.getByRole("tab", { name: "3M" }));
     expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.9000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("-0.0400").length).toBeGreaterThan(0);
@@ -64,19 +58,19 @@ describe("RateHistory", () => {
   });
 
   it("renders the tab empty state with the selected pair when history data is missing", () => {
-    render(<RateHistory history={null} pair="GBP/JPY" />);
+    render(<RateHistory model={null} />);
 
     expect(screen.getByText("No chart data available")).toBeTruthy();
-    expect(screen.getByText(/GBP\/JPY/)).toBeTruthy();
+    expect(screen.getByText(/this pair/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
     expect(screen.queryByRole("img", { name: /rate history chart/ })).toBeNull();
   });
 
   it("renders the tab empty state when history points are empty", () => {
-    render(<RateHistory history={{ pair: "CAD/CHF", points: [] }} pair="CAD/CHF" />);
+    render(<RateHistory model={{ pair: "CAD/CHF", ranges: [] }} />);
 
     expect(screen.getByText("No chart data available")).toBeTruthy();
-    expect(screen.getByText(/CAD\/CHF/)).toBeTruthy();
+    expect(screen.getByText(/this pair/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
   });
 });

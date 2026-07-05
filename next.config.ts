@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   experimental: {
     inlineCss: true,
+    staleTimes: {
+      dynamic: 300,
+    },
   },
 };
 

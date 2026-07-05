@@ -5,6 +5,7 @@ import {
   historyRanges,
   type HistoryRange,
 } from "@/features/rate-history";
+import { deriveRateHistoryViewModel } from "@/features/rate-history/rate-history-chart-model";
 import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
 
@@ -40,14 +41,14 @@ async function HomeContent({ searchParams }: HomeProps) {
     return null;
   }
 
-  const pair = `${sendCurrency}/${receiveCurrency}`;
   const history = deriveRateHistoryData({
     baseCurrency: sendCurrency,
     quoteCurrency: receiveCurrency,
     rates: data.historicalRates,
   });
+  const model = deriveRateHistoryViewModel(history);
 
-  return <RateHistory history={history} pair={pair} selectedRange={selectedRange} />;
+  return <RateHistory model={model} selectedRange={selectedRange} />;
 }
 
 export default function Home({ searchParams }: HomeProps) {

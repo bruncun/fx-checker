@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import { getRateDetailsSectionFromPathname } from "./rate-details-navigation-state";
-import type { RateDetailsSection } from "./rate-details-navigation-state";
+import {
+  getRateDetailsSectionFromPathname,
+  type RateDetailsSection,
+} from "./rate-details-navigation-state";
 
 type RateDetailsProps = {
   children: ReactNode;

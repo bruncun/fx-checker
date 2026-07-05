@@ -21,6 +21,35 @@ export type RateHistoryData = {
   points: RateHistoryPoint[];
 };
 
+export type RateHistoryAxisLabel = {
+  label: string;
+  tabletOnly?: boolean;
+  x?: number;
+  y?: number;
+};
+
+export type RateHistoryChartModel = {
+  areaPath: string;
+  firstDateLabel: string;
+  firstRate: string;
+  lastDateLabel: string;
+  lastRate: string;
+  linePath: string;
+  xAxisLabels: RateHistoryAxisLabel[];
+  yAxisLabels: RateHistoryAxisLabel[];
+};
+
+export type RateHistoryRangeModel = {
+  chart: RateHistoryChartModel;
+  range: HistoryRange;
+  stats: RateHistoryStat[];
+};
+
+export type RateHistoryViewModel = {
+  pair: string;
+  ranges: RateHistoryRangeModel[];
+};
+
 const RateHistoryDecimal = Decimal.clone({ precision: 40 });
 
 export const historyRanges: HistoryRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y"];
