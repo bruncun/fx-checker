@@ -12,6 +12,8 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Frontend Mentor | FX Checker",
+  description:
+    "Check live foreign exchange rates, compare currencies, and track favorite conversions with FX Checker.",
   icons: {
     icon: [
       {
