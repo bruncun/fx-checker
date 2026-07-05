@@ -117,6 +117,12 @@ FRANKFURTER_API_BASE_URL=
 FRANKFURTER_CACHE_KEY=
 ```
 
+The Frankfurter cache warmup cron route is protected with a bearer secret:
+
+```env
+CRON_SECRET=
+```
+
 ### Quality Gates
 
 Run the same checks used by CI:

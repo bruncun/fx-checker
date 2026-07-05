@@ -1,0 +1,39 @@
+import {
+  getCurrencyReferenceData,
+  getHistoryPageData,
+  getLatestRatesData,
+  getLiveRatesData,
+} from "./home-page";
+
+type WarmupStatus = "available" | "unavailable";
+
+export type FrankfurterCacheWarmupResult = {
+  ok: boolean;
+  results: {
+    currencyReferenceData: WarmupStatus;
+    historicalRates: WarmupStatus;
+    latestRates: WarmupStatus;
+    liveRates: WarmupStatus;
+  };
+};
+
+export async function warmFrankfurterCache(): Promise<FrankfurterCacheWarmupResult> {
+  const latestRatesData = await getLatestRatesData();
+  const [currencyReferenceData, liveRatesData, historyPageData] = await Promise.all([
+    getCurrencyReferenceData(),
+    getLiveRatesData(),
+    getHistoryPageData(),
+  ]);
+
+  const results = {
+    currencyReferenceData: currencyReferenceData.status,
+    historicalRates: historyPageData.status,
+    latestRates: latestRatesData.status,
+    liveRates: liveRatesData.status,
+  };
+
+  return {
+    ok: Object.values(results).every((status) => status === "available"),
+    results,
+  };
+}
