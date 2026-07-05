@@ -82,7 +82,7 @@ function useOptimisticConversions(initialConversions: Conversion[]) {
     setConversionSnapshot(initialConversions);
   }, [initialConversions]);
 
-  return conversions;
+  return conversionSnapshot === null ? initialConversions : conversions;
 }
 
 function useOptimisticConversionCount(initialCount: number) {
