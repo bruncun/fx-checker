@@ -1,11 +1,31 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CompareRatesProvider } from "./compare-rates-context";
+import type { Favorite } from "@/features/favorites";
 import { CompareRates, getCompareCurrencies } from "./compare-rates";
+
+const { createFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
+  createFavorite: vi.fn(),
+  routerRefresh: vi.fn(),
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/rate/compare",
+  useRouter: () => ({
+    refresh: routerRefresh,
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
+
+vi.mock("@/features/favorites/actions", () => ({
+  createFavorite,
+  deleteFavorite: vi.fn(),
+}));
 
 const availableCurrencies = [
   { code: "USD", countryCode: "us" as const, name: "United States Dollar" },
@@ -32,45 +52,39 @@ const rates = [
   { date: "2026-06-19", base: "EUR", quote: "BDT", rate: 153.65 },
 ];
 
-afterEach(cleanup);
+afterEach(() => {
+  createFavorite.mockReset();
+  routerRefresh.mockClear();
+  routerReplace.mockClear();
+  testSearchParams.current = "";
+  cleanup();
+});
 
 function renderCompareRates({
   amount = "1000",
   favorites = [],
-  onCompareCurrencySelect = vi.fn(),
-  onFavoriteToggle = vi.fn(),
 }: {
   amount?: string;
-  favorites?: ComponentProps<typeof CompareRatesProvider>["value"]["favorites"];
-  onCompareCurrencySelect?: ComponentProps<
-    typeof CompareRatesProvider
-  >["value"]["onCompareCurrencySelect"];
-  onFavoriteToggle?: ComponentProps<typeof CompareRatesProvider>["value"]["onFavoriteToggle"];
+  favorites?: Favorite[];
 } = {}) {
   render(
-    <CompareRatesProvider
-      value={{
-        amount,
-        amountSource: "send",
-        availableCurrencies,
-        conversions: [],
-        favoriteRates: [],
-        favorites,
-        onConversionCreate: vi.fn(),
-        onConversionDelete: vi.fn(),
-        onConversionsClear: vi.fn(),
-        onConversionSelect: vi.fn(),
-        onCurrencyPairSelect: vi.fn(),
-        onCompareCurrencySelect,
-        onFavoriteToggle,
-        rates,
-        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
-        sendCurrency: { countryCode: "us", currencyCode: "USD" },
-      }}
-    >
-      <CompareRates />
-    </CompareRatesProvider>
+    <CompareRates
+      amount={amount}
+      amountSource="send"
+      availableCurrencies={availableCurrencies}
+      favoritesPromise={fulfilledPromise(favorites)}
+      rates={rates}
+      receiveCurrency={{ countryCode: "eu", currencyCode: "EUR" }}
+      sendCurrency={{ countryCode: "us", currencyCode: "USD" }}
+    />
   );
+}
+
+function fulfilledPromise<T>(value: T) {
+  return Object.assign(Promise.resolve(value), {
+    status: "fulfilled" as const,
+    value,
+  });
 }
 
 describe("CompareRates", () => {
@@ -100,14 +114,19 @@ describe("CompareRates", () => {
     expect(screen.getByRole("button", { name: "Favorite USD/CHF" })).toBeTruthy();
   });
 
-  it("notifies when a compare favorite is toggled", () => {
-    const onFavoriteToggle = vi.fn();
+  it("creates a favorite when a compare favorite is toggled", () => {
+    createFavorite.mockResolvedValue({
+      createdAt: "2026-06-19T00:00:00.000Z",
+      fromCurrency: "USD",
+      id: "favorite-usd-gbp",
+      toCurrency: "GBP",
+    });
 
-    renderCompareRates({ onFavoriteToggle });
+    renderCompareRates();
 
     fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
 
-    expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
+    expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
   });
 
   it("renders the comparison empty state when no converter amount is entered", () => {
@@ -121,9 +140,7 @@ describe("CompareRates", () => {
   });
 
   it("selects compare rows to load the receive currency into the converter", () => {
-    const onCompareCurrencySelect = vi.fn();
-
-    renderCompareRates({ onCompareCurrencySelect });
+    renderCompareRates();
 
     const gbpRow = screen.getByRole("row", {
       name: "Use USD/GBP in converter, 736 GBP at 0.7360",
@@ -131,16 +148,13 @@ describe("CompareRates", () => {
 
     fireEvent.click(gbpRow);
 
-    expect(onCompareCurrencySelect).toHaveBeenCalledWith({
-      countryCode: "gb",
-      currencyCode: "GBP",
+    expect(routerReplace).toHaveBeenCalledWith("/rate/compare?from=USD&to=GBP", {
+      scroll: false,
     });
   });
 
   it("supports row-first treegrid keyboard navigation and selection", () => {
-    const onCompareCurrencySelect = vi.fn();
-
-    renderCompareRates({ onCompareCurrencySelect });
+    renderCompareRates();
 
     const gbpRow = screen.getByRole("row", {
       name: "Use USD/GBP in converter, 736 GBP at 0.7360",
@@ -161,17 +175,20 @@ describe("CompareRates", () => {
 
     fireEvent.keyDown(jpyRow, { key: "Enter" });
 
-    expect(onCompareCurrencySelect).toHaveBeenCalledWith({
-      countryCode: "jp",
-      currencyCode: "JPY",
+    expect(routerReplace).toHaveBeenCalledWith("/rate/compare?from=USD&to=JPY", {
+      scroll: false,
     });
   });
 
   it("moves from a focused row to the favorite action and back", () => {
-    const onCompareCurrencySelect = vi.fn();
-    const onFavoriteToggle = vi.fn();
+    createFavorite.mockResolvedValue({
+      createdAt: "2026-06-19T00:00:00.000Z",
+      fromCurrency: "USD",
+      id: "favorite-usd-gbp",
+      toCurrency: "GBP",
+    });
 
-    renderCompareRates({ onCompareCurrencySelect, onFavoriteToggle });
+    renderCompareRates();
 
     const gbpRow = screen.getByRole("row", {
       name: "Use USD/GBP in converter, 736 GBP at 0.7360",
@@ -187,8 +204,8 @@ describe("CompareRates", () => {
     fireEvent.keyDown(favoriteButton, { key: "Enter" });
     fireEvent.click(favoriteButton);
 
-    expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
-    expect(onCompareCurrencySelect).not.toHaveBeenCalled();
+    expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
+    expect(routerReplace).not.toHaveBeenCalled();
 
     fireEvent.keyDown(favoriteButton, { key: "Escape" });
 

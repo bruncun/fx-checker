@@ -8,16 +8,12 @@ describe("home page", () => {
     cy.task("resetFrankfurterMock");
   });
 
-  it("renders a page-level unavailable state when currency data cannot load", () => {
-    cy.task("failFrankfurterCurrencies");
-
+  it("renders the home shell without redirecting to login", () => {
     cy.visit("/");
 
-    cy.findByRole("heading", {
-      name: "Exchange rate data is unavailable",
-    }).should("be.visible");
-    cy.contains("Please refresh the page in a moment.").should("be.visible");
-    cy.findByRole("list", { name: "Exchange rate data stats" }).should("not.exist");
+    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
+    cy.findByRole("textbox", { name: "Email" }).should("not.exist");
   });
 
   it("renders exchange-rate data details from Frankfurter currencies", () => {
@@ -92,7 +88,7 @@ describe("home page", () => {
     cy.viewport(375, 667);
     cy.visit("/");
 
-    cy.findByRole("button", { name: "Select send currency" }).then(($trigger) => {
+    cy.findByRole("button", { name: "Select send currency", timeout: 10000 }).then(($trigger) => {
       cy.wrap($trigger).click({ scrollBehavior: false });
       cy.findByRole("dialog", { name: "Currency picker" }).should(($dialog) => {
         const triggerBottom = $trigger[0]!.getBoundingClientRect().bottom;

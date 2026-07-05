@@ -1,10 +1,22 @@
 import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/converter/currencies";
 import { getServerConversions } from "@/features/conversion-log/server";
 import { getServerFavorites } from "@/features/favorites/server";
+import { ExchangeRateStats } from "@/features/header/header";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
-import { cache, type ReactNode } from "react";
+import { cacheLife } from "next/cache";
+import { Suspense, type ReactNode } from "react";
+import { Converter } from "@/features/converter";
+import { LiveRateList } from "@/features/live-rates";
+import { RateDetails } from "@/features/rate-details";
+import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
+import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
+import {
+  ConverterFallback,
+  HeaderStatsFallback,
+  LiveRatesFallback,
+} from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 
 const RATE_HISTORY_YEARS = 5;
@@ -128,7 +140,10 @@ async function getHistoricalRatesByYear({ from, to }: DateRange) {
   return rateGroups.flat();
 }
 
-export const getLatestRatesData = cache(async (): Promise<LatestRatesData> => {
+export async function getLatestRatesData(): Promise<LatestRatesData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const rates = await getRates();
 
@@ -136,9 +151,12 @@ export const getLatestRatesData = cache(async (): Promise<LatestRatesData> => {
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
-export const getCurrencyReferenceData = cache(async (): Promise<CurrencyReferenceData> => {
+export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const [currencies, latestRatesData] = await Promise.all([
       getCurrencies(),
@@ -163,9 +181,12 @@ export const getCurrencyReferenceData = cache(async (): Promise<CurrencyReferenc
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
-export const getLiveRatesData = cache(async (): Promise<LiveRatesData> => {
+export async function getLiveRatesData(): Promise<LiveRatesData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -200,9 +221,12 @@ export const getLiveRatesData = cache(async (): Promise<LiveRatesData> => {
   } catch {
     return { status: "unavailable" };
   }
-});
+}
 
-export const getHistoryPageData = cache(async (): Promise<HistoryPageData> => {
+export async function getHistoryPageData(): Promise<HistoryPageData> {
+  "use cache";
+  cacheLife("days");
+
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -229,60 +253,92 @@ export const getHistoryPageData = cache(async (): Promise<HistoryPageData> => {
   } catch {
     return { status: "unavailable" };
   }
-});
-
-function DataUnavailable() {
-  return (
-    <main className="text-white min-h-screen bg-neutral-900">
-      <section className="mx-auto flex min-h-[calc(100vh-88px)] max-w-[520px] flex-col items-center justify-center px-300 text-center">
-        <h1 className="text-preset-2">Exchange rate data is unavailable</h1>
-        <p className="mt-150 text-preset-4 text-neutral-200">
-          We could not load the latest currency data. Please refresh the page in a moment.
-        </p>
-      </section>
-    </main>
-  );
 }
 
 type HomePageShellProps = {
   children: ReactNode;
 };
 
-export async function HomePageShell({ children }: HomePageShellProps) {
-  const [currencyReferenceData, latestRatesData, liveRatesData, favorites, conversions] =
-    await Promise.all([
-      getCurrencyReferenceData(),
-      getLatestRatesData(),
-      getLiveRatesData(),
-      getServerFavorites().catch((error) => {
-        console.error("Failed to retrieve favorites", error);
+async function HeaderStats() {
+  const currencyReferenceData = await getCurrencyReferenceData();
 
-        return [];
-      }),
-      getServerConversions().catch((error) => {
-        console.error("Failed to retrieve conversions", error);
+  if (currencyReferenceData.status === "unavailable") {
+    return null;
+  }
 
-        return [];
-      }),
-    ]);
+  return <ExchangeRateStats currencyCount={currencyReferenceData.currencyCount} />;
+}
+
+async function LiveRates() {
+  const liveRatesData = await getLiveRatesData();
+
+  if (liveRatesData.status === "unavailable") {
+    return null;
+  }
+
+  return <LiveRateList rates={liveRatesData.liveRates} />;
+}
+
+async function ConverterSlot() {
+  const favoritesPromise = getServerFavorites().catch(() => []);
+  const [currencyReferenceData, latestRatesData] = await Promise.all([
+    getCurrencyReferenceData(),
+    getLatestRatesData(),
+  ]);
 
   if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
-    return <DataUnavailable />;
+    return null;
   }
 
   return (
-    <HomePageContent
-      availableCurrencies={currencyReferenceData.availableCurrencies}
-      conversions={conversions}
-      currencyCount={currencyReferenceData.currencyCount}
-      favorites={favorites}
-      liveRateHistoryRates={
-        liveRatesData.status === "available" ? liveRatesData.liveRateHistoryRates : []
-      }
-      liveRates={liveRatesData.status === "available" ? liveRatesData.liveRates : []}
+    <Converter
+      currencies={currencyReferenceData.availableCurrencies}
+      favoritesPromise={favoritesPromise}
       rates={latestRatesData.rates}
-    >
-      {children}
-    </HomePageContent>
+    />
+  );
+}
+
+async function RateDetailsNavigationSlot() {
+  const [favorites, conversions] = await Promise.all([
+    getServerFavorites().catch(() => []),
+    getServerConversions().catch(() => []),
+  ]);
+
+  return (
+    <RateDetailsNavigation conversionCount={conversions.length} favoriteCount={favorites.length} />
+  );
+}
+
+export function HomePageShell({ children }: HomePageShellProps) {
+  return (
+    <HomePageContent
+      converterSlot={
+        <Suspense fallback={<ConverterFallback />}>
+          <ConverterSlot />
+        </Suspense>
+      }
+      headerStatsSlot={
+        <Suspense fallback={<HeaderStatsFallback />}>
+          <HeaderStats />
+        </Suspense>
+      }
+      liveRatesSlot={
+        <Suspense fallback={<LiveRatesFallback />}>
+          <LiveRates />
+        </Suspense>
+      }
+      rateDetailsSlot={
+        <RateDetails
+          navigationSlot={
+            <Suspense fallback={<RateDetailsNavigationFallback />}>
+              <RateDetailsNavigationSlot />
+            </Suspense>
+          }
+        >
+          {children}
+        </RateDetails>
+      }
+    />
   );
 }

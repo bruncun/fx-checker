@@ -1,12 +1,17 @@
 import { Logo } from "@/components/logo";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
+import type { ReactNode } from "react";
 import { SignOutLink } from "./sign-out-link";
 
-type AppHeaderProps = {
+type ExchangeRateStatsProps = {
   currencyCount: number;
 };
 
-function ExchangeRateStats({ currencyCount }: AppHeaderProps) {
+type HeaderProps = {
+  statsSlot?: ReactNode;
+};
+
+function ExchangeRateStats({ currencyCount }: ExchangeRateStatsProps) {
   return (
     <InlineMetaList
       className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
@@ -26,11 +31,13 @@ function ExchangeRateStats({ currencyCount }: AppHeaderProps) {
   );
 }
 
-export function Header({ currencyCount }: AppHeaderProps) {
+export function Header({ statsSlot }: HeaderProps) {
   return (
     <nav className="flex w-full items-center justify-between p-200 sm:px-300 sm:py-250">
       <Logo />
-      <ExchangeRateStats currencyCount={currencyCount} />
+      {statsSlot}
     </nav>
   );
 }
+
+export { ExchangeRateStats };

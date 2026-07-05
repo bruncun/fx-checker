@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/client";
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
 import {
   mapFavorite,
   normalizeFavoritePair,
@@ -6,30 +8,37 @@ import {
   type FavoriteCurrencyPair,
 } from "./favorites";
 
-export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
-  const supabase = createClient();
+const FAVORITES_SELECT = "id, from_currency, to_currency, created_at";
+
+async function getAuthenticatedUserContext() {
+  const supabase = await createClient();
   const {
     data: { user },
-    error: userError,
+    error,
   } = await supabase.auth.getUser();
 
-  if (userError) {
-    throw userError;
+  if (error) {
+    throw error;
   }
 
   if (!user) {
-    throw new Error("You must be signed in to create favorites.");
+    throw new Error("You must be signed in to update favorites.");
   }
 
+  return { supabase, userId: user.id };
+}
+
+export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
+  const { supabase, userId } = await getAuthenticatedUserContext();
   const normalizedPair = normalizeFavoritePair(pair);
   const { data, error } = await supabase
     .from("favorites")
     .insert({
       from_currency: normalizedPair.fromCurrency,
       to_currency: normalizedPair.toCurrency,
-      user_id: user.id,
+      user_id: userId,
     })
-    .select("id, from_currency, to_currency, created_at")
+    .select(FAVORITES_SELECT)
     .single();
 
   if (error) {
@@ -40,25 +49,12 @@ export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favori
 }
 
 export async function deleteFavorite(pair: FavoriteCurrencyPair): Promise<void> {
-  const supabase = createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw userError;
-  }
-
-  if (!user) {
-    throw new Error("You must be signed in to delete favorites.");
-  }
-
+  const { supabase, userId } = await getAuthenticatedUserContext();
   const normalizedPair = normalizeFavoritePair(pair);
   const { error } = await supabase
     .from("favorites")
     .delete()
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("from_currency", normalizedPair.fromCurrency)
     .eq("to_currency", normalizedPair.toCurrency);
 

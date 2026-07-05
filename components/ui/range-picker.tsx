@@ -50,7 +50,7 @@ function RangePicker({
     <div
       ref={tabListRef}
       aria-label={ariaLabel}
-      className={cn("flex w-fit rounded-8 bg-neutral-700 p-025", className)}
+      className={cn("flex h-[42px] w-fit rounded-8 bg-neutral-700 p-025", className)}
       onKeyDown={disabled ? undefined : rovingFocus.handleKeyDown}
       role="tablist"
     >

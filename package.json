@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:e2e": "NEXT_DIST_DIR=.next-e2e FRANKFURTER_API_BASE_URL=http://127.0.0.1:3100/v2 FRANKFURTER_CACHE_KEY=auto next dev -p 3101",
+    "dev:e2e": "NEXT_DIST_DIR=.next-e2e FX_CHECKER_E2E_AUTH_BYPASS=1 FRANKFURTER_API_BASE_URL=http://127.0.0.1:3100/v2 FRANKFURTER_CACHE_KEY=auto next dev -p 3101",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",

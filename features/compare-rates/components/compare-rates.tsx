@@ -6,6 +6,7 @@ import { Flag } from "@/components/ui/flag";
 import { FavoriteButton } from "@/components/ui/favorite-button";
 import {
   RateDetailsList,
+  type RateDetailsRowActionProps,
   RateDetailsTreeGrid,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
@@ -17,8 +18,24 @@ import {
   getExchangeRate,
   MoneyDecimal,
 } from "@/features/converter/exchange";
-import { findFavorite, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
-import { useCompareRatesPresentation } from "./compare-rates-context";
+import type { SelectedCurrency } from "@/features/converter";
+import {
+  findFavorite,
+  getFavoritePairKey,
+  normalizeFavoritePair,
+  type Favorite,
+  type FavoriteCurrencyPair,
+} from "@/features/favorites";
+import { createFavorite, deleteFavorite } from "@/features/favorites/actions";
+import {
+  addOptimisticFavorite,
+  removeOptimisticFavorite,
+  replaceOptimisticFavorite,
+  useOptimisticFavorites,
+} from "@/features/favorites/optimistic-favorites";
+import { getCurrencyPairUrl } from "@/features/home/url-state";
+import type { FrankfurterRate } from "@/lib/frankfurter";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];
 
@@ -58,25 +75,97 @@ function getCompareCurrencies(currencies: AvailableCurrency[], sendCurrencyCode:
 type CompareRateItemProps = {
   amount: string;
   currency: AvailableCurrency;
-  favorites: Favorite[];
+  favoritesPromise: Promise<Favorite[]>;
   fromCurrencyCode: string;
   isSelected: boolean;
   onCompareCurrencySelect: (currency: AvailableCurrency) => void;
-  onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
   rate: string;
   tabIndex: 0 | -1;
 };
 
 type CompareRateItemData = Pick<CompareRateItemProps, "amount" | "currency" | "rate">;
 
+type CompareFavoriteButtonProps = {
+  actionProps: RateDetailsRowActionProps;
+  favoritesPromise: Promise<Favorite[]>;
+  pair: FavoriteCurrencyPair;
+};
+
+function CompareFavoriteButton({
+  actionProps,
+  favoritesPromise,
+  pair,
+}: CompareFavoriteButtonProps) {
+  const router = useRouter();
+  const initialFavorites = React.use(favoritesPromise);
+  const favorites = useOptimisticFavorites(initialFavorites);
+  const normalizedPair = normalizeFavoritePair(pair);
+  const existingFavorite = findFavorite(favorites, normalizedPair);
+  const isFavorite = existingFavorite !== null;
+
+  function toggleFavorite(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+
+    if (existingFavorite) {
+      removeOptimisticFavorite(normalizedPair);
+
+      React.startTransition(async () => {
+        try {
+          await deleteFavorite(normalizedPair);
+          router.refresh();
+        } catch (error) {
+          console.error("Failed to delete favorite", error);
+          addOptimisticFavorite(existingFavorite);
+        }
+      });
+
+      return;
+    }
+
+    const pendingFavorite: Favorite = {
+      ...normalizedPair,
+      createdAt: new Date().toISOString(),
+      id: `optimistic:${getFavoritePairKey(normalizedPair)}`,
+    };
+
+    addOptimisticFavorite(pendingFavorite);
+
+    React.startTransition(async () => {
+      try {
+        const createdFavorite = await createFavorite(normalizedPair);
+
+        replaceOptimisticFavorite(pendingFavorite, createdFavorite);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to create favorite", error);
+        removeOptimisticFavorite(normalizedPair);
+      }
+    });
+  }
+
+  return (
+    <FavoriteButton
+      {...actionProps}
+      aria-label={
+        isFavorite
+          ? `Remove ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency} from favorites`
+          : `Favorite ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency}`
+      }
+      onClick={toggleFavorite}
+      pinned={isFavorite}
+      variant="icon"
+      data-compare-favorite-button
+    />
+  );
+}
+
 function CompareRateItem({
   amount,
   currency,
-  favorites,
+  favoritesPromise,
   fromCurrencyCode,
   isSelected,
   onCompareCurrencySelect,
-  onFavoriteToggle,
   rate,
   tabIndex,
 }: CompareRateItemProps) {
@@ -84,7 +173,6 @@ function CompareRateItem({
     fromCurrency: fromCurrencyCode,
     toCurrency: currency.code,
   };
-  const isFavorited = findFavorite(favorites, pair) !== null;
   const rowLabel = `Use ${fromCurrencyCode}/${currency.code} in converter, ${amount} ${currency.code} at ${rate}`;
 
   function selectCompareCurrency() {
@@ -95,21 +183,14 @@ function CompareRateItem({
     <RateDetailsTreeGridRow
       aria-label={rowLabel}
       action={(actionProps) => (
-        <FavoriteButton
-          {...actionProps}
-          aria-label={
-            isFavorited
-              ? `Remove ${fromCurrencyCode}/${currency.code} from favorites`
-              : `Favorite ${fromCurrencyCode}/${currency.code}`
-          }
-          onClick={(event) => {
-            event.stopPropagation();
-            onFavoriteToggle(pair);
-          }}
-          pinned={isFavorited}
-          variant="icon"
-          data-compare-favorite-button
-        />
+        <React.Suspense fallback={<span aria-hidden className="block size-400" />}>
+          <CompareFavoriteButton
+            key={getFavoritePairKey(pair)}
+            actionProps={actionProps}
+            favoritesPromise={favoritesPromise}
+            pair={pair}
+          />
+        </React.Suspense>
       )}
       gridClassName="grid-cols-[auto_minmax(0,1fr)_auto_auto]"
       isSelected={isSelected}
@@ -134,18 +215,29 @@ function CompareRateItem({
   );
 }
 
-function CompareRates() {
-  const {
-    amount,
-    amountSource,
-    availableCurrencies,
-    favorites,
-    rates,
-    receiveCurrency,
-    sendCurrency,
-    onCompareCurrencySelect,
-    onFavoriteToggle,
-  } = useCompareRatesPresentation();
+type CompareRatesProps = {
+  amount: string;
+  amountSource: "send" | "receive";
+  availableCurrencies: AvailableCurrency[];
+  favoritesPromise: Promise<Favorite[]>;
+  rates: FrankfurterRate[];
+  receiveCurrency: SelectedCurrency;
+  sendCurrency: SelectedCurrency;
+};
+
+function CompareRates({
+  amount,
+  amountSource,
+  availableCurrencies,
+  favoritesPromise,
+  rates,
+  receiveCurrency,
+  sendCurrency,
+}: CompareRatesProps) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
   const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
     receiveCurrency.currencyCode
   );
@@ -179,10 +271,17 @@ function CompareRates() {
     : (compareRates[0]?.currency.code ?? "");
 
   function selectCompareCurrency(currency: AvailableCurrency) {
-    onCompareCurrencySelect({
-      countryCode: currency.countryCode,
-      currencyCode: currency.code,
+    const nextUrl = getCurrencyPairUrl({
+      pathname,
+      receiveCurrency: {
+        countryCode: currency.countryCode,
+        currencyCode: currency.code,
+      },
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency,
     });
+
+    router.replace(nextUrl, { scroll: false });
     setPreferredTabStopCode(currency.code);
   }
 
@@ -249,11 +348,10 @@ function CompareRates() {
             key={item.currency.code}
             amount={item.amount}
             currency={item.currency}
-            favorites={favorites}
+            favoritesPromise={favoritesPromise}
             fromCurrencyCode={sendCurrency.currencyCode}
             isSelected={item.currency.code === receiveCurrency.currencyCode}
             onCompareCurrencySelect={selectCompareCurrency}
-            onFavoriteToggle={onFavoriteToggle}
             rate={item.rate}
             tabIndex={item.currency.code === tabStopCode ? 0 : -1}
           />

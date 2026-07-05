@@ -1,12 +1,37 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useState } from "react";
 
 import { Converter, type SelectedCurrency } from "../converter";
 import type { AvailableCurrency } from "../../currencies";
+import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+
+const { createFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
+  createFavorite: vi.fn(),
+  routerRefresh: vi.fn(),
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({
+    refresh: routerRefresh,
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
+
+vi.mock("@/features/favorites/actions", () => ({
+  createFavorite,
+  deleteFavorite: vi.fn(),
+}));
+
+vi.mock("@/features/conversion-log/client", () => ({
+  createConversion: vi.fn(),
+}));
 
 const rates: FrankfurterRate[] = [
   { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.171 },
@@ -24,36 +49,50 @@ const defaultSelectedCurrencies = {
   receiveCurrency: { countryCode: "eu", currencyCode: "EUR" } satisfies SelectedCurrency,
 };
 
+function fulfilledPromise<T>(value: T) {
+  return Object.assign(Promise.resolve(value), {
+    status: "fulfilled" as const,
+    value,
+  });
+}
+
 function renderConverter({
   converterCurrencies = currencies,
   converterRates = rates,
+  favorites = [],
   initialSelectedCurrencies = defaultSelectedCurrencies,
+  searchParams,
 }: {
   converterCurrencies?: AvailableCurrency[];
   converterRates?: FrankfurterRate[];
+  favorites?: Favorite[];
   initialSelectedCurrencies?: {
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
   };
+  searchParams?: string;
 } = {}) {
-  function TestConverter() {
-    const [selectedCurrencies, setSelectedCurrencies] = useState(initialSelectedCurrencies);
-
-    return (
-      <Converter
-        currencies={converterCurrencies}
-        rates={converterRates}
-        sendCurrency={selectedCurrencies.sendCurrency}
-        receiveCurrency={selectedCurrencies.receiveCurrency}
-        onSelectedCurrenciesChange={setSelectedCurrencies}
-      />
-    );
+  if (searchParams !== undefined) {
+    testSearchParams.current = searchParams;
+  } else {
+    testSearchParams.current = `from=${initialSelectedCurrencies.sendCurrency.currencyCode}&to=${initialSelectedCurrencies.receiveCurrency.currencyCode}`;
   }
 
-  return render(<TestConverter />);
+  return render(
+    <Converter
+      currencies={converterCurrencies}
+      favoritesPromise={fulfilledPromise(favorites)}
+      rates={converterRates}
+    />
+  );
 }
 
 afterEach(() => {
+  createFavorite.mockReset();
+  routerRefresh.mockClear();
+  routerReplace.mockClear();
+  testSearchParams.current = "";
+  vi.useRealTimers();
   cleanup();
 });
 
@@ -290,72 +329,55 @@ describe("Converter", () => {
     expect(screen.getByText("1 VND = 0.00003333 EUR")).toBeTruthy();
   });
 
-  it("recalculates amounts when selected currencies change outside the converter", () => {
-    function ControlledConverter() {
-      const [selectedCurrencies, setSelectedCurrencies] = useState<{
-        receiveCurrency: SelectedCurrency;
-        sendCurrency: SelectedCurrency;
-      }>({
-        sendCurrency: { countryCode: "us", currencyCode: "USD" },
-        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
-      });
+  it("optimistically favorites the selected pair", async () => {
+    createFavorite.mockResolvedValue({
+      createdAt: "2026-06-19T00:00:00.000Z",
+      fromCurrency: "USD",
+      id: "favorite-usd-eur",
+      toCurrency: "EUR",
+    });
 
-      return (
-        <>
-          <button
-            type="button"
-            onClick={() =>
-              setSelectedCurrencies({
-                sendCurrency: { countryCode: "gb", currencyCode: "GBP" },
-                receiveCurrency: { countryCode: "us", currencyCode: "USD" },
-              })
-            }
-          >
-            Select GBP/USD
-          </button>
-          <Converter
-            currencies={[
-              ...currencies,
-              { code: "GBP", countryCode: "gb" as const, name: "British Pound" },
-            ]}
-            rates={[...rates, { date: "2026-06-19", base: "EUR", quote: "GBP", rate: 0.85 }]}
-            sendCurrency={selectedCurrencies.sendCurrency}
-            receiveCurrency={selectedCurrencies.receiveCurrency}
-            onSelectedCurrenciesChange={setSelectedCurrencies}
-          />
-        </>
-      );
-    }
+    renderConverter();
 
-    render(<ControlledConverter />);
+    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
+    });
+    expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("debounces amount updates into the search params", () => {
+    vi.useFakeTimers();
+
+    renderConverter();
+
+    vi.advanceTimersByTime(300);
+    expect(routerReplace).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "100" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Select GBP/USD" }));
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "137.76"
-    );
+    vi.advanceTimersByTime(299);
+    expect(routerReplace).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(routerReplace).toHaveBeenCalledWith("/?from=USD&to=EUR&amount=100&amountSource=send", {
+      scroll: false,
+    });
   });
 
-  it("notifies when the selected pair favorite is toggled", () => {
-    const onFavoriteToggle = vi.fn();
+  it("does not update search params for formatting-only amount input changes", () => {
+    vi.useFakeTimers();
 
-    render(
-      <Converter
-        currencies={currencies}
-        rates={rates}
-        sendCurrency={defaultSelectedCurrencies.sendCurrency}
-        receiveCurrency={defaultSelectedCurrencies.receiveCurrency}
-        onFavoriteToggle={onFavoriteToggle}
-        onSelectedCurrenciesChange={vi.fn()}
-      />
-    );
+    renderConverter({ searchParams: "from=USD&to=EUR&amount=100&amountSource=send" });
 
-    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "1,00" },
+    });
+    vi.advanceTimersByTime(300);
 
-    expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 });

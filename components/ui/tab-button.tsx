@@ -4,17 +4,20 @@ import Link, { type LinkProps } from "next/link";
 import { cn } from "@/lib/utils";
 
 export interface TabCountBadgeProps extends React.ComponentProps<"span"> {
-  count: number;
+  count?: number;
 }
 
 function TabCountBadge({ className, count, ...props }: TabCountBadgeProps) {
+  const isEmpty = count === undefined;
+
   return (
     <span
+      {...props}
+      aria-hidden={isEmpty ? true : props["aria-hidden"]}
       className={cn(
         "inline-flex size-[20px] shrink-0 items-center justify-center rounded-full bg-lime-800 text-preset-6 text-lime-500",
         className
       )}
-      {...props}
     >
       {count}
     </span>
@@ -25,6 +28,7 @@ export type TabButtonProps = {
   active?: boolean;
   count?: number;
   label: string;
+  reserveCount?: boolean;
 } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | "href"> &
   LinkProps & {
     href: LinkProps["href"];
@@ -34,16 +38,20 @@ function getTabButtonContent({
   active,
   count,
   label,
+  reserveCount = false,
 }: {
   active: boolean;
   count?: number;
   label: string;
+  reserveCount?: boolean;
 }) {
+  const shouldRenderCount = count !== undefined || reserveCount;
+
   return (
     <>
       <span className="inline-flex items-center gap-100 px-200 py-125">
         <span>{label}</span>
-        {count !== undefined ? <TabCountBadge count={count} /> : null}
+        {shouldRenderCount ? <TabCountBadge count={count} /> : null}
       </span>
       <span aria-hidden className={cn("h-025 bg-transparent", active && "bg-lime-500")} />
     </>
@@ -63,6 +71,7 @@ function TabButton({
   count,
   href,
   label,
+  reserveCount,
   role = "tab",
   ...props
 }: TabButtonProps) {
@@ -75,7 +84,7 @@ function TabButton({
       {...props}
       prefetch
     >
-      {getTabButtonContent({ active, count, label })}
+      {getTabButtonContent({ active, count, label, reserveCount })}
     </Link>
   );
 }

@@ -1,10 +1,23 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RateHistory } from "./rate-history";
 import type { RateHistoryData } from "../rate-history";
+
+const { routerReplace, testSearchParams } = vi.hoisted(() => ({
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
 
 const history: RateHistoryData = {
   pair: "USD/EUR",
@@ -20,6 +33,8 @@ const history: RateHistoryData = {
 };
 
 afterEach(() => {
+  routerReplace.mockClear();
+  testSearchParams.current = "";
   cleanup();
 });
 

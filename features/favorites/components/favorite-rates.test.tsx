@@ -4,18 +4,32 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { CompareRatesProvider } from "@/features/compare-rates";
 import { FavoriteRates } from "./favorite-rates";
+
+const { deleteFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
+  deleteFavorite: vi.fn(),
+  routerRefresh: vi.fn(),
+  routerReplace: vi.fn(),
+  testSearchParams: { current: "" },
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/rate/favorites",
+  useRouter: () => ({
+    refresh: routerRefresh,
+    replace: routerReplace,
+  }),
+  useSearchParams: () => new URLSearchParams(testSearchParams.current),
+}));
+
+vi.mock("@/features/favorites/actions", () => ({
+  deleteFavorite,
+}));
 
 const availableCurrencies = [
   { code: "USD", countryCode: "us" as const, name: "United States Dollar" },
   { code: "EUR", countryCode: "eu" as const, name: "Euro" },
   { code: "GBP", countryCode: "gb" as const, name: "British Pound" },
-];
-
-const rates = [
-  { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.25 },
-  { date: "2026-06-19", base: "EUR", quote: "GBP", rate: 0.92 },
 ];
 
 const favoriteRates = [
@@ -38,42 +52,25 @@ const favorites = [
   },
 ];
 
-afterEach(cleanup);
+afterEach(() => {
+  deleteFavorite.mockReset();
+  routerRefresh.mockClear();
+  routerReplace.mockClear();
+  testSearchParams.current = "";
+  cleanup();
+});
 
 function renderFavoriteRates({
   favorites: selectedFavorites = favorites,
-  onCurrencyPairSelect = vi.fn(),
-  onFavoriteToggle = vi.fn(),
 }: {
-  favorites?: ComponentProps<typeof CompareRatesProvider>["value"]["favorites"];
-  onCurrencyPairSelect?: ComponentProps<
-    typeof CompareRatesProvider
-  >["value"]["onCurrencyPairSelect"];
-  onFavoriteToggle?: ComponentProps<typeof CompareRatesProvider>["value"]["onFavoriteToggle"];
+  favorites?: ComponentProps<typeof FavoriteRates>["favorites"];
 } = {}) {
   render(
-    <CompareRatesProvider
-      value={{
-        amount: "1000",
-        amountSource: "send",
-        availableCurrencies,
-        conversions: [],
-        favoriteRates,
-        favorites: selectedFavorites,
-        onCompareCurrencySelect: vi.fn(),
-        onConversionCreate: vi.fn(),
-        onConversionDelete: vi.fn(),
-        onConversionsClear: vi.fn(),
-        onConversionSelect: vi.fn(),
-        onCurrencyPairSelect,
-        onFavoriteToggle,
-        rates,
-        receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
-        sendCurrency: { countryCode: "us", currencyCode: "USD" },
-      }}
-    >
-      <FavoriteRates />
-    </CompareRatesProvider>
+    <FavoriteRates
+      availableCurrencies={availableCurrencies}
+      favorites={selectedFavorites}
+      liveRates={favoriteRates}
+    />
   );
 }
 
@@ -95,10 +92,9 @@ describe("FavoriteRates", () => {
   });
 
   it("selects a favorite pair and removes it from the star action", () => {
-    const onCurrencyPairSelect = vi.fn();
-    const onFavoriteToggle = vi.fn();
+    deleteFavorite.mockResolvedValue(undefined);
 
-    renderFavoriteRates({ onCurrencyPairSelect, onFavoriteToggle });
+    renderFavoriteRates();
 
     const row = screen.getByRole("row", {
       name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
@@ -106,14 +102,13 @@ describe("FavoriteRates", () => {
 
     fireEvent.click(row);
 
-    expect(onCurrencyPairSelect).toHaveBeenCalledWith({
-      receiveCurrency: { countryCode: "eu", currencyCode: "EUR" },
-      sendCurrency: { countryCode: "us", currencyCode: "USD" },
+    expect(routerReplace).toHaveBeenCalledWith("/rate/favorites?from=USD&to=EUR", {
+      scroll: false,
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
 
-    expect(onFavoriteToggle).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+    expect(deleteFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
   });
 
   it("renders the pinned pairs empty state when no favorites exist", () => {

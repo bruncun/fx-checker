@@ -1,74 +1,20 @@
-"use client";
-
-import { SectionNavigation, type SectionNavigationItem } from "@/components/ui/section-navigation";
-import { useCompareRatesPresentation } from "@/features/compare-rates";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useMemo, type ReactNode } from "react";
-
-export type RateDetailsSection = "compare" | "favorites" | "history" | "log";
-
-const rateDetailsSectionDefinitions = [
-  { href: "/", label: "History", value: "history" },
-  { href: "/rate/compare", label: "Compare", value: "compare" },
-  { href: "/rate/favorites", label: "Favorites", value: "favorites" },
-  { href: "/rate/log", label: "Log", value: "log" },
-] as const;
-
-function isRateDetailsSection(value: string | null | undefined): value is RateDetailsSection {
-  return rateDetailsSectionDefinitions.some((section) => section.value === value);
-}
+import type { ReactNode } from "react";
+import { getRateDetailsSectionFromPathname } from "./rate-details-navigation-state";
+import type { RateDetailsSection } from "./rate-details-navigation-state";
 
 type RateDetailsProps = {
   children: ReactNode;
+  navigationSlot: ReactNode;
 };
 
-function getRateDetailsSectionFromPathname(pathname: string | null): RateDetailsSection {
-  const nestedSection = pathname?.match(/^\/rate\/([^/]+)$/)?.[1];
-
-  if (isRateDetailsSection(nestedSection)) {
-    return nestedSection;
-  }
-
-  return "history";
-}
-
-function appendSearchParams(href: string, searchParams: string) {
-  return searchParams ? `${href}?${searchParams}` : href;
-}
-
-function RateDetails({ children }: RateDetailsProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { conversions, favorites } = useCompareRatesPresentation();
-  const searchParamsString = searchParams.toString();
-  const selectedSection = getRateDetailsSectionFromPathname(pathname);
-  const rateDetailsSections: SectionNavigationItem[] = useMemo(
-    () =>
-      rateDetailsSectionDefinitions.map((section) => ({
-        ...section,
-        count:
-          section.value === "favorites"
-            ? favorites.length
-            : section.value === "log"
-              ? conversions.length
-              : undefined,
-        href: appendSearchParams(section.href, searchParamsString),
-      })),
-    [conversions.length, favorites.length, searchParamsString]
-  );
-
+function RateDetails({ children, navigationSlot }: RateDetailsProps) {
   return (
     <section aria-label="Rate details">
-      <SectionNavigation
-        aria-label="Rate details sections"
-        items={rateDetailsSections}
-        value={selectedSection}
-      />
-      <div className="mt-200 sm:mt-250" key={pathname}>
-        {children}
-      </div>
+      {navigationSlot}
+      <div className="mt-200 sm:mt-250">{children}</div>
     </section>
   );
 }
 
 export { RateDetails, getRateDetailsSectionFromPathname };
+export type { RateDetailsSection };

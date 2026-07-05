@@ -13,6 +13,10 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  if (process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1") {
+    return supabaseResponse;
+  }
+
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
   const supabase = createServerClient(

@@ -11,11 +11,18 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
-import { useCompareRatesPresentation } from "@/features/compare-rates";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
-import type { Favorite, FavoriteCurrencyPair } from "@/features/favorites";
+import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
+import { deleteFavorite } from "@/features/favorites/actions";
+import {
+  addOptimisticFavorite,
+  removeOptimisticFavorite,
+  useOptimisticFavorites,
+} from "@/features/favorites/optimistic-favorites";
+import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { LiveRate } from "@/features/live-rates";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type FavoriteRateItemData = {
   favorite: Favorite;
@@ -104,14 +111,22 @@ function FavoriteRateItem({
   );
 }
 
-function FavoriteRates() {
-  const {
-    availableCurrencies,
-    favoriteRates: liveRates,
-    favorites,
-    onCurrencyPairSelect,
-    onFavoriteToggle,
-  } = useCompareRatesPresentation();
+type FavoriteRatesProps = {
+  availableCurrencies: AvailableCurrency[];
+  favorites: Favorite[];
+  liveRates: LiveRate[];
+};
+
+function FavoriteRates({
+  availableCurrencies,
+  favorites: initialFavorites,
+  liveRates,
+}: FavoriteRatesProps) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const favorites = useOptimisticFavorites(initialFavorites);
   const [preferredTabStopPair, setPreferredTabStopPair] = React.useState(
     favorites[0] ? `${favorites[0].fromCurrency}/${favorites[0].toCurrency}` : ""
   );
@@ -136,6 +151,42 @@ function FavoriteRates() {
   const tabStopPair = favoriteRates.some((item) => item.rate.pair === preferredTabStopPair)
     ? preferredTabStopPair
     : (favoriteRates[0]?.rate.pair ?? "");
+
+  function selectCurrencyPair(currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) {
+    const nextUrl = getCurrencyPairUrl({
+      pathname,
+      receiveCurrency: currencies.receiveCurrency,
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency: currencies.sendCurrency,
+    });
+
+    router.replace(nextUrl, { scroll: false });
+  }
+
+  function toggleFavorite(pair: FavoriteCurrencyPair) {
+    const existingFavorite = favorites.find(
+      (favorite) => getFavoritePairKey(favorite) === getFavoritePairKey(pair)
+    );
+
+    if (!existingFavorite) {
+      return;
+    }
+
+    removeOptimisticFavorite(pair);
+
+    React.startTransition(async () => {
+      try {
+        await deleteFavorite(pair);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete favorite", error);
+        addOptimisticFavorite(existingFavorite);
+      }
+    });
+  }
 
   if (favoriteRates.length === 0) {
     return (
@@ -183,8 +234,8 @@ function FavoriteRates() {
           <FavoriteRateItem
             key={item.favorite.id}
             {...item}
-            onFavoriteToggle={onFavoriteToggle}
-            onPairSelect={onCurrencyPairSelect}
+            onFavoriteToggle={toggleFavorite}
+            onPairSelect={selectCurrencyPair}
             tabIndex={item.rate.pair === tabStopPair ? 0 : -1}
           />
         ))}
