@@ -250,7 +250,7 @@ function CompareRates({
     selectedExchangeRate === null ? null : new MoneyDecimal(1).div(selectedExchangeRate);
   const sendAmount =
     amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate) || "";
-  const hasCompareAmount = sendAmount.trim() !== "0";
+  const hasCompareAmount = !["0", ""].includes(sendAmount.trim());
   const compareRates = getCompareCurrencies(availableCurrencies, sendCurrency.currencyCode)
     .map((currency) => {
       const rate = getExchangeRate(rates, sendCurrency.currencyCode, currency.code);

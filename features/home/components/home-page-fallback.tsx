@@ -1,31 +1,12 @@
+import { CurrencyButton } from "@/components/ui/currency-button";
+import { ExchangeButton } from "@/components/ui/exchange-button";
+import { FavoriteButton } from "@/components/ui/favorite-button";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
+import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { cn } from "@/lib/utils";
 
 function EmptySpace({ className }: { className: string }) {
   return <span aria-hidden className={cn("block", className)} />;
-}
-
-function EmptyFavoriteControlSpace() {
-  return (
-    <span
-      aria-hidden
-      className="invisible inline-flex items-center justify-center gap-100 px-150 py-100 text-preset-5-medium uppercase"
-    >
-      <span className="size-200" />
-      <span>Favorite</span>
-    </span>
-  );
-}
-
-function EmptyLogControlSpace() {
-  return (
-    <span
-      aria-hidden
-      className="invisible inline-flex h-400 items-center justify-center px-150 py-100 text-preset-5-medium uppercase"
-    >
-      Log conversion
-    </span>
-  );
 }
 
 function HeaderStatsFallback() {
@@ -96,7 +77,7 @@ function ConverterFallback() {
       <div className="rounded-20 bg-neutral-700 shadow-[0_12px_40px_0_rgb(0_0_0_/_0.4)]">
         <div className="flex flex-col gap-200 p-200 sm:flex-row sm:items-center sm:gap-300 sm:p-250">
           <ConverterAmountPanelFallback label="Send" />
-          <EmptySpace className="size-[48px] self-center" />
+          <ExchangeButton className="self-center" tabIndex={-1} />
           <ConverterAmountPanelFallback label="Receive" />
         </div>
         <svg width="100%" height="1">
@@ -111,9 +92,15 @@ function ConverterFallback() {
           />
         </svg>
         <div className="min-h-[90px] p-200 sm:flex sm:min-h-800 sm:items-center sm:justify-between sm:px-250">
+          <p
+            className="text-center text-preset-6 text-neutral-50 sm:text-left sm:text-preset-5"
+            aria-hidden
+          >
+            &nbsp;
+          </p>
           <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
-            <EmptyFavoriteControlSpace />
-            <EmptyLogControlSpace />
+            <FavoriteButton aria-label="Favorite USD/EUR" tabIndex={-1} />
+            <LogConversionButton aria-label="Log USD to EUR" disabled tabIndex={-1} />
           </div>
         </div>
       </div>
@@ -126,8 +113,13 @@ function ConverterAmountPanelFallback({ label }: { label: string }) {
     <section className="flex flex-col justify-between rounded-16 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:min-w-0 sm:flex-1 sm:p-250">
       <h2 className="mb-250 text-preset-4 text-neutral-100 uppercase">{label}</h2>
       <div className="flex items-end justify-between gap-200">
-        <EmptySpace className="h-[40px] min-w-0 flex-1 lg:h-[41px]" />
-        <EmptySpace className="h-500 w-1200 shrink-0" />
+        <EmptySpace className="h-[40px] w-800 lg:h-[41px]" key="amount" />,
+        <CurrencyButton
+          aria-label={`Select ${label.toLowerCase()} currency`}
+          countryCode={label === "Send" ? "us" : "eu"}
+          currencyCode={label === "Send" ? "USD" : "EUR"}
+          tabIndex={-1}
+        />
       </div>
     </section>
   );

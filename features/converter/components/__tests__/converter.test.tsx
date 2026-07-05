@@ -352,14 +352,14 @@ describe("Converter", () => {
 
     renderConverter();
 
-    vi.advanceTimersByTime(300);
+    vi.advanceTimersByTime(50);
     expect(routerReplace).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "100" },
     });
 
-    vi.advanceTimersByTime(299);
+    vi.advanceTimersByTime(49);
     expect(routerReplace).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(1);

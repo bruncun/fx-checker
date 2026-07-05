@@ -15,6 +15,7 @@ import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from ".
 import type { SelectedCurrency } from "./converter";
 import { ConverterFavoriteButton } from "./converter-favorite-button";
 import { CurrencyPicker } from "./currency-picker";
+import { FavoriteButton } from "@/components/ui/favorite-button";
 
 type ConverterAmountState = {
   amount: string;
@@ -46,29 +47,6 @@ type ConverterAmountControlsProps = {
     sendCurrency: SelectedCurrency;
   }) => void;
 };
-
-function EmptyFavoriteControlSpace() {
-  return (
-    <span
-      aria-hidden
-      className="invisible inline-flex items-center justify-center gap-100 px-150 py-100 text-preset-5-medium uppercase"
-    >
-      <span className="size-200" />
-      <span>Favorite</span>
-    </span>
-  );
-}
-
-function EmptyLogControlSpace() {
-  return (
-    <span
-      aria-hidden
-      className="invisible inline-flex h-400 items-center justify-center px-150 py-100 text-preset-5-medium uppercase"
-    >
-      Log conversion
-    </span>
-  );
-}
 
 function isPositiveAmount(amount: string) {
   try {
@@ -122,7 +100,7 @@ function usePersistedConverterAmount({
       if (nextUrl !== currentUrl) {
         router.replace(nextUrl, { scroll: false });
       }
-    }, 300);
+    }, 50);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -272,7 +250,14 @@ function ConverterAmountControls({
           {exchangeRateLabel}
         </p>
         <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
-          <React.Suspense fallback={<EmptyFavoriteControlSpace />}>
+          <React.Suspense
+            fallback={
+              <>
+                <FavoriteButton />
+                <LogConversionButton disabled />
+              </>
+            }
+          >
             <ConverterFavoriteButton
               favoritesPromise={favoritesPromise}
               pair={{
@@ -280,21 +265,18 @@ function ConverterAmountControls({
                 toCurrency: receiveCurrency.currencyCode,
               }}
             />
-            {canLogConversion ? (
-              <LogConversionButton
-                aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
-                onClick={() => {
-                  onConversionLogCreate?.({
-                    fromCurrency: sendCurrency.currencyCode,
-                    receiveAmount,
-                    sendAmount,
-                    toCurrency: receiveCurrency.currencyCode,
-                  });
-                }}
-              />
-            ) : (
-              <EmptyLogControlSpace />
-            )}
+            <LogConversionButton
+              aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
+              onClick={() => {
+                onConversionLogCreate?.({
+                  fromCurrency: sendCurrency.currencyCode,
+                  receiveAmount,
+                  sendAmount,
+                  toCurrency: receiveCurrency.currencyCode,
+                });
+              }}
+              disabled={!canLogConversion}
+            />
           </React.Suspense>
         </div>
       </div>
