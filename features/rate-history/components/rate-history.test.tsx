@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RateHistory } from "./rate-history";
 import type { RateHistoryData } from "../rate-history";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(""),
+}));
 
 const history: RateHistoryData = {
   pair: "USD/EUR",
@@ -35,12 +40,15 @@ describe("RateHistory", () => {
     expect(screen.getByRole("list", { name: "Chart details" }).getAttribute("aria-live")).toBe(
       "polite"
     );
-    expect(document.querySelector("#rate-history-chart-summary")?.getAttribute("aria-live")).toBe(
-      "polite"
-    );
+    expect(
+      document.querySelector("#rate-history-chart-summary-1m")?.getAttribute("aria-live")
+    ).toBe("polite");
 
-    cleanup();
-    render(<RateHistory history={history} pair="USD/EUR" selectedRange="3M" />);
+    expect(
+      screen.getAllByRole("img", { name: /USD\/EUR rate history chart/, hidden: true })
+    ).toHaveLength(6);
+
+    fireEvent.click(screen.getByRole("tab", { name: "3M" }));
     expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.9000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("-0.0400").length).toBeGreaterThan(0);
