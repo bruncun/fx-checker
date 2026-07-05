@@ -122,9 +122,6 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
   const chart = getRateHistoryChartModel(chartPoints);
   const firstPoint = chartPoints[0];
   const lastPoint = chartPoints.at(-1);
-  const chartId = `rate-history-chart-${range.toLowerCase()}`;
-  const gradientId = `rate-history-area-${range.toLowerCase()}`;
-  const summaryId = `rate-history-chart-summary-${range.toLowerCase()}`;
 
   if (!chart || !firstPoint || !lastPoint) {
     return null;
@@ -132,11 +129,11 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
 
   return (
     <section
-      aria-labelledby={chartId}
+      aria-labelledby="rate-history-chart-heading"
       className="rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:p-250"
     >
       <div className="flex items-center justify-between gap-150 uppercase">
-        <h2 id={chartId} className="text-preset-3-medium text-neutral-50">
+        <h2 id="rate-history-chart-heading" className="text-preset-3-medium text-neutral-50">
           {pair}
         </h2>
         <InlineMetaList
@@ -149,7 +146,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
         />
       </div>
       <div
-        aria-describedby={summaryId}
+        aria-describedby="rate-history-chart-summary"
         aria-label={`${range} ${pair} rate history chart`}
         role="img"
         className="mt-250 grid grid-cols-[36px_1fr] gap-x-200"
@@ -183,7 +180,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
           >
             <defs>
               <linearGradient
-                id={gradientId}
+                id="rate-history-area"
                 x1="0"
                 x2="0"
                 y1="0"
@@ -208,7 +205,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
             </g>
             <path
               d={chart.areaPath}
-              fill={`url(#${gradientId})`}
+              fill="url(#rate-history-area)"
               vectorEffect="non-scaling-stroke"
             />
             <path
@@ -233,7 +230,7 @@ function RateHistoryChart({ pair, points, range }: RateHistoryChartProps) {
           ))}
         </div>
       </div>
-      <p id={summaryId} className="sr-only" aria-live="polite" aria-atomic="true">
+      <p id="rate-history-chart-summary" className="sr-only" aria-live="polite" aria-atomic="true">
         {range} {pair} moved from {firstPoint.rate.toFixed(4)} on{" "}
         {formatDateAxisLabel(firstPoint.date)} to {lastPoint.rate.toFixed(4)} on{" "}
         {formatDateAxisLabel(lastPoint.date)}. The highest displayed rate is{" "}
