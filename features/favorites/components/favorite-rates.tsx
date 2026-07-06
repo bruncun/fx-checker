@@ -20,6 +20,7 @@ import {
   removeOptimisticFavorite,
   useOptimisticFavorites,
 } from "@/features/favorites/optimistic-favorites";
+import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { LiveRate } from "@/features/live-rates";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -124,6 +125,7 @@ function FavoriteRates({
 }: FavoriteRatesProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const favorites = useOptimisticFavorites(initialFavorites);
@@ -181,6 +183,7 @@ function FavoriteRates({
       } catch (error) {
         console.error("Failed to delete favorite", error);
         addOptimisticFavorite(existingFavorite);
+        showDataUnavailableError();
       }
     });
   }

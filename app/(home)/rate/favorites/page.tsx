@@ -1,6 +1,7 @@
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { FavoriteRates } from "@/features/favorites";
 import { getServerFavorites } from "@/features/favorites/server";
+import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   getCurrencyReferenceData,
   getLatestRatesData,
@@ -18,9 +19,9 @@ async function FavoriteRatesContent() {
     getLiveRatesData(),
   ]);
 
-  if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
-    return null;
-  }
+  assertDataAvailable(currencyReferenceData);
+  assertDataAvailable(latestRatesData);
+  assertDataAvailable(liveRatesData);
 
   return (
     <Suspense
@@ -29,9 +30,7 @@ async function FavoriteRatesContent() {
       <FavoriteRatesUserContent
         availableCurrencies={currencyReferenceData.availableCurrencies}
         latestRates={latestRatesData.rates}
-        liveRateHistoryRates={
-          liveRatesData.status === "available" ? liveRatesData.liveRateHistoryRates : []
-        }
+        liveRateHistoryRates={liveRatesData.liveRateHistoryRates}
       />
     </Suspense>
   );
@@ -46,7 +45,7 @@ async function FavoriteRatesUserContent({
   latestRates: FrankfurterRate[];
   liveRateHistoryRates: FrankfurterRate[];
 }) {
-  const favorites = await getServerFavorites().catch(() => []);
+  const favorites = await getServerFavorites();
   const favoriteRates = favorites.flatMap((favorite) => {
     const rate = deriveLiveRateForPair({
       base: favorite.fromCurrency,

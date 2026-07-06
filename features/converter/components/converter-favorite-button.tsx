@@ -18,6 +18,7 @@ import {
   replaceOptimisticFavorite,
   useOptimisticFavorites,
 } from "@/features/favorites/optimistic-favorites";
+import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 
 type ConverterFavoriteButtonProps = {
   favoritesPromise: Promise<Favorite[]>;
@@ -26,6 +27,7 @@ type ConverterFavoriteButtonProps = {
 
 function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteButtonProps) {
   const router = useRouter();
+  const showDataUnavailableError = useDataUnavailableError();
   const initialFavorites = React.use(favoritesPromise);
   const favorites = useOptimisticFavorites(initialFavorites);
   const normalizedPair = normalizeFavoritePair(pair);
@@ -43,6 +45,7 @@ function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteBu
         } catch (error) {
           console.error("Failed to delete favorite", error);
           addOptimisticFavorite(existingFavorite);
+          showDataUnavailableError();
         }
       });
 
@@ -66,6 +69,7 @@ function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteBu
       } catch (error) {
         console.error("Failed to create favorite", error);
         removeOptimisticFavorite(normalizedPair);
+        showDataUnavailableError();
       }
     });
   }

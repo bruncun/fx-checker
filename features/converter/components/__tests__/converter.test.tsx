@@ -8,10 +8,19 @@ import type { AvailableCurrency } from "../../currencies";
 import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
-const { createFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
+const {
+  createConversion,
+  createFavorite,
+  routerRefresh,
+  routerReplace,
+  showDataUnavailableError,
+  testSearchParams,
+} = vi.hoisted(() => ({
+  createConversion: vi.fn(),
   createFavorite: vi.fn(),
   routerRefresh: vi.fn(),
   routerReplace: vi.fn(),
+  showDataUnavailableError: vi.fn(),
   testSearchParams: { current: "" },
 }));
 
@@ -30,7 +39,11 @@ vi.mock("@/features/favorites/actions", () => ({
 }));
 
 vi.mock("@/features/conversion-log/client", () => ({
-  createConversion: vi.fn(),
+  createConversion,
+}));
+
+vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+  useDataUnavailableError: () => showDataUnavailableError,
 }));
 
 const rates: FrankfurterRate[] = [
@@ -88,9 +101,11 @@ function renderConverter({
 }
 
 afterEach(() => {
+  createConversion.mockReset();
   createFavorite.mockReset();
   routerRefresh.mockClear();
   routerReplace.mockClear();
+  showDataUnavailableError.mockClear();
   testSearchParams.current = "";
   vi.useRealTimers();
   cleanup();
@@ -345,6 +360,18 @@ describe("Converter", () => {
       expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
     });
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("shows the data unavailable error when logging a conversion fails", async () => {
+    createConversion.mockRejectedValue(new Error("Supabase failed"));
+
+    renderConverter();
+
+    fireEvent.click(screen.getByRole("button", { name: /Log .* USD to .* EUR/ }));
+
+    await waitFor(() => {
+      expect(showDataUnavailableError).toHaveBeenCalled();
+    });
   });
 
   it("debounces amount updates into the search params", () => {

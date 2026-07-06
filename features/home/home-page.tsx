@@ -19,6 +19,7 @@ import {
   LiveRatesFallback,
 } from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
+import { assertDataAvailable } from "./components/data-unavailable";
 import { getConverterAmountFromParams, getDefaultCurrencyPair } from "./url-state";
 
 const RATE_HISTORY_YEARS = 5;
@@ -264,9 +265,7 @@ type HomePageShellProps = {
 async function HeaderStats() {
   const currencyReferenceData = await getCurrencyReferenceData();
 
-  if (currencyReferenceData.status === "unavailable") {
-    return null;
-  }
+  assertDataAvailable(currencyReferenceData);
 
   return <ExchangeRateStats currencyCount={currencyReferenceData.currencyCount} />;
 }
@@ -274,23 +273,20 @@ async function HeaderStats() {
 async function LiveRates() {
   const liveRatesData = await getLiveRatesData();
 
-  if (liveRatesData.status === "unavailable") {
-    return null;
-  }
+  assertDataAvailable(liveRatesData);
 
   return <LiveRateList rates={liveRatesData.liveRates} />;
 }
 
 async function ConverterSlot() {
-  const favoritesPromise = getServerFavorites().catch(() => []);
+  const favoritesPromise = getServerFavorites();
   const [currencyReferenceData, latestRatesData] = await Promise.all([
     getCurrencyReferenceData(),
     getLatestRatesData(),
   ]);
 
-  if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
-    return null;
-  }
+  assertDataAvailable(currencyReferenceData);
+  assertDataAvailable(latestRatesData);
 
   const selectedCurrencies = getDefaultCurrencyPair(currencyReferenceData.availableCurrencies);
   const defaultAmount = getConverterAmountFromParams(new URLSearchParams());
@@ -343,8 +339,8 @@ async function ConverterSlot() {
 
 async function RateDetailsNavigationSlot() {
   const [favorites, conversions] = await Promise.all([
-    getServerFavorites().catch(() => []),
-    getServerConversions().catch(() => []),
+    getServerFavorites(),
+    getServerConversions(),
   ]);
 
   return (

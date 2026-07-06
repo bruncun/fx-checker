@@ -1,19 +1,26 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ConversionLog, formatRelativeTime } from "./conversion-log";
 
-const { deleteAllConversions, deleteConversion, routerRefresh, routerReplace, testSearchParams } =
-  vi.hoisted(() => ({
-    deleteAllConversions: vi.fn(),
-    deleteConversion: vi.fn(),
-    routerRefresh: vi.fn(),
-    routerReplace: vi.fn(),
-    testSearchParams: { current: "" },
-  }));
+const {
+  deleteAllConversions,
+  deleteConversion,
+  routerRefresh,
+  routerReplace,
+  showDataUnavailableError,
+  testSearchParams,
+} = vi.hoisted(() => ({
+  deleteAllConversions: vi.fn(),
+  deleteConversion: vi.fn(),
+  routerRefresh: vi.fn(),
+  routerReplace: vi.fn(),
+  showDataUnavailableError: vi.fn(),
+  testSearchParams: { current: "" },
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/rate/log",
@@ -27,6 +34,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/conversion-log/client", () => ({
   deleteAllConversions,
   deleteConversion,
+}));
+
+vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+  useDataUnavailableError: () => showDataUnavailableError,
 }));
 
 const availableCurrencies = [
@@ -59,6 +70,7 @@ afterEach(() => {
   deleteConversion.mockReset();
   routerRefresh.mockClear();
   routerReplace.mockClear();
+  showDataUnavailableError.mockClear();
   testSearchParams.current = "";
   cleanup();
 });
@@ -111,6 +123,18 @@ describe("ConversionLog", () => {
 
     expect(deleteConversion).toHaveBeenCalledWith("conversion-usd-eur");
     expect(deleteAllConversions).toHaveBeenCalled();
+  });
+
+  it("shows the data unavailable error when deleting a conversion fails", async () => {
+    deleteConversion.mockRejectedValue(new Error("Supabase failed"));
+
+    renderConversionLog();
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
+
+    await waitFor(() => {
+      expect(showDataUnavailableError).toHaveBeenCalled();
+    });
   });
 
   it("renders the conversion log empty state when no conversions exist", () => {

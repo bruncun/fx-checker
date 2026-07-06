@@ -33,6 +33,7 @@ import {
   replaceOptimisticFavorite,
   useOptimisticFavorites,
 } from "@/features/favorites/optimistic-favorites";
+import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -97,6 +98,7 @@ function CompareFavoriteButton({
   pair,
 }: CompareFavoriteButtonProps) {
   const router = useRouter();
+  const showDataUnavailableError = useDataUnavailableError();
   const initialFavorites = React.use(favoritesPromise);
   const favorites = useOptimisticFavorites(initialFavorites);
   const normalizedPair = normalizeFavoritePair(pair);
@@ -116,6 +118,7 @@ function CompareFavoriteButton({
         } catch (error) {
           console.error("Failed to delete favorite", error);
           addOptimisticFavorite(existingFavorite);
+          showDataUnavailableError();
         }
       });
 
@@ -139,6 +142,7 @@ function CompareFavoriteButton({
       } catch (error) {
         console.error("Failed to create favorite", error);
         removeOptimisticFavorite(normalizedPair);
+        showDataUnavailableError();
       }
     });
   }

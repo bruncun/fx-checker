@@ -1,17 +1,19 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { FavoriteRates } from "./favorite-rates";
 
-const { deleteFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
-  deleteFavorite: vi.fn(),
-  routerRefresh: vi.fn(),
-  routerReplace: vi.fn(),
-  testSearchParams: { current: "" },
-}));
+const { deleteFavorite, routerRefresh, routerReplace, showDataUnavailableError, testSearchParams } =
+  vi.hoisted(() => ({
+    deleteFavorite: vi.fn(),
+    routerRefresh: vi.fn(),
+    routerReplace: vi.fn(),
+    showDataUnavailableError: vi.fn(),
+    testSearchParams: { current: "" },
+  }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/rate/favorites",
@@ -24,6 +26,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/favorites/actions", () => ({
   deleteFavorite,
+}));
+
+vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+  useDataUnavailableError: () => showDataUnavailableError,
 }));
 
 const availableCurrencies = [
@@ -56,6 +62,7 @@ afterEach(() => {
   deleteFavorite.mockReset();
   routerRefresh.mockClear();
   routerReplace.mockClear();
+  showDataUnavailableError.mockClear();
   testSearchParams.current = "";
   cleanup();
 });
@@ -109,6 +116,18 @@ describe("FavoriteRates", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
 
     expect(deleteFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+  });
+
+  it("shows the data unavailable error when removing a favorite fails", async () => {
+    deleteFavorite.mockRejectedValue(new Error("Supabase failed"));
+
+    renderFavoriteRates();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
+
+    await waitFor(() => {
+      expect(showDataUnavailableError).toHaveBeenCalled();
+    });
   });
 
   it("renders the pinned pairs empty state when no favorites exist", () => {

@@ -1,6 +1,7 @@
 import { ConversionLog } from "@/features/conversion-log";
 import { getServerConversions } from "@/features/conversion-log/server";
 import type { AvailableCurrency } from "@/features/converter/currencies";
+import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { getCurrencyReferenceData } from "@/features/home/home-page";
 import { RateDetailsRowsFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
@@ -8,9 +9,7 @@ import { Suspense } from "react";
 async function ConversionLogContent() {
   const currencyReferenceData = await getCurrencyReferenceData();
 
-  if (currencyReferenceData.status === "unavailable") {
-    return null;
-  }
+  assertDataAvailable(currencyReferenceData);
 
   return (
     <Suspense
@@ -26,7 +25,7 @@ async function ConversionLogUserContent({
 }: {
   availableCurrencies: AvailableCurrency[];
 }) {
-  const conversions = await getServerConversions().catch(() => []);
+  const conversions = await getServerConversions();
 
   return <ConversionLog availableCurrencies={availableCurrencies} conversions={conversions} />;
 }

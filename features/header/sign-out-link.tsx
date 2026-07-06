@@ -1,20 +1,32 @@
 "use client";
 
+import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 
 export function SignOutLink() {
   const router = useRouter();
+  const showDataUnavailableError = useDataUnavailableError();
 
   async function signOut(event: MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
 
     const supabase = createClient();
 
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-    router.refresh();
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
+
+      router.push("/auth/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to sign out", error);
+      showDataUnavailableError();
+    }
   }
 
   return (

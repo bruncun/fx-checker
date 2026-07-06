@@ -1,4 +1,5 @@
 import { CompareRates } from "@/features/compare-rates";
+import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { getCurrencyReferenceData, getLatestRatesData } from "@/features/home/home-page";
 import {
   getConverterAmountFromParams,
@@ -19,15 +20,14 @@ type CompareRatesPageProps = {
 
 async function CompareRatesContent({ searchParams }: CompareRatesPageProps) {
   const params = await searchParams;
-  const favoritesPromise = getServerFavorites().catch(() => []);
+  const favoritesPromise = getServerFavorites();
   const [currencyReferenceData, latestRatesData] = await Promise.all([
     getCurrencyReferenceData(),
     getLatestRatesData(),
   ]);
 
-  if (currencyReferenceData.status === "unavailable" || latestRatesData.status === "unavailable") {
-    return null;
-  }
+  assertDataAvailable(currencyReferenceData);
+  assertDataAvailable(latestRatesData);
 
   const urlSearchParams = new URLSearchParams(params);
   const selectedCurrencies = getSelectedCurrencyPairFromParams(

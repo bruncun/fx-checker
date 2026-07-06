@@ -15,6 +15,7 @@ import {
   replaceOptimisticConversion,
 } from "@/features/conversion-log/optimistic-conversions";
 import type { Favorite } from "@/features/favorites";
+import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import {
   getConverterAmountFromParams,
   getCurrencyPairUrl,
@@ -45,6 +46,7 @@ function getOptimisticId() {
 function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const selectedCurrencyPairFromUrl = getSelectedCurrencyPairFromParams(
@@ -118,6 +120,7 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
       } catch (error) {
         console.error("Failed to log conversion", error);
         removeOptimisticConversion(pendingConversion.id);
+        showDataUnavailableError();
       }
     });
   }

@@ -21,6 +21,7 @@ import {
 } from "@/features/conversion-log/optimistic-conversions";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { MoneyDecimal } from "@/features/converter/exchange";
+import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/url-state";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -148,6 +149,7 @@ function ConversionLog({
 }: ConversionLogProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const conversions = useOptimisticConversions(initialConversions);
@@ -191,6 +193,8 @@ function ConversionLog({
         if (removedConversion) {
           setConversionSnapshot(conversions);
         }
+
+        showDataUnavailableError();
       }
     });
   }
@@ -211,6 +215,7 @@ function ConversionLog({
       } catch (error) {
         console.error("Failed to clear conversions", error);
         setConversionSnapshot(previousConversions);
+        showDataUnavailableError();
       }
     });
   }

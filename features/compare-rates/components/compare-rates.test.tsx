@@ -1,17 +1,19 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Favorite } from "@/features/favorites";
 import { CompareRates, getCompareCurrencies } from "./compare-rates";
 
-const { createFavorite, routerRefresh, routerReplace, testSearchParams } = vi.hoisted(() => ({
-  createFavorite: vi.fn(),
-  routerRefresh: vi.fn(),
-  routerReplace: vi.fn(),
-  testSearchParams: { current: "" },
-}));
+const { createFavorite, routerRefresh, routerReplace, showDataUnavailableError, testSearchParams } =
+  vi.hoisted(() => ({
+    createFavorite: vi.fn(),
+    routerRefresh: vi.fn(),
+    routerReplace: vi.fn(),
+    showDataUnavailableError: vi.fn(),
+    testSearchParams: { current: "" },
+  }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/rate/compare",
@@ -25,6 +27,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/favorites/actions", () => ({
   createFavorite,
   deleteFavorite: vi.fn(),
+}));
+
+vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+  useDataUnavailableError: () => showDataUnavailableError,
 }));
 
 const availableCurrencies = [
@@ -56,6 +62,7 @@ afterEach(() => {
   createFavorite.mockReset();
   routerRefresh.mockClear();
   routerReplace.mockClear();
+  showDataUnavailableError.mockClear();
   testSearchParams.current = "";
   cleanup();
 });
@@ -127,6 +134,18 @@ describe("CompareRates", () => {
     fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
 
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
+  });
+
+  it("shows the data unavailable error when a compare favorite toggle fails", async () => {
+    createFavorite.mockRejectedValue(new Error("Supabase failed"));
+
+    renderCompareRates();
+
+    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
+
+    await waitFor(() => {
+      expect(showDataUnavailableError).toHaveBeenCalled();
+    });
   });
 
   it("renders the comparison empty state when no converter amount is entered", () => {

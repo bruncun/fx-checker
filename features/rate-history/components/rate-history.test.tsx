@@ -31,7 +31,9 @@ afterEach(() => {
 
 describe("RateHistory", () => {
   it("renders stats and chart details for the selected range", () => {
-    render(<RateHistory model={deriveRateHistoryViewModel(history)} selectedRange="1M" />);
+    render(
+      <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
+    );
 
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getAllByText("0.8500").length).toBeGreaterThan(0);
@@ -58,7 +60,9 @@ describe("RateHistory", () => {
   });
 
   it("shows the closest chart point details while hovering the rate chart", () => {
-    render(<RateHistory model={deriveRateHistoryViewModel(history)} selectedRange="1M" />);
+    render(
+      <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
+    );
 
     const chartRegion = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
     const chartSurface = chartRegion.querySelector(".cursor-crosshair") as HTMLElement;
@@ -86,19 +90,19 @@ describe("RateHistory", () => {
   });
 
   it("renders the tab empty state with the selected pair when history data is missing", () => {
-    render(<RateHistory model={null} />);
+    render(<RateHistory model={null} pair="USD/EUR" />);
 
     expect(screen.getByText("No chart data available")).toBeTruthy();
-    expect(screen.getByText(/this pair/)).toBeTruthy();
+    expect(screen.getByText(/We couldn't load rate history for USD\/EUR right now\./)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
     expect(screen.queryByRole("img", { name: /rate history chart/ })).toBeNull();
   });
 
   it("renders the tab empty state when history points are empty", () => {
-    render(<RateHistory model={{ pair: "CAD/CHF", ranges: [] }} />);
+    render(<RateHistory model={{ pair: "CAD/CHF", ranges: [] }} pair="USD/EUR" />);
 
     expect(screen.getByText("No chart data available")).toBeTruthy();
-    expect(screen.getByText(/this pair/)).toBeTruthy();
+    expect(screen.getByText(/We couldn't load rate history for CAD\/CHF right now\./)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Rate history" })).toBeNull();
   });
 });
