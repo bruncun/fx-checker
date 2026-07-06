@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type PointerEvent } from "react";
+import { useState, type PointerEvent } from "react";
 
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import type {
@@ -37,13 +37,9 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
   const gradientId = `rate-history-area-${range.toLowerCase()}`;
   const summaryId = `rate-history-chart-summary-${range.toLowerCase()}`;
   const [hoverPoint, setHoverPoint] = useState<RateHistoryChartPoint | null>(null);
-  const chartDetails = useMemo(
-    () =>
-      hoverPoint
-        ? [hoverPoint.rateLabel, `${hoverPoint.dateLabel} 16:00 CET`]
-        : [chart.lastRate, `${chart.lastDateLabel} 16:00 CET`],
-    [chart.lastDateLabel, chart.lastRate, hoverPoint]
-  );
+  const chartDetails = hoverPoint
+    ? [hoverPoint.rateLabel, `${hoverPoint.dateLabel} 16:00 CET`]
+    : [chart.lastRate, `${chart.lastDateLabel} 16:00 CET`];
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
     const bounds = event.currentTarget.getBoundingClientRect();

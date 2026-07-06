@@ -4,7 +4,6 @@ import { SectionNavigation, type SectionNavigationItem } from "@/components/ui/s
 import { useOptimisticConversionCount } from "@/features/conversion-log/optimistic-conversions";
 import { useOptimisticFavoriteCount } from "@/features/favorites/optimistic-favorites";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
 import {
   appendSearchParams,
   getRateDetailsSectionFromPathname,
@@ -23,19 +22,17 @@ function RateDetailsNavigation({ conversionCount, favoriteCount }: RateDetailsNa
   const optimisticConversionCount = useOptimisticConversionCount(conversionCount);
   const optimisticFavoriteCount = useOptimisticFavoriteCount(favoriteCount);
   const selectedSection = getRateDetailsSectionFromPathname(pathname);
-  const rateDetailsSections: SectionNavigationItem[] = useMemo(
-    () =>
-      rateDetailsSectionDefinitions.map((section) => ({
-        ...section,
-        count:
-          section.value === "favorites"
-            ? optimisticFavoriteCount
-            : section.value === "log"
-              ? optimisticConversionCount
-              : undefined,
-        href: appendSearchParams(section.href, searchParamsString),
-      })),
-    [optimisticConversionCount, optimisticFavoriteCount, searchParamsString]
+  const rateDetailsSections: SectionNavigationItem[] = rateDetailsSectionDefinitions.map(
+    (section) => ({
+      ...section,
+      count:
+        section.value === "favorites"
+          ? optimisticFavoriteCount
+          : section.value === "log"
+            ? optimisticConversionCount
+            : undefined,
+      href: appendSearchParams(section.href, searchParamsString),
+    })
   );
 
   return (

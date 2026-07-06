@@ -74,59 +74,53 @@ export function useRovingTabIndex<TItem extends HTMLElement>({
   orientation,
   wrap = true,
 }: UseRovingTabIndexOptions<TItem>) {
-  const getItems = React.useCallback(() => {
+  function getItems() {
     return Array.from(containerRef.current?.querySelectorAll<TItem>(itemSelector) ?? []);
-  }, [containerRef, itemSelector]);
+  }
 
-  const focusItem = React.useCallback(
-    (item: TItem | undefined) => {
-      if (!item) {
-        return;
-      }
+  function focusItem(item: TItem | undefined) {
+    if (!item) {
+      return;
+    }
 
-      const items = getItems();
+    const items = getItems();
 
-      items.forEach((currentItem) => {
-        currentItem.tabIndex = currentItem === item ? 0 : -1;
-      });
-      onCurrentElementChange?.(item);
-      item.focus({ preventScroll: true });
-      item.scrollIntoView?.({ block: "nearest", inline: "nearest" });
-    },
-    [getItems, onCurrentElementChange]
-  );
+    items.forEach((currentItem) => {
+      currentItem.tabIndex = currentItem === item ? 0 : -1;
+    });
+    onCurrentElementChange?.(item);
+    item.focus({ preventScroll: true });
+    item.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }
 
-  const handleKeyDown = React.useCallback(
-    (event: React.KeyboardEvent<HTMLElement>) => {
-      if (!isRovingFocusKey(event.key)) {
-        return false;
-      }
+  function handleKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (!isRovingFocusKey(event.key)) {
+      return false;
+    }
 
-      const items = getItems();
-      const currentIndex = items.findIndex((item) => item === document.activeElement);
+    const items = getItems();
+    const currentIndex = items.findIndex((item) => item === document.activeElement);
 
-      if (currentIndex === -1 || items.length === 0) {
-        return false;
-      }
+    if (currentIndex === -1 || items.length === 0) {
+      return false;
+    }
 
-      const nextIndex = getNextRovingFocusIndex({
-        currentIndex,
-        itemCount: items.length,
-        key: event.key,
-        orientation,
-        wrap,
-      });
+    const nextIndex = getNextRovingFocusIndex({
+      currentIndex,
+      itemCount: items.length,
+      key: event.key,
+      orientation,
+      wrap,
+    });
 
-      if (nextIndex === currentIndex) {
-        return false;
-      }
+    if (nextIndex === currentIndex) {
+      return false;
+    }
 
-      event.preventDefault();
-      focusItem(items[nextIndex]);
-      return true;
-    },
-    [focusItem, getItems, orientation, wrap]
-  );
+    event.preventDefault();
+    focusItem(items[nextIndex]);
+    return true;
+  }
 
   return {
     focusItem,

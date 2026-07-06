@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { RateChange } from "@/components/ui/rate-change";
@@ -27,10 +27,8 @@ function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewer
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [currentRange, setCurrentRange] = useState(selectedRange);
-  const selectedPanel = useMemo(
-    () => model.ranges.find((panel) => panel.range === currentRange) ?? model.ranges[0],
-    [currentRange, model.ranges]
-  );
+  const selectedPanel =
+    model.ranges.find((panel) => panel.range === currentRange) ?? model.ranges[0];
 
   function selectRange(value: string) {
     if (!historyRanges.includes(value as HistoryRange) || value === currentRange) {

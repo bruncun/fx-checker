@@ -47,15 +47,12 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const selectedCurrencyPairFromUrl = React.useMemo(
-    () => getSelectedCurrencyPairFromParams(currencies, new URLSearchParams(searchParamsString)),
-    [currencies, searchParamsString]
+  const selectedCurrencyPairFromUrl = getSelectedCurrencyPairFromParams(
+    currencies,
+    new URLSearchParams(searchParamsString)
   );
   const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
-  const converterAmount = React.useMemo(
-    () => getConverterAmountFromParams(new URLSearchParams(searchParamsString)),
-    [searchParamsString]
-  );
+  const converterAmount = getConverterAmountFromParams(new URLSearchParams(searchParamsString));
   const [optimisticSelectedCurrencies, setOptimisticSelectedCurrencies] = React.useState(() => ({
     currencies: selectedCurrencyPairFromUrl,
     urlKey: selectedCurrencyPairUrlKey,

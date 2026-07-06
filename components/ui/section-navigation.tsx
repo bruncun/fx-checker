@@ -47,7 +47,7 @@ function SectionNavigation({
   const activeLabel = activeItem?.label ?? "";
   const activeCount = activeItem?.count;
   const activeAccessibleName = getSectionAccessibleName(activeItem);
-  const closeMenu = React.useCallback((options?: { restoreFocus?: boolean }) => {
+  function closeMenu(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
 
     if (options?.restoreFocus ?? true) {
@@ -55,7 +55,7 @@ function SectionNavigation({
         triggerRef.current?.focus({ preventScroll: true });
       });
     }
-  }, []);
+  }
 
   function openMenu() {
     setIsOpen(true);
@@ -74,9 +74,9 @@ function SectionNavigation({
 
   usePointerDownOutside({
     enabled: isOpen,
-    onPointerDownOutside: React.useCallback(() => {
+    onPointerDownOutside: () => {
       closeMenu({ restoreFocus: false });
-    }, [closeMenu]),
+    },
     ref: rootRef,
   });
 

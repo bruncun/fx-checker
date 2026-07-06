@@ -31,18 +31,15 @@ function RangePicker({
   const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
     containerRef: tabListRef,
     itemSelector: "[data-range-picker-tab]",
-    onCurrentElementChange: React.useCallback(
-      (element: HTMLButtonElement) => {
-        const nextValue = element.dataset.rangeValue;
+    onCurrentElementChange: (element: HTMLButtonElement) => {
+      const nextValue = element.dataset.rangeValue;
 
-        if (!nextValue || nextValue === value) {
-          return;
-        }
+      if (!nextValue || nextValue === value) {
+        return;
+      }
 
-        onValueChange?.(nextValue);
-      },
-      [onValueChange, value]
-    ),
+      onValueChange?.(nextValue);
+    },
     orientation: "horizontal",
   });
 

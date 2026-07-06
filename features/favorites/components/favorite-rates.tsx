@@ -130,10 +130,7 @@ function FavoriteRates({
   const [preferredTabStopPair, setPreferredTabStopPair] = React.useState(
     favorites[0] ? `${favorites[0].fromCurrency}/${favorites[0].toCurrency}` : ""
   );
-  const currencyByCode = React.useMemo(
-    () => new Map(availableCurrencies.map((currency) => [currency.code, currency])),
-    [availableCurrencies]
-  );
+  const currencyByCode = new Map(availableCurrencies.map((currency) => [currency.code, currency]));
   const favoriteRates = favorites.flatMap((favorite) => {
     const fromCurrency = currencyByCode.get(favorite.fromCurrency);
     const toCurrency = currencyByCode.get(favorite.toCurrency);

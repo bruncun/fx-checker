@@ -143,7 +143,7 @@ function CurrencyPicker({
     setIsOpen(true);
   }
 
-  const closePicker = React.useCallback((options?: { restoreFocus?: boolean }) => {
+  function closePicker(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
 
     if (options?.restoreFocus ?? true) {
@@ -151,7 +151,7 @@ function CurrencyPicker({
         triggerRef.current?.focus();
       });
     }
-  }, []);
+  }
 
   React.useLayoutEffect(() => {
     if (!isOpen) {
@@ -199,9 +199,9 @@ function CurrencyPicker({
 
   usePointerDownOutside({
     enabled: isOpen,
-    onPointerDownOutside: React.useCallback(() => {
+    onPointerDownOutside: () => {
       closePicker({ restoreFocus: false });
-    }, [closePicker]),
+    },
     ref: rootRef,
   });
 
