@@ -57,6 +57,34 @@ describe("RateHistory", () => {
     expect(screen.getByRole("img", { name: "3M USD/EUR rate history chart" })).toBeTruthy();
   });
 
+  it("shows the closest chart point details while hovering the rate chart", () => {
+    render(<RateHistory model={deriveRateHistoryViewModel(history)} selectedRange="1M" />);
+
+    const chartRegion = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
+    const chartSurface = chartRegion.querySelector(".cursor-crosshair") as HTMLElement;
+
+    chartSurface.getBoundingClientRect = vi.fn(() => ({
+      bottom: 272,
+      height: 272,
+      left: 0,
+      right: 267,
+      toJSON: vi.fn(),
+      top: 0,
+      width: 267,
+      x: 0,
+      y: 0,
+    }));
+
+    fireEvent.pointerMove(chartSurface, { clientX: 267 });
+
+    expect(screen.getAllByText("Jun 19, 2026 16:00 CET")).toHaveLength(1);
+    expect(screen.getAllByText("0.8600").length).toBeGreaterThan(0);
+
+    fireEvent.pointerLeave(chartSurface);
+
+    expect(screen.queryByText("Jun 19, 2026 16:00 CET")).toBeNull();
+  });
+
   it("renders the tab empty state with the selected pair when history data is missing", () => {
     render(<RateHistory model={null} />);
 

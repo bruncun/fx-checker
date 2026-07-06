@@ -1,7 +1,16 @@
+"use client";
+
+import { useMemo, useState, type PointerEvent } from "react";
+
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
-import type { HistoryRange, RateHistoryChartModel } from "@/features/rate-history/rate-history";
+import type {
+  HistoryRange,
+  RateHistoryChartModel,
+  RateHistoryChartPoint,
+} from "@/features/rate-history/rate-history";
 
 const chartWidth = 267;
+const chartHeight = 272;
 
 type RateHistoryChartProps = {
   chart: RateHistoryChartModel;
@@ -9,10 +18,47 @@ type RateHistoryChartProps = {
   range: HistoryRange;
 };
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getNearestPoint(points: RateHistoryChartPoint[], x: number) {
+  return points.reduce<RateHistoryChartPoint | null>((nearestPoint, point) => {
+    if (!nearestPoint) {
+      return point;
+    }
+
+    return Math.abs(point.x - x) < Math.abs(nearestPoint.x - x) ? point : nearestPoint;
+  }, null);
+}
+
 function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
   const chartId = `rate-history-chart-${range.toLowerCase()}`;
   const gradientId = `rate-history-area-${range.toLowerCase()}`;
   const summaryId = `rate-history-chart-summary-${range.toLowerCase()}`;
+  const [hoverPoint, setHoverPoint] = useState<RateHistoryChartPoint | null>(null);
+  const chartDetails = useMemo(
+    () =>
+      hoverPoint
+        ? [hoverPoint.rateLabel, `${hoverPoint.dateLabel} 16:00 CET`]
+        : [chart.lastRate, `${chart.lastDateLabel} 16:00 CET`],
+    [chart.lastDateLabel, chart.lastRate, hoverPoint]
+  );
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+
+    if (bounds.width === 0) {
+      return;
+    }
+
+    const pointerX = clamp(
+      ((event.clientX - bounds.left) / bounds.width) * chartWidth,
+      0,
+      chartWidth
+    );
+    setHoverPoint(getNearestPoint(chart.points, pointerX));
+  }
 
   return (
     <section
@@ -29,7 +75,7 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
           aria-live="polite"
           className="justify-end text-right text-preset-5 text-neutral-100"
           separatorClassName="text-neutral-200"
-          items={[chart.lastRate, `${chart.lastDateLabel} 16:00 CET`]}
+          items={chartDetails}
         />
       </div>
       <div
@@ -57,7 +103,11 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
             </span>
           ))}
         </div>
-        <div className="relative h-[272px] w-full overflow-hidden">
+        <div
+          className="relative h-[272px] w-full cursor-crosshair overflow-hidden"
+          onPointerLeave={() => setHoverPoint(null)}
+          onPointerMove={handlePointerMove}
+        >
           <svg
             aria-hidden="true"
             className="absolute inset-0 h-[272px] w-full"
@@ -103,7 +153,39 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
               fill="none"
               vectorEffect="non-scaling-stroke"
             />
+            {hoverPoint ? (
+              <g className="pointer-events-none">
+                <line
+                  x1={hoverPoint.x}
+                  x2={hoverPoint.x}
+                  y1="0"
+                  y2={chartHeight}
+                  stroke="hsl(var(--neutral-200))"
+                  strokeDasharray="4 4"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <line
+                  x1="0"
+                  x2={chartWidth}
+                  y1={hoverPoint.y}
+                  y2={hoverPoint.y}
+                  stroke="hsl(var(--neutral-200))"
+                  strokeDasharray="4 4"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </g>
+            ) : null}
           </svg>
+          {hoverPoint ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute z-10 size-125 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lime-500 bg-neutral-700 sm:size-150"
+              style={{
+                left: `${(hoverPoint.x / chartWidth) * 100}%`,
+                top: `${(hoverPoint.y / chartHeight) * 100}%`,
+              }}
+            />
+          ) : null}
         </div>
         <div aria-hidden="true" />
         <div className="mt-200 flex justify-between text-preset-6 text-neutral-200">

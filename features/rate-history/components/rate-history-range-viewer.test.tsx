@@ -24,6 +24,10 @@ function createRange(range: RateHistoryRangeModel["range"], open: string): RateH
       lastDateLabel: "19 Jun",
       lastRate: "0.8600",
       linePath: "M0,272L267,0",
+      points: [
+        { dateLabel: "19 May 2026", rateLabel: open, x: 0, y: 272 },
+        { dateLabel: "19 Jun 2026", rateLabel: "0.8600", x: 267, y: 0 },
+      ],
       xAxisLabels: [
         { label: "19 May", x: 0 },
         { label: "19 Jun", x: 267 },

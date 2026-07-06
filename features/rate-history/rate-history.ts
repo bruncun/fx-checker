@@ -28,6 +28,13 @@ export type RateHistoryAxisLabel = {
   y?: number;
 };
 
+export type RateHistoryChartPoint = {
+  dateLabel: string;
+  rateLabel: string;
+  x: number;
+  y: number;
+};
+
 export type RateHistoryChartModel = {
   areaPath: string;
   firstDateLabel: string;
@@ -35,6 +42,7 @@ export type RateHistoryChartModel = {
   lastDateLabel: string;
   lastRate: string;
   linePath: string;
+  points: RateHistoryChartPoint[];
   xAxisLabels: RateHistoryAxisLabel[];
   yAxisLabels: RateHistoryAxisLabel[];
 };
