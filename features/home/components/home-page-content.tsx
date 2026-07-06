@@ -16,6 +16,12 @@ export function HomePageContent({
 }: HomePageContentProps) {
   return (
     <main className="text-white min-h-screen bg-neutral-900">
+      <a
+        className="sr-only z-[100] rounded-4 rounded-8 bg-neutral-900 px-150 py-100 text-preset-5-medium text-preset-6 text-neutral-50 uppercase underline-offset-4 shadow-[0_0_0_3px_hsl(var(--neutral-900)),0_0_0_5px_hsl(var(--lime-500))] hover:underline hover:decoration-neutral-200 focus:not-sr-only focus:absolute focus:top-200 focus:left-200 focus:outline-none focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500 sm:text-preset-4"
+        href="#converter"
+      >
+        Go to main content
+      </a>
       <Header statsSlot={headerStatsSlot} />
       {liveRatesSlot}
       <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">

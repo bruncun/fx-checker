@@ -126,7 +126,12 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   }
 
   return (
-    <section aria-labelledby="converter-heading">
+    <section
+      aria-labelledby="converter-heading"
+      className="scroll-mt-200 focus:outline-none"
+      id="converter"
+      tabIndex={-1}
+    >
       <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
         Check the Rate
       </h1>

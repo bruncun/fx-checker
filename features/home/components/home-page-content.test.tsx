@@ -19,6 +19,9 @@ describe("HomePageContent", () => {
     );
 
     expect(screen.getByAltText("FX Checker")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Go to main content" }).getAttribute("href")).toBe(
+      "#converter"
+    );
     expect(screen.getByText("56 Currencies")).toBeTruthy();
     expect(screen.getByRole("region", { name: "Converter" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Live exchange rates" })).toBeTruthy();
