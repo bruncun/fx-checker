@@ -7,6 +7,7 @@ import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
+import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -159,6 +160,38 @@ function ConverterAmountPanel({
   );
 }
 
+function ConverterActionToolbar({ children }: { children: React.ReactNode }) {
+  const toolbarRef = React.useRef<HTMLDivElement>(null);
+  const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
+    containerRef: toolbarRef,
+    itemSelector: "[data-converter-action]:not(:disabled)",
+    orientation: "horizontal",
+  });
+
+  React.useLayoutEffect(() => {
+    const items = rovingFocus.getItems();
+    const focusedItem = items.find((item) => item === document.activeElement);
+    const currentTabStop = items.find((item) => item.tabIndex === 0);
+    const tabStop = focusedItem ?? currentTabStop ?? items[0];
+
+    items.forEach((item) => {
+      item.tabIndex = item === tabStop ? 0 : -1;
+    });
+  });
+
+  return (
+    <div
+      ref={toolbarRef}
+      aria-label="Conversion actions"
+      className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end"
+      onKeyDown={rovingFocus.handleKeyDown}
+      role="toolbar"
+    >
+      {children}
+    </div>
+  );
+}
+
 function ConverterAmountControls({
   currencies,
   exchangeRateLabel,
@@ -249,24 +282,27 @@ function ConverterAmountControls({
         >
           {exchangeRateLabel}
         </p>
-        <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
+        <ConverterActionToolbar>
           <React.Suspense
             fallback={
               <>
-                <FavoriteButton />
-                <LogConversionButton disabled />
+                <FavoriteButton data-converter-action />
+                <LogConversionButton data-converter-action disabled tabIndex={-1} />
               </>
             }
           >
             <ConverterFavoriteButton
+              data-converter-action
               favoritesPromise={favoritesPromise}
               pair={{
                 fromCurrency: sendCurrency.currencyCode,
                 toCurrency: receiveCurrency.currencyCode,
               }}
+              tabIndex={0}
             />
             <LogConversionButton
               aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
+              data-converter-action
               onClick={() => {
                 onConversionLogCreate?.({
                   fromCurrency: sendCurrency.currencyCode,
@@ -276,9 +312,10 @@ function ConverterAmountControls({
                 });
               }}
               disabled={!canLogConversion}
+              tabIndex={-1}
             />
           </React.Suspense>
-        </div>
+        </ConverterActionToolbar>
       </div>
     </>
   );

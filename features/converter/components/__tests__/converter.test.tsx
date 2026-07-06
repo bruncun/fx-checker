@@ -362,6 +362,46 @@ describe("Converter", () => {
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
   });
 
+  it("groups converter actions in a toolbar with one tab stop", () => {
+    renderConverter();
+
+    const toolbar = screen.getByRole("toolbar", { name: "Conversion actions" });
+    const favoriteButton = screen.getByRole("button", { name: "Favorite USD/EUR" });
+    const logButton = screen.getByRole("button", { name: /Log .* USD to .* EUR/ });
+
+    expect(toolbar.contains(favoriteButton)).toBe(true);
+    expect(toolbar.contains(logButton)).toBe(true);
+    expect(favoriteButton.tabIndex).toBe(0);
+    expect(logButton.tabIndex).toBe(-1);
+  });
+
+  it("moves focus between enabled converter toolbar actions with arrow keys", () => {
+    renderConverter();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "100" },
+    });
+
+    const favoriteButton = screen.getByRole("button", { name: "Favorite USD/EUR" });
+    const logButton = screen.getByRole("button", { name: /Log .* USD to .* EUR/ });
+
+    expect(favoriteButton.tabIndex).toBe(0);
+    expect(logButton.tabIndex).toBe(-1);
+
+    favoriteButton.focus();
+    fireEvent.keyDown(favoriteButton, { key: "ArrowRight" });
+
+    expect(document.activeElement).toBe(logButton);
+    expect(favoriteButton.tabIndex).toBe(-1);
+    expect(logButton.tabIndex).toBe(0);
+
+    fireEvent.keyDown(logButton, { key: "ArrowLeft" });
+
+    expect(document.activeElement).toBe(favoriteButton);
+    expect(favoriteButton.tabIndex).toBe(0);
+    expect(logButton.tabIndex).toBe(-1);
+  });
+
   it("shows the data unavailable error when logging a conversion fails", async () => {
     createConversion.mockRejectedValue(new Error("Supabase failed"));
 

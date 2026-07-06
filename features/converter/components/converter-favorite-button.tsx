@@ -20,12 +20,16 @@ import {
 } from "@/features/favorites/optimistic-favorites";
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 
-type ConverterFavoriteButtonProps = {
+type ConverterFavoriteButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   favoritesPromise: Promise<Favorite[]>;
   pair: FavoriteCurrencyPair;
 };
 
-function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteButtonProps) {
+function ConverterFavoriteButton({
+  favoritesPromise,
+  pair,
+  ...props
+}: ConverterFavoriteButtonProps) {
   const router = useRouter();
   const showDataUnavailableError = useDataUnavailableError();
   const initialFavorites = React.use(favoritesPromise);
@@ -76,6 +80,7 @@ function ConverterFavoriteButton({ favoritesPromise, pair }: ConverterFavoriteBu
 
   return (
     <FavoriteButton
+      {...props}
       aria-label={
         isFavorite
           ? `Remove ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency} from favorites`
