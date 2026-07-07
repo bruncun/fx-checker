@@ -35,7 +35,7 @@ describe("HomePageContent", () => {
       />
     );
 
-    expect(screen.getByAltText("FX Checker")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "FX Checker" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Go to main content" }).getAttribute("href")).toBe(
       "#converter"
     );

@@ -1,5 +1,4 @@
-import Image from "next/image";
-
+import { Icon } from "@/components/ui/icon";
 import { TabButton } from "@/components/ui/tab-button";
 import { cn } from "@/lib/utils";
 import { rateDetailsSectionDefinitions } from "./rate-details-navigation-state";
@@ -186,7 +185,7 @@ function RateDetailsNavigationFallback() {
         <span className="inline-flex items-center gap-100">
           <span>History</span>
         </span>
-        <Image aria-hidden alt="" height={7} src="/images/angle-down.svg" width={11} />
+        <Icon decorative height={7} iconName="chevron-down" width={11} />
       </button>
       <div
         className="hidden w-full items-start gap-250 shadow-[inset_0_-1px_0_0_hsl(var(--neutral-600))] sm:flex sm:gap-100"

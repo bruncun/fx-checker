@@ -16,12 +16,14 @@ const logoVariants = {
     className: "h-250 w-auto sm:h-[26px]",
     height: 26,
     src: "/images/logo.svg",
+    lightSrc: "/images/logo-light.svg",
     width: 139,
   },
   mark: {
     className: "size-[26px]",
     height: 26,
     src: "/images/auth-logo.svg",
+    lightSrc: "/images/auth-logo-light.svg",
     width: 26,
   },
 } as const;
@@ -30,14 +32,30 @@ function Logo({ alt = "FX Checker", className, variant = "full", ...props }: Log
   const logo = logoVariants[variant];
 
   return (
-    <Image
-      alt={alt}
-      className={cn(logo.className, className)}
-      height={logo.height}
-      src={logo.src}
-      width={logo.width}
-      {...props}
-    />
+    <span
+      aria-label={alt}
+      className={cn("inline-flex shrink-0", logo.className, className)}
+      role="img"
+    >
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="fx-logo-dark h-full w-auto"
+        height={logo.height}
+        src={logo.src}
+        width={logo.width}
+        {...props}
+      />
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="fx-logo-light h-full w-auto"
+        height={logo.height}
+        src={logo.lightSrc}
+        width={logo.width}
+        {...props}
+      />
+    </span>
   );
 }
 

@@ -280,6 +280,32 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --shadow-elevation-auth-card: 0 12px 40px 0 rgb(0 0 0 / 0.4);
+    --shadow-elevation-card: 0 12px 40px 0 rgb(0 0 0 / 0.4);
+    --shadow-elevation-phone: 0 32px 80px rgb(0 0 0 / 0.25);
+    --shadow-elevation-popover: 0 20px 60px 0 rgb(10 10 10 / 0.5);
+  }
+
+  .light {
+    --neutral-900: 225 36% 97%;
+    --neutral-700: 0 0% 100%;
+    --neutral-600: 226 34% 93%;
+    --neutral-500: 226 27% 84%;
+    --neutral-400: 226 20% 68%;
+    --neutral-300: 229 15% 52%;
+    --neutral-200: 229 18% 35%;
+    --neutral-100: 232 36% 20%;
+    --neutral-50: 235 60% 8%;
+    --lime-500: 239 100% 45%;
+    --lime-800: 238 100% 92%;
+    --green-500: 166 86% 24%;
+    --red-500: 334 90% 38%;
+    --background: var(--neutral-900);
+    --foreground: var(--neutral-50);
+    --shadow-elevation-auth-card: 0 18px 46px rgb(3 12 58 / 0.13);
+    --shadow-elevation-card: 0 16px 40px rgb(3 12 58 / 0.14);
+    --shadow-elevation-phone: 0 30px 76px rgb(3 12 58 / 0.18);
+    --shadow-elevation-popover: 0 18px 44px rgb(3 12 58 / 0.2);
   }
 }
 
@@ -298,4 +324,49 @@
 
 abbr {
   text-decoration: none;
+}
+
+.fx-logo-light {
+  display: none;
+}
+
+.fx-themed-icon-dark,
+.fx-themed-icon-light {
+  display: block;
+}
+
+.fx-themed-icon-light {
+  display: none;
+}
+
+.light .fx-logo-dark {
+  display: none;
+}
+
+.light .fx-logo-light {
+  display: block;
+}
+
+.light .fx-themed-icon-dark {
+  display: none;
+}
+
+.light .fx-themed-icon-light {
+  display: block;
+}
+
+.fx-favorite-default-pinned {
+  filter: brightness(0);
+}
+
+.light .fx-favorite-default-pinned {
+  filter: brightness(0) invert(1);
+}
+
+.fx-favorite-icon-pinned {
+  filter: none;
+}
+
+.light .fx-favorite-unpinned {
+  filter: brightness(0);
 }

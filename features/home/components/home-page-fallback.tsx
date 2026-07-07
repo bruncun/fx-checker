@@ -74,13 +74,11 @@ function HeaderStatsFallback() {
           <abbr title="European Central Bank">ECB</abbr>{" "}
           <span className="hidden sm:inline">data</span>
         </span>,
-        <a
-          className="rounded-4 text-neutral-50 underline-offset-4 hover:underline hover:decoration-neutral-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500"
-          href="/auth/login"
-          key="sign-out"
-        >
-          Sign out
-        </a>,
+        <span
+          aria-hidden="true"
+          className="inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
+          key="account"
+        />,
       ]}
     />
   );
@@ -131,7 +129,7 @@ function ConverterFallback({
       <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
         Check the Rate
       </h1>
-      <div className="rounded-20 bg-neutral-700 shadow-[0_12px_40px_0_rgb(0_0_0_/_0.4)]">
+      <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <div className="flex flex-col gap-200 p-200 sm:flex-row sm:items-center sm:gap-300 sm:p-250">
           <ConverterAmountPanelFallback amount={sendAmount} currency={sendCurrency} label="Send" />
           <ExchangeButton className="self-center" tabIndex={-1} />

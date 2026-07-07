@@ -19,8 +19,6 @@ describe("SignUpForm", () => {
   it("offers guest mode from the sign-up page", () => {
     render(<SignUpForm />);
 
-    expect(screen.getByRole("link", { name: "Try as guest" }).getAttribute("href")).toBe(
-      "/guest"
-    );
+    expect(screen.getByRole("link", { name: "Try as guest" }).getAttribute("href")).toBe("/guest");
   });
 });

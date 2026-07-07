@@ -11,7 +11,7 @@ describe("home page", () => {
   it("renders the landing page with auth and guest paths", () => {
     cy.visit("/");
 
-    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the rate before money moves." }).should("be.visible");
     cy.findByRole("link", { name: "Log in" }).should("have.attr", "href", "/auth/login");
     cy.findByRole("link", { name: "Get started" }).should("have.attr", "href", "/auth/sign-up");
@@ -27,7 +27,7 @@ describe("home page", () => {
 
     cy.location("pathname").should("eq", "/app");
     cy.window().its("scrollY").should("eq", 0);
-    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
   });
 
   it("keeps guest users in the app shell when returning from compare to history", () => {
@@ -48,7 +48,7 @@ describe("home page", () => {
   it("renders the home shell without redirecting to login", () => {
     cy.visit("/");
 
-    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the rate before money moves." }).should("be.visible");
     cy.findByRole("link", { name: "Log in" }).should("have.attr", "href", "/auth/login");
     cy.findByRole("link", { name: "Get started" }).should("have.attr", "href", "/auth/sign-up");
@@ -64,13 +64,13 @@ describe("home page", () => {
 
     cy.location("pathname").should("eq", "/app");
     cy.window().its("scrollY").should("eq", 0);
-    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
   });
 
   it("renders the home shell without redirecting to login", () => {
     cy.visit("/app");
 
-    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
     cy.findByRole("textbox", { name: "Email" }).should("not.exist");
   });
@@ -81,7 +81,7 @@ describe("home page", () => {
 
       cy.visit("/app");
 
-      cy.findByAltText("FX Checker").should("be.visible");
+      cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
       cy.findByRole("list", { name: "Exchange rate data stats" }).within(() => {
         cy.contains(`${currencyCount} Currencies`).should("be.visible");
         cy.contains("EOD").should("be.visible");

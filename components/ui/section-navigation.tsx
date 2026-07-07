@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { TabButton, TabCountBadge } from "@/components/ui/tab-button";
+import { Icon } from "@/components/ui/icon";
 import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import { cn } from "@/lib/utils";
@@ -147,13 +147,13 @@ function SectionNavigation({
           <span>{activeLabel}</span>
           {activeCount !== undefined ? <TabCountBadge count={activeCount} /> : null}
         </span>
-        <Image aria-hidden alt="" height={7} src="/images/angle-down.svg" width={11} />
+        <Icon decorative height={7} iconName="chevron-down" width={11} />
       </button>
 
       {isOpen ? (
         <div
           ref={panelRef}
-          className="absolute top-[calc(100%+8px)] right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),0_20px_60px_0_rgb(10_10_10_/_0.50)] sm:hidden"
+          className="absolute top-[calc(100%+8px)] right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),var(--shadow-elevation-popover)] sm:hidden"
           id={panelId}
           onKeyDown={handlePanelKeyDown}
         >

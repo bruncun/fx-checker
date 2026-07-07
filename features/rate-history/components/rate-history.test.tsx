@@ -89,6 +89,18 @@ describe("RateHistory", () => {
     expect(screen.queryByText("Jun 19, 2026 16:00 CET")).toBeNull();
   });
 
+  it("keeps the chart area gradient pinned to the full chart height", () => {
+    render(
+      <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
+    );
+
+    const gradient = document.querySelector("#rate-history-area-1m");
+
+    expect(gradient?.getAttribute("gradientUnits")).toBe("userSpaceOnUse");
+    expect(gradient?.getAttribute("y1")).toBe("0");
+    expect(gradient?.getAttribute("y2")).toBe("272");
+  });
+
   it("renders the tab empty state with the selected pair when history data is missing", () => {
     render(<RateHistory model={null} pair="USD/EUR" />);
 

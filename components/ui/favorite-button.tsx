@@ -47,7 +47,10 @@ function FavoriteButton({
       <Icon
         className={cn(
           "size-200 self-center",
-          pinned && !isIconVariant && "brightness-0",
+          !pinned && !disabled && "fx-favorite-unpinned",
+          pinned &&
+            !disabled &&
+            (isIconVariant ? "fx-favorite-icon-pinned" : "fx-favorite-default-pinned"),
           disabled && "brightness-0 invert-[62%]"
         )}
         decorative

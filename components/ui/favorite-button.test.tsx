@@ -11,6 +11,23 @@ afterEach(() => {
 });
 
 describe("FavoriteButton", () => {
+  it("marks unpinned outline icons for light-mode darkening", () => {
+    render(<FavoriteButton />);
+
+    const button = screen.getByRole("button", { name: "Favorite" });
+
+    expect(button.querySelector("span")?.className).toContain("fx-favorite-unpinned");
+  });
+
+  it("marks the unpinned icon variant outline icon for light-mode darkening", () => {
+    render(<FavoriteButton variant="icon" />);
+
+    const button = screen.getByRole("button", { name: "Favorite" });
+
+    expect(button.querySelector("span")?.className).toContain("fx-favorite-unpinned");
+    expect(button.querySelector('img[src="/images/icon-star-dark.svg"]')).toBeTruthy();
+  });
+
   it("restores the original pinned styling for the default variant", () => {
     render(<FavoriteButton pinned />);
 
@@ -21,9 +38,10 @@ describe("FavoriteButton", () => {
     expect(button.className).toContain("shadow-none");
     expect(button.className).toContain("hover:!bg-lime-500");
     expect(button.className).toContain("hover:opacity-80");
+    expect(button.querySelector("span")?.className).toContain("fx-favorite-default-pinned");
   });
 
-  it("keeps the icon variant pinned styling separate from the default fill", () => {
+  it("keeps the pinned icon variant structurally outlined with a primary star", () => {
     render(<FavoriteButton pinned variant="icon" />);
 
     const button = screen.getByRole("button", { name: "Favorited" });
@@ -31,6 +49,8 @@ describe("FavoriteButton", () => {
     expect(button.className).toContain("shadow-[inset_0_0_0_1px_hsl(var(--lime-500))]");
     expect(button.className).not.toContain("!bg-lime-500");
     expect(button.className).not.toContain("text-neutral-900");
+    expect(button.querySelector("span")?.className).toContain("fx-favorite-icon-pinned");
+    expect(button.querySelector('img[src="/images/icon-star-filled-dark.svg"]')).toBeTruthy();
   });
 
   it("keeps the original disabled styling for the default variant", () => {

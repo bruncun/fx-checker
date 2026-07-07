@@ -2,7 +2,7 @@ import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/co
 import { convertAmount, formatExchangeRate, getExchangeRate } from "@/features/converter/exchange";
 import { getServerConversions } from "@/features/conversion-log/server";
 import { getServerFavorites } from "@/features/favorites/server";
-import { ExchangeRateStats } from "@/features/header/header";
+import { ExchangeRateStats, getHeaderAccount } from "@/features/header/header";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
@@ -263,11 +263,20 @@ type HomePageShellProps = {
 };
 
 async function HeaderStats() {
-  const currencyReferenceData = await getCurrencyReferenceData();
+  const [currencyReferenceData, account] = await Promise.all([
+    getCurrencyReferenceData(),
+    getHeaderAccount(),
+  ]);
 
   assertDataAvailable(currencyReferenceData);
 
-  return <ExchangeRateStats currencyCount={currencyReferenceData.currencyCount} />;
+  return (
+    <ExchangeRateStats
+      currencyCount={currencyReferenceData.currencyCount}
+      email={account.email}
+      isGuest={account.isGuest}
+    />
+  );
 }
 
 async function LiveRates() {

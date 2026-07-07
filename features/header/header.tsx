@@ -1,17 +1,41 @@
 import { Logo } from "@/components/logo";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
+import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
+import { createClient } from "@/lib/supabase/server";
+import { hasEnvVars } from "@/lib/utils";
+import { cookies } from "next/headers";
 import type { ReactNode } from "react";
-import { SignOutLink } from "./sign-out-link";
+import { UserDropdown } from "./user-dropdown";
 
 type ExchangeRateStatsProps = {
   currencyCount: number;
+  email?: string | null;
+  isGuest?: boolean;
 };
 
 type HeaderProps = {
   statsSlot?: ReactNode;
 };
 
-function ExchangeRateStats({ currencyCount }: ExchangeRateStatsProps) {
+async function getHeaderAccount() {
+  const cookieStore = await cookies();
+  const isGuest = isGuestModeFromCookies(cookieStore);
+
+  if (isGuest || !hasEnvVars || process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1") {
+    return { email: null, isGuest: true };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    return { email: null, isGuest: false };
+  }
+
+  return { email: data.user?.email ?? null, isGuest: false };
+}
+
+function ExchangeRateStats({ currencyCount, email, isGuest = false }: ExchangeRateStatsProps) {
   return (
     <InlineMetaList
       className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
@@ -25,7 +49,7 @@ function ExchangeRateStats({ currencyCount }: ExchangeRateStatsProps) {
           <abbr title="European Central Bank">ECB</abbr>{" "}
           <span className="hidden sm:inline">data</span>
         </span>,
-        <SignOutLink key="sign-out" />,
+        <UserDropdown key="sign-out" email={email} isGuest={isGuest} />,
       ]}
     />
   );
@@ -40,4 +64,4 @@ export function Header({ statsSlot }: HeaderProps) {
   );
 }
 
-export { ExchangeRateStats };
+export { ExchangeRateStats, getHeaderAccount };

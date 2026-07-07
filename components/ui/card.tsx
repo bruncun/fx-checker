@@ -7,7 +7,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        "rounded-20 bg-neutral-700 text-neutral-50 shadow-[0_12px_40px_0_rgb(0_0_0_/_0.4)]",
+        "rounded-20 bg-neutral-700 text-neutral-50 shadow-[var(--shadow-elevation-auth-card)]",
         className
       )}
       {...props}

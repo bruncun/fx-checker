@@ -135,7 +135,7 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
       <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
         Check the Rate
       </h1>
-      <div className="rounded-20 bg-neutral-700 shadow-[0_12px_40px_0_rgb(0_0_0_/_0.4)]">
+      <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <ConverterAmountControls
           currencies={currencies}
           exchangeRateLabel={exchangeRateLabel}

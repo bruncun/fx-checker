@@ -1,8 +1,8 @@
 import { buttonVariants } from "@/components/ui/button";
 import { Flag } from "@/components/ui/flag";
+import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
 
 const features = [
@@ -74,7 +74,7 @@ export default function LandingPage() {
                 className="flex items-center gap-100 sm:justify-center lg:justify-start"
                 key={index}
               >
-                <Image alt="" height={16} src="/images/icon-check.svg" width={16} />
+                <Icon decorative height={16} iconName="check" width={16} />
                 <span>{feature}</span>
               </li>
             ))}
@@ -84,13 +84,13 @@ export default function LandingPage() {
         <div className="relative mx-auto -mt-100 w-full max-w-[544px] lg:mx-0 lg:mt-0 lg:justify-self-end">
           <div
             aria-label="FX Checker mobile app preview"
-            className="mx-auto w-full max-w-[300px] rounded-[32px] bg-neutral-600 p-075 shadow-[0_32px_80px_rgba(0,0,0,0.25)]"
+            className="mx-auto w-full max-w-[300px] rounded-[32px] bg-[hsl(234_18%_8%)] p-075 shadow-[var(--shadow-elevation-phone)] dark:bg-[hsl(240_3%_13%)]"
             role="img"
           >
-            <div className="overflow-hidden rounded-[24px] bg-neutral-900 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]">
+            <div className="overflow-hidden rounded-[24px] bg-[hsl(225_36%_97%)] shadow-[inset_0_0_0_1px_hsl(234_24%_22%)] dark:bg-neutral-900 dark:shadow-[inset_0_0_0_1px_hsl(240_3%_18%)]">
               <div className="flex items-center justify-between px-200 pt-150 text-[10px] leading-none text-neutral-100">
                 <span>9:41</span>
-                <span className="h-075 w-400 rounded-full bg-neutral-700" />
+                <span className="h-075 w-400 rounded-full bg-[hsl(234_30%_5%)] dark:bg-[hsl(240_4%_9%)]" />
                 <span>100%</span>
               </div>
               <div className="px-150 pt-200 pb-150">
@@ -103,7 +103,7 @@ export default function LandingPage() {
                   </ul>
                 </nav>
 
-                <section aria-hidden="true" className="-mx-[10.75px] mt-200 flex bg-neutral-700">
+                <section aria-hidden="true" className="-mx-[11px] mt-200 flex bg-neutral-700">
                   <div className="flex shrink-0 items-center gap-075 bg-lime-500 px-100 py-125 text-preset-6 text-neutral-900 uppercase">
                     <span className="size-[6px] rounded-full bg-neutral-900" />
                     <span>Live markets</span>
@@ -135,53 +135,38 @@ export default function LandingPage() {
                   Check the Rate
                 </h2>
 
-                <div className="rounded-20 bg-neutral-700 shadow-[0_12px_40px_0_rgb(0_0_0_/_0.4)]">
+                <div className="rounded-20 bg-neutral-700 shadow-[inset_0_0_0_1px_hsl(226_40%_88%),0_16px_34px_rgb(3_12_58_/_0.17)] dark:shadow-[var(--shadow-elevation-card)]">
                   <div className="grid gap-125 p-150">
-                    <section className="rounded-16 bg-neutral-600 p-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]">
+                    <section className="rounded-16 bg-[hsl(232_100%_94%)] p-150 shadow-[inset_0_0_0_1px_hsl(229_34%_74%)] dark:bg-neutral-600 dark:shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]">
                       <h3 className="mb-150 text-preset-4 text-neutral-100 uppercase">Send</h3>
                       <div className="flex items-end justify-between gap-150">
-                        <span className="min-w-0 border-b border-neutral-500 text-preset-1-tablet text-neutral-50">
+                        <span className="min-w-0 border-b border-[hsl(229_34%_74%)] text-preset-1-tablet text-neutral-50 dark:border-neutral-500">
                           1,000
                         </span>
-                        <span className="inline-flex h-500 w-[88px] items-center justify-center gap-075 rounded-8 bg-neutral-500 p-125 text-preset-5-medium text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]">
+                        <span className="inline-flex h-500 w-[88px] items-center justify-center gap-075 rounded-8 bg-[hsl(226_48%_86%)] p-125 text-preset-5-medium text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(229_24%_63%)] dark:bg-neutral-500 dark:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]">
                           <Flag alt="" className="size-200" countryCode="us" />
                           <span>USD</span>
-                          <Image
-                            alt=""
-                            height={14}
-                            src="/images/icon-chevron-down.svg"
-                            width={14}
-                          />
+                          <Icon decorative height={14} iconName="chevron-down" width={14} />
                         </span>
                       </div>
                     </section>
 
                     <div className="flex justify-center">
-                      <div className="flex size-[44px] items-center justify-center rounded-8 bg-neutral-500 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]">
-                        <Image
-                          alt=""
-                          height={20}
-                          src="/images/icon-exchange-vertical.svg"
-                          width={20}
-                        />
+                      <div className="flex size-[44px] items-center justify-center rounded-8 bg-[hsl(226_48%_86%)] shadow-[inset_0_0_0_1px_hsl(229_24%_63%)] dark:bg-neutral-500 dark:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]">
+                        <Icon decorative iconName="exchange-vertical" />
                       </div>
                     </div>
 
-                    <section className="rounded-16 bg-neutral-600 p-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]">
+                    <section className="rounded-16 bg-[hsl(232_100%_94%)] p-150 shadow-[inset_0_0_0_1px_hsl(229_34%_74%)] dark:bg-neutral-600 dark:shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]">
                       <h3 className="mb-150 text-preset-4 text-neutral-100 uppercase">Receive</h3>
                       <div className="flex items-end justify-between gap-150">
-                        <span className="min-w-0 border-b border-neutral-500 text-preset-1-tablet text-lime-500">
+                        <span className="min-w-0 border-b border-[hsl(229_34%_74%)] text-preset-1-tablet text-lime-500 dark:border-neutral-500">
                           854
                         </span>
-                        <span className="inline-flex h-500 w-[88px] items-center justify-center gap-075 rounded-8 bg-neutral-500 p-125 text-preset-5-medium text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]">
+                        <span className="inline-flex h-500 w-[88px] items-center justify-center gap-075 rounded-8 bg-[hsl(226_48%_86%)] p-125 text-preset-5-medium text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(229_24%_63%)] dark:bg-neutral-500 dark:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]">
                           <Flag alt="" className="size-200" countryCode="eu" />
                           <span>EUR</span>
-                          <Image
-                            alt=""
-                            height={14}
-                            src="/images/icon-chevron-down.svg"
-                            width={14}
-                          />
+                          <Icon decorative height={14} iconName="chevron-down" width={14} />
                         </span>
                       </div>
                     </section>
@@ -204,9 +189,9 @@ export default function LandingPage() {
                     <div className="mt-150 flex justify-center gap-100">
                       <span
                         aria-hidden="true"
-                        className="inline-flex size-400 items-center justify-center rounded-8 bg-neutral-500 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
+                        className="inline-flex size-400 items-center justify-center rounded-8 bg-[hsl(226_48%_86%)] shadow-[inset_0_0_0_1px_hsl(229_24%_63%)] dark:bg-neutral-500 dark:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
                       >
-                        <Image alt="" height={16} src="/images/icon-star.svg" width={16} />
+                        <Icon className="fx-favorite-unpinned" decorative iconName="star" />
                       </span>
                       <span
                         aria-hidden="true"
