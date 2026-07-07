@@ -18,14 +18,12 @@ export function LiveRateList({ rates }: LiveRateListProps) {
         <span>Live markets</span>
       </div>
       <div
-        className="min-w-0 flex-1 overflow-x-auto"
-        role="region"
         aria-label="Live exchange rates"
+        className="relative min-w-0 flex-1 overflow-x-auto focus-visible:outline-none focus-visible:after:pointer-events-none focus-visible:after:absolute focus-visible:after:inset-0 focus-visible:after:z-10 focus-visible:after:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus-visible:after:content-['']"
+        role="region"
+        tabIndex={0}
       >
-        <ul
-          className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
-          aria-label="Live exchange rates"
-        >
+        <ul className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500">
           {rates.map((rate) => (
             <LiveRateItem key={rate.pair} rate={rate} />
           ))}

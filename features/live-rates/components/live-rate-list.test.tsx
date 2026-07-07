@@ -26,7 +26,8 @@ describe("LiveRateList", () => {
   it("renders every mock rate in order", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const list = screen.getByRole("list", { name: "Live exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Live exchange rates" });
+    const list = within(scroller).getByRole("list");
     const items = within(list).getAllByRole("listitem");
 
     expect(items).toHaveLength(7);
@@ -42,18 +43,20 @@ describe("LiveRateList", () => {
     expect(container.querySelector('ul[aria-hidden="true"]')).toBeNull();
   });
 
-  it("keeps the scroll region out of the tab order", () => {
+  it("keeps the scroll region keyboard focusable", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
     const scroller = screen.getByRole("region", { name: "Live exchange rates" });
 
-    expect(scroller.getAttribute("tabindex")).toBeNull();
+    expect(scroller.getAttribute("tabindex")).toBe("0");
+    expect(scroller.className).toContain("focus-visible:after:shadow-");
   });
 
   it("renders rate items as static content", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const list = screen.getByRole("list", { name: "Live exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Live exchange rates" });
+    const list = within(scroller).getByRole("list");
 
     expect(within(list).getAllByRole("listitem")).toHaveLength(7);
     expect(within(list).queryAllByRole("button")).toHaveLength(0);
@@ -63,7 +66,8 @@ describe("LiveRateList", () => {
   it("does not expose ticker items as focusable actions", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const list = screen.getByRole("list", { name: "Live exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Live exchange rates" });
+    const list = within(scroller).getByRole("list");
     const firstItem = within(list).getAllByRole("listitem")[0];
 
     expect(firstItem?.getAttribute("tabindex")).toBeNull();
@@ -74,7 +78,8 @@ describe("LiveRateList", () => {
   it("uses the direction to style positive and negative changes", () => {
     render(<LiveRateList rates={mockLiveRates.slice(0, 2)} />);
 
-    const list = screen.getByRole("list", { name: "Live exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Live exchange rates" });
+    const list = within(scroller).getByRole("list");
 
     expect(within(list).getByText("-0.14%").parentElement?.classList.contains("text-red-500")).toBe(
       true
