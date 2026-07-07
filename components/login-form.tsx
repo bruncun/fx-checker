@@ -16,9 +16,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-function getSafeRedirectPath(redirectTo: string | null) {
+export function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/";
+    return "/app";
   }
 
   return redirectTo;
@@ -62,12 +62,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     }
   };
 
-  function handleGuestMode() {
-    document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
-    document.cookie = `${GUEST_MODE_COOKIE}=1; Path=/; SameSite=Lax`;
-    router.push(redirectPath);
-  }
-
   return (
     <div className={cn("flex flex-col", className)} {...props}>
       <CardTitle>Login</CardTitle>
@@ -107,9 +101,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
-              </Button>
-              <Button type="button" variant="outline" onClick={handleGuestMode}>
-                Try as guest
               </Button>
             </div>
           </form>

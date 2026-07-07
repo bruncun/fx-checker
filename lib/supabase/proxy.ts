@@ -3,10 +3,26 @@ import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 import { GUEST_MODE_COOKIE, isGuestCookieValue } from "@/features/guest-session/guest-session";
 
+const publicRoutes = new Set(["/guest"]);
+
+function redirectToApp(request: NextRequest, responseToCopy?: NextResponse) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/app";
+
+  const response = NextResponse.redirect(url);
+
+  responseToCopy?.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+
+  return response;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
+  const pathname = request.nextUrl.pathname;
 
   // If the env vars are not set, skip proxy check. You can remove this
   // once you setup the project.
@@ -18,9 +34,13 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  if (publicRoutes.has(pathname)) {
+    return supabaseResponse;
+  }
+
   const isGuestMode = isGuestCookieValue(request.cookies.get(GUEST_MODE_COOKIE)?.value);
 
-  if (isGuestMode && !request.nextUrl.pathname.startsWith("/auth")) {
+  if (isGuestMode && !pathname.startsWith("/auth")) {
     return supabaseResponse;
   }
 
@@ -56,11 +76,19 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (!user && !request.nextUrl.pathname.startsWith("/auth")) {
+  if (user && pathname === "/") {
+    return redirectToApp(request, supabaseResponse);
+  }
+
+  if (!user && pathname === "/") {
+    return supabaseResponse;
+  }
+
+  if (!user && !pathname.startsWith("/auth")) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
-    url.searchParams.set("redirectTo", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    url.searchParams.set("redirectTo", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 

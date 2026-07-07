@@ -49,6 +49,28 @@ describe("home page", () => {
     cy.visit("/");
 
     cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("heading", { name: "Check the rate before money moves." }).should("be.visible");
+    cy.findByRole("link", { name: "Log in" }).should("have.attr", "href", "/auth/login");
+    cy.findByRole("link", { name: "Get started" }).should("have.attr", "href", "/auth/sign-up");
+    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest");
+  });
+
+  it("offers guest mode from sign-up and starts the guest app at the top on mobile", () => {
+    cy.viewport(375, 667);
+    cy.visit("/auth/sign-up");
+
+    cy.findByRole("button", { name: "Sign up" }).should("be.visible");
+    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest").click();
+
+    cy.location("pathname").should("eq", "/app");
+    cy.window().its("scrollY").should("eq", 0);
+    cy.findByAltText("FX Checker").should("be.visible");
+  });
+
+  it("renders the home shell without redirecting to login", () => {
+    cy.visit("/app");
+
+    cy.findByAltText("FX Checker").should("be.visible");
     cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
     cy.findByRole("textbox", { name: "Email" }).should("not.exist");
   });
@@ -57,7 +79,7 @@ describe("home page", () => {
     cy.fixture<CurrenciesFixture>("frankfurter-currencies.json").then((currencies) => {
       const currencyCount = currencies.length;
 
-      cy.visit("/");
+      cy.visit("/app");
 
       cy.findByAltText("FX Checker").should("be.visible");
       cy.findByRole("list", { name: "Exchange rate data stats" }).within(() => {
@@ -70,7 +92,7 @@ describe("home page", () => {
   });
 
   it("supports the complete currency-picker keyboard flow", () => {
-    cy.visit("/");
+    cy.visit("/app");
 
     cy.findByRole("button", { name: "Select send currency" }).focus();
     cy.press(Cypress.Keyboard.Keys.DOWN);
@@ -102,7 +124,7 @@ describe("home page", () => {
   });
 
   it("supports keyboard navigation after focus enters the picker with a mouse", () => {
-    cy.visit("/");
+    cy.visit("/app");
 
     cy.findByRole("button", { name: "Select send currency" }).click();
     cy.findByRole("heading", { name: "Send" }).click();
@@ -123,7 +145,7 @@ describe("home page", () => {
 
   it("resizes the mobile currency picker to the space below its trigger", () => {
     cy.viewport(375, 667);
-    cy.visit("/");
+    cy.visit("/app");
 
     cy.findByRole("button", { name: "Select send currency", timeout: 10000 }).then(($trigger) => {
       cy.wrap($trigger).click({ scrollBehavior: false });
