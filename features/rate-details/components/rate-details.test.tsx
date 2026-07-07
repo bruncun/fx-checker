@@ -56,7 +56,9 @@ describe("RateDetails", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Rate details sections: History" }));
     const compareLink = screen.getByRole("link", { name: "Compare" });
+    const historyLink = screen.getByRole("link", { name: "History" });
 
+    expect(historyLink.getAttribute("href")).toBe("/app?from=GBP&to=USD");
     expect(compareLink.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
     expect(screen.getByRole("link", { name: "Favorites, 3" })).toBeTruthy();
   });
@@ -93,7 +95,7 @@ describe("RateDetails", () => {
     const compareTab = screen.getByRole("tab", { name: "Compare" });
     const favoritesTab = screen.getByRole("tab", { name: "Favorites, 4" });
 
-    expect(historyTab.getAttribute("href")).toBe("/?from=GBP&to=USD");
+    expect(historyTab.getAttribute("href")).toBe("/app?from=GBP&to=USD");
     expect(compareTab.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
     expect(favoritesTab.getAttribute("href")).toBe("/rate/favorites?from=GBP&to=USD");
   });

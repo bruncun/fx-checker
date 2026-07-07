@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
+import { GUEST_MODE_COOKIE, isGuestCookieValue } from "@/features/guest-session/guest-session";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -14,6 +15,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1") {
+    return supabaseResponse;
+  }
+
+  const isGuestMode = isGuestCookieValue(request.cookies.get(GUEST_MODE_COOKIE)?.value);
+
+  if (isGuestMode && !request.nextUrl.pathname.startsWith("/auth")) {
     return supabaseResponse;
   }
 

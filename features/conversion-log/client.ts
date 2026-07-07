@@ -1,5 +1,13 @@
 import { createClient } from "@/lib/supabase/client";
 import {
+  addGuestConversion,
+  GUEST_CONVERSIONS_COOKIE,
+  GUEST_MODE_COOKIE,
+  readGuestConversionsCookie,
+  serializeGuestConversionsCookie,
+  trimGuestConversions,
+} from "@/features/guest-session/guest-session";
+import {
   mapConversion,
   normalizeConversionInput,
   type Conversion,
@@ -8,7 +16,34 @@ import {
 
 const CONVERSION_SELECT = "id, from_currency, to_currency, send_amount, receive_amount, created_at";
 
+function getCookieValue(name: string) {
+  return document.cookie
+    .split("; ")
+    .find((cookie) => cookie.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
+}
+
+function setSessionCookie(name: string, value: string) {
+  document.cookie = `${name}=${value}; Path=/; SameSite=Lax`;
+}
+
+function isGuestMode() {
+  return getCookieValue(GUEST_MODE_COOKIE) === "1";
+}
+
 export async function createConversion(input: CreateConversionInput): Promise<Conversion> {
+  if (isGuestMode()) {
+    const conversions = readGuestConversionsCookie(getCookieValue(GUEST_CONVERSIONS_COOKIE));
+    const conversion = addGuestConversion(input);
+
+    setSessionCookie(
+      GUEST_CONVERSIONS_COOKIE,
+      serializeGuestConversionsCookie(trimGuestConversions([conversion, ...conversions]))
+    );
+
+    return conversion;
+  }
+
   const supabase = createClient();
   const {
     data: { user },
@@ -44,6 +79,17 @@ export async function createConversion(input: CreateConversionInput): Promise<Co
 }
 
 export async function deleteConversion(id: string): Promise<void> {
+  if (isGuestMode()) {
+    const conversions = readGuestConversionsCookie(getCookieValue(GUEST_CONVERSIONS_COOKIE));
+
+    setSessionCookie(
+      GUEST_CONVERSIONS_COOKIE,
+      serializeGuestConversionsCookie(conversions.filter((conversion) => conversion.id !== id))
+    );
+
+    return;
+  }
+
   const supabase = createClient();
   const {
     data: { user },
@@ -66,6 +112,12 @@ export async function deleteConversion(id: string): Promise<void> {
 }
 
 export async function deleteAllConversions(): Promise<void> {
+  if (isGuestMode()) {
+    setSessionCookie(GUEST_CONVERSIONS_COOKIE, serializeGuestConversionsCookie([]));
+
+    return;
+  }
+
   const supabase = createClient();
   const {
     data: { user },

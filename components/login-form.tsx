@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_CONVERSIONS_COOKIE,
+  GUEST_FAVORITES_COOKIE,
+  GUEST_MODE_COOKIE,
+} from "@/features/guest-session/guest-session";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +24,13 @@ function getSafeRedirectPath(redirectTo: string | null) {
   return redirectTo;
 }
 
+function clearGuestSessionCookies() {
+  document.cookie = `${GUEST_MODE_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
+  document.cookie = `${GUEST_FAVORITES_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
+  document.cookie = `${GUEST_CONVERSIONS_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
+  document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
+}
+
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +38,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const redirectPath = getSafeRedirectPath(searchParams.get("redirectTo"));
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +53,20 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         password,
       });
       if (error) throw error;
-      router.push(getSafeRedirectPath(searchParams.get("redirectTo")));
+      clearGuestSessionCookies();
+      router.push(redirectPath);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
+
+  function handleGuestMode() {
+    document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
+    document.cookie = `${GUEST_MODE_COOKIE}=1; Path=/; SameSite=Lax`;
+    router.push(redirectPath);
+  }
 
   return (
     <div className={cn("flex flex-col", className)} {...props}>
@@ -85,6 +107,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleGuestMode}>
+                Try as guest
               </Button>
             </div>
           </form>

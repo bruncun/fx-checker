@@ -8,6 +8,43 @@ describe("home page", () => {
     cy.task("resetFrankfurterMock");
   });
 
+  it("renders the landing page with auth and guest paths", () => {
+    cy.visit("/");
+
+    cy.findByAltText("FX Checker").should("be.visible");
+    cy.findByRole("heading", { name: "Check the rate before money moves." }).should("be.visible");
+    cy.findByRole("link", { name: "Log in" }).should("have.attr", "href", "/auth/login");
+    cy.findByRole("link", { name: "Get started" }).should("have.attr", "href", "/auth/sign-up");
+    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest");
+  });
+
+  it("offers guest mode from sign-up and starts the guest app at the top on mobile", () => {
+    cy.viewport(375, 667);
+    cy.visit("/auth/sign-up");
+
+    cy.findByRole("button", { name: "Sign up" }).should("be.visible");
+    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest").click();
+
+    cy.location("pathname").should("eq", "/app");
+    cy.window().its("scrollY").should("eq", 0);
+    cy.findByAltText("FX Checker").should("be.visible");
+  });
+
+  it("keeps guest users in the app shell when returning from compare to history", () => {
+    cy.visit("/guest");
+
+    cy.location("pathname").should("eq", "/app");
+    cy.location("search").should("include", "amount=1000");
+    cy.findByRole("tab", { name: "Compare" }).click();
+    cy.location("pathname").should("eq", "/rate/compare");
+
+    cy.findByRole("tab", { name: "History" }).click();
+
+    cy.location("pathname").should("eq", "/app");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
+    cy.findByRole("heading", { name: "Check the rate before money moves." }).should("not.exist");
+  });
+
   it("renders the home shell without redirecting to login", () => {
     cy.visit("/");
 

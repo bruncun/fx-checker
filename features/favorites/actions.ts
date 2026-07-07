@@ -2,6 +2,15 @@
 
 import { createClient } from "@/lib/supabase/server";
 import {
+  addGuestFavorite,
+  GUEST_FAVORITES_COOKIE,
+  isGuestModeFromCookies,
+  readGuestFavoritesCookie,
+  removeGuestFavorite,
+  serializeGuestFavoritesCookie,
+} from "@/features/guest-session/guest-session";
+import { cookies } from "next/headers";
+import {
   mapFavorite,
   normalizeFavoritePair,
   type Favorite,
@@ -29,6 +38,23 @@ async function getAuthenticatedUserContext() {
 }
 
 export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
+  const cookieStore = await cookies();
+
+  if (isGuestModeFromCookies(cookieStore)) {
+    const favorites = readGuestFavoritesCookie(cookieStore.get(GUEST_FAVORITES_COOKIE)?.value);
+    const favorite = addGuestFavorite(favorites, pair);
+    const nextFavorites = favorites.some((currentFavorite) => currentFavorite.id === favorite.id)
+      ? favorites
+      : [...favorites, favorite];
+
+    cookieStore.set(GUEST_FAVORITES_COOKIE, serializeGuestFavoritesCookie(nextFavorites), {
+      path: "/",
+      sameSite: "lax",
+    });
+
+    return favorite;
+  }
+
   const { supabase, userId } = await getAuthenticatedUserContext();
   const normalizedPair = normalizeFavoritePair(pair);
   const { data, error } = await supabase
@@ -49,6 +75,23 @@ export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favori
 }
 
 export async function deleteFavorite(pair: FavoriteCurrencyPair): Promise<void> {
+  const cookieStore = await cookies();
+
+  if (isGuestModeFromCookies(cookieStore)) {
+    const favorites = readGuestFavoritesCookie(cookieStore.get(GUEST_FAVORITES_COOKIE)?.value);
+
+    cookieStore.set(
+      GUEST_FAVORITES_COOKIE,
+      serializeGuestFavoritesCookie(removeGuestFavorite(favorites, pair)),
+      {
+        path: "/",
+        sameSite: "lax",
+      }
+    );
+
+    return;
+  }
+
   const { supabase, userId } = await getAuthenticatedUserContext();
   const normalizedPair = normalizeFavoritePair(pair);
   const { error } = await supabase

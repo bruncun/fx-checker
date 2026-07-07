@@ -1,7 +1,7 @@
 export type RateDetailsSection = "compare" | "favorites" | "history" | "log";
 
 const rateDetailsSectionDefinitions = [
-  { href: "/", label: "History", value: "history" },
+  { href: "/app", label: "History", value: "history" },
   { href: "/rate/compare", label: "Compare", value: "compare" },
   { href: "/rate/favorites", label: "Favorites", value: "favorites" },
   { href: "/rate/log", label: "Log", value: "log" },

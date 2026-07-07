@@ -91,6 +91,10 @@ function usePersistedConverterAmount({
     }
 
     const timeoutId = window.setTimeout(() => {
+      if (window.location.pathname !== pathname) {
+        return;
+      }
+
       nextSearchParams.set("amount", amountState.amount);
       nextSearchParams.set("amountSource", amountState.amountSource);
 

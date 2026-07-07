@@ -77,11 +77,17 @@ afterEach(() => {
 
 function renderConversionLog({
   conversions: selectedConversions = conversions,
+  isGuestMode = false,
 }: {
   conversions?: ComponentProps<typeof ConversionLog>["conversions"];
+  isGuestMode?: ComponentProps<typeof ConversionLog>["isGuestMode"];
 } = {}) {
   render(
-    <ConversionLog availableCurrencies={availableCurrencies} conversions={selectedConversions} />
+    <ConversionLog
+      availableCurrencies={availableCurrencies}
+      conversions={selectedConversions}
+      isGuestMode={isGuestMode}
+    />
   );
 }
 
@@ -137,7 +143,7 @@ describe("ConversionLog", () => {
     });
   });
 
-  it("renders the conversion log empty state when no conversions exist", () => {
+  it("renders the account conversion log empty state when no conversions exist", () => {
     renderConversionLog({ conversions: [] });
 
     expect(screen.getByText("No conversions logged yet")).toBeTruthy();
@@ -149,6 +155,12 @@ describe("ConversionLog", () => {
     expect(screen.getByText(/Your log is private to your account/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversion log" })).toBeNull();
     expect(screen.queryByRole("treegrid", { name: "Conversion Log" })).toBeNull();
+  });
+
+  it("renders the guest conversion log empty state when no conversions exist", () => {
+    renderConversionLog({ conversions: [], isGuestMode: true });
+
+    expect(screen.getByText(/Your log is private to this session and this browser/)).toBeTruthy();
   });
 
   it("formats relative timestamps for recent and older conversions", () => {

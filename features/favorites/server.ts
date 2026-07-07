@@ -1,10 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  GUEST_FAVORITES_COOKIE,
+  isGuestModeFromCookies,
+  readGuestFavoritesCookie,
+} from "@/features/guest-session/guest-session";
 import { hasEnvVars } from "@/lib/utils";
+import { cookies } from "next/headers";
 import { mapFavorite, type Favorite } from "./favorites";
 
 export async function getServerFavorites(): Promise<Favorite[]> {
-  if (!hasEnvVars || process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1") {
-    return [];
+  const cookieStore = await cookies();
+
+  if (
+    isGuestModeFromCookies(cookieStore) ||
+    !hasEnvVars ||
+    process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1"
+  ) {
+    return readGuestFavoritesCookie(cookieStore.get(GUEST_FAVORITES_COOKIE)?.value);
   }
 
   const supabase = await createClient();

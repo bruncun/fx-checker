@@ -1,5 +1,6 @@
 import { Header } from "@/features/header";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { GuestModeAlert } from "./guest-mode-alert";
 
 type HomePageContentProps = {
   converterSlot: ReactNode;
@@ -25,6 +26,9 @@ export function HomePageContent({
       <Header statsSlot={headerStatsSlot} />
       {liveRatesSlot}
       <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">
+        <Suspense fallback={null}>
+          <GuestModeAlert />
+        </Suspense>
         {converterSlot}
         <div className="mt-500 lg:mt-400">{rateDetailsSlot}</div>
       </div>

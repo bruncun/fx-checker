@@ -141,11 +141,13 @@ function ConversionLogItem({
 type ConversionLogProps = {
   availableCurrencies: AvailableCurrency[];
   conversions: Conversion[];
+  isGuestMode?: boolean;
 };
 
 function ConversionLog({
   availableCurrencies,
   conversions: initialConversions,
+  isGuestMode = false,
 }: ConversionLogProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
@@ -228,7 +230,9 @@ function ConversionLog({
           <>
             Every conversion is recorded here automatically when you tap LOG CONVERSION.
             <br />
-            Your log is private to your account.
+            {isGuestMode
+              ? "Your log is private to this session and this browser."
+              : "Your log is private to your account."}
           </>
         }
       />
