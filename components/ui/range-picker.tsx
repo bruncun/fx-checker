@@ -59,7 +59,7 @@ function RangePicker({
             aria-selected={isActive}
             className={cn(
               "block cursor-pointer rounded-8 px-200 py-150 text-preset-5 text-neutral-200",
-              "focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
+              "focus-visible:bg-neutral-500 focus-visible:text-neutral-50 focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
               isActive && "bg-neutral-500 text-neutral-50"
             )}
