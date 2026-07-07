@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SectionNavigation, type SectionNavigationItem } from "./section-navigation";
 
@@ -108,6 +108,45 @@ describe("SectionNavigation", () => {
 
     expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Compare" }));
     expect(screen.getByRole("tab", { name: "Compare" }).getAttribute("href")).toBe("#compare");
+  });
+
+  it("activates a tablet tab when the tab receives focus", () => {
+    const onTabActivate = vi.fn();
+
+    render(
+      <SectionNavigation
+        aria-label="Rate details sections"
+        items={sections}
+        onTabActivate={onTabActivate}
+        value="history"
+      />
+    );
+
+    screen.getByRole("tab", { name: "Compare" }).focus();
+
+    expect(onTabActivate).toHaveBeenCalledWith(sections[1]);
+    expect(onTabActivate).toHaveBeenCalledTimes(1);
+  });
+
+  it("activates the next tablet tab when focus moves with arrow keys", () => {
+    const onTabActivate = vi.fn();
+
+    render(
+      <SectionNavigation
+        aria-label="Rate details sections"
+        items={sections}
+        onTabActivate={onTabActivate}
+        value="history"
+      />
+    );
+
+    const historyTab = screen.getByRole("tab", { name: "History" });
+
+    historyTab.focus();
+    fireEvent.keyDown(historyTab, { key: "ArrowRight" });
+
+    expect(onTabActivate).toHaveBeenCalledWith(sections[1]);
+    expect(onTabActivate).toHaveBeenCalledTimes(1);
   });
 
   it("closes the menu when a section link is clicked", () => {

@@ -11,15 +11,22 @@ const { testPathname, testSearchParams } = vi.hoisted(() => ({
   testPathname: { current: "/" },
   testSearchParams: { current: "" },
 }));
+const { routerPush } = vi.hoisted(() => ({
+  routerPush: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => testPathname.current,
+  useRouter: () => ({
+    push: routerPush,
+  }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
 afterEach(() => {
   testPathname.current = "/";
   testSearchParams.current = "";
+  routerPush.mockReset();
   cleanup();
 });
 
@@ -89,5 +96,16 @@ describe("RateDetails", () => {
     expect(historyTab.getAttribute("href")).toBe("/?from=GBP&to=USD");
     expect(compareTab.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
     expect(favoritesTab.getAttribute("href")).toBe("/rate/favorites?from=GBP&to=USD");
+  });
+
+  it("pushes the route when a desktop section tab receives focus", () => {
+    testSearchParams.current = "from=GBP&to=USD";
+
+    renderRateDetails(<section aria-label="Rate history" />);
+
+    screen.getByRole("tab", { name: "Compare" }).focus();
+
+    expect(routerPush).toHaveBeenCalledWith("/rate/compare?from=GBP&to=USD", { scroll: false });
+    expect(routerPush).toHaveBeenCalledTimes(1);
   });
 });

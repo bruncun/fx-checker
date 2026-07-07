@@ -3,7 +3,7 @@
 import { SectionNavigation, type SectionNavigationItem } from "@/components/ui/section-navigation";
 import { useOptimisticConversionCount } from "@/features/conversion-log/optimistic-conversions";
 import { useOptimisticFavoriteCount } from "@/features/favorites/optimistic-favorites";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   appendSearchParams,
   getRateDetailsSectionFromPathname,
@@ -17,6 +17,7 @@ type RateDetailsNavigationProps = {
 
 function RateDetailsNavigation({ conversionCount, favoriteCount }: RateDetailsNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const optimisticConversionCount = useOptimisticConversionCount(conversionCount);
@@ -39,6 +40,9 @@ function RateDetailsNavigation({ conversionCount, favoriteCount }: RateDetailsNa
     <SectionNavigation
       aria-label="Rate details sections"
       items={rateDetailsSections}
+      onTabActivate={(item) => {
+        router.push(item.href, { scroll: false });
+      }}
       value={selectedSection}
     />
   );

@@ -19,6 +19,7 @@ export type SectionNavigationItem = {
 export interface SectionNavigationProps extends React.ComponentProps<"nav"> {
   "aria-label"?: string;
   items: SectionNavigationItem[];
+  onTabActivate?: (item: SectionNavigationItem) => void;
   value: string;
 }
 
@@ -34,6 +35,7 @@ function SectionNavigation({
   "aria-label": ariaLabel = "Sections",
   className,
   items,
+  onTabActivate,
   value,
   ...props
 }: SectionNavigationProps) {
@@ -206,6 +208,11 @@ function SectionNavigation({
               count={item.count}
               href={item.href}
               label={item.label}
+              onFocus={() => {
+                if (!isCurrent) {
+                  onTabActivate?.(item);
+                }
+              }}
               scroll={false}
               tabIndex={isCurrent ? 0 : -1}
             />
