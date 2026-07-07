@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ConversionLog, formatRelativeTime } from "./conversion-log";
+import { ConversionLog, formatRelativeTime, getConversionLogCsv } from "./conversion-log";
 
 const {
   deleteAllConversions,
@@ -131,6 +131,74 @@ describe("ConversionLog", () => {
     expect(deleteAllConversions).toHaveBeenCalled();
   });
 
+  it("exports the conversion log as a CSV file", async () => {
+    const createObjectURL = vi.fn<(blob: Blob) => string>(() => "blob:conversion-log");
+    const revokeObjectURL = vi.fn<(url: string) => void>();
+
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+
+    renderConversionLog();
+
+    const originalCreateElement = document.createElement.bind(document);
+    const anchor = originalCreateElement("a");
+    const click = vi.fn();
+
+    anchor.click = click;
+
+    const createElement = vi
+      .spyOn(document, "createElement")
+      .mockImplementation((tagName, options) => {
+        if (tagName === "a") {
+          return anchor;
+        }
+
+        return originalCreateElement(tagName, options);
+      });
+
+    fireEvent.click(screen.getByRole("button", { name: "Export conversions as CSV" }));
+
+    const blob = createObjectURL.mock.calls[0][0];
+
+    await expect(blob.text()).resolves.toBe(
+      [
+        "created_at,from_currency,to_currency,send_amount,receive_amount",
+        "2026-07-01T22:38:21.000Z,USD,EUR,1000.00,853.02",
+        "2026-07-01T22:24:21.000Z,EUR,JPY,500.00,92490",
+      ].join("\n")
+    );
+    expect(anchor.download).toMatch(/^conversion-log-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(anchor.href).toBe("blob:conversion-log");
+    expect(click).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:conversion-log");
+
+    createElement.mockRestore();
+  });
+
+  it("treats the conversion log actions as a roving focus toolbar", () => {
+    renderConversionLog();
+
+    const toolbar = screen.getByRole("toolbar", { name: "Conversion log actions" });
+    const exportButton = screen.getByRole("button", { name: "Export conversions as CSV" });
+    const clearButton = screen.getByRole("button", { name: "Clear all conversions" });
+
+    expect(exportButton.tabIndex).toBe(0);
+    expect(clearButton.tabIndex).toBe(-1);
+
+    exportButton.focus();
+    fireEvent.keyDown(toolbar, { key: "ArrowRight" });
+
+    expect(document.activeElement).toBe(clearButton);
+    expect(exportButton.tabIndex).toBe(-1);
+    expect(clearButton.tabIndex).toBe(0);
+  });
+
   it("shows the data unavailable error when deleting a conversion fails", async () => {
     deleteConversion.mockRejectedValue(new Error("Supabase failed"));
 
@@ -169,5 +237,25 @@ describe("ConversionLog", () => {
     expect(formatRelativeTime("2026-07-01T22:38:21.000Z", now)).toBe("20M");
     expect(formatRelativeTime("2026-07-01T21:58:21.000Z", now)).toBe("1H");
     expect(formatRelativeTime("2026-05-13T12:00:00.000Z", now)).toBe("13 May");
+  });
+
+  it("escapes CSV cells when conversion values contain CSV syntax", () => {
+    expect(
+      getConversionLogCsv([
+        {
+          createdAt: "2026-07-01T22:38:21.000Z",
+          fromCurrency: 'U"S',
+          id: "conversion-csv",
+          receiveAmount: "853,02",
+          sendAmount: "1000\n00",
+          toCurrency: "EUR",
+        },
+      ])
+    ).toBe(
+      [
+        "created_at,from_currency,to_currency,send_amount,receive_amount",
+        '2026-07-01T22:38:21.000Z,"U""S",EUR,"1000\n00","853,02"',
+      ].join("\n")
+    );
   });
 });

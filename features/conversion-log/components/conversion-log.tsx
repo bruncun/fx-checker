@@ -11,6 +11,7 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
+import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { Conversion } from "@/features/conversion-log";
 import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/client";
 import {
@@ -68,6 +69,83 @@ function formatRelativeTime(createdAt: string, now = new Date()) {
     month: "short",
     timeZone: "UTC",
   }).format(createdAtDate);
+}
+
+function escapeCsvCell(value: string) {
+  if (!/[",\n\r]/.test(value)) {
+    return value;
+  }
+
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
+function getConversionLogCsv(conversions: Conversion[]) {
+  const rows = [
+    ["created_at", "from_currency", "to_currency", "send_amount", "receive_amount"],
+    ...conversions.map((conversion) => [
+      conversion.createdAt,
+      conversion.fromCurrency,
+      conversion.toCurrency,
+      conversion.sendAmount,
+      conversion.receiveAmount,
+    ]),
+  ];
+
+  return rows.map((row) => row.map(escapeCsvCell).join(",")).join("\n");
+}
+
+function getConversionLogCsvFileName(now = new Date()) {
+  const date = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(now);
+
+  return `conversion-log-${date}.csv`;
+}
+
+function downloadCsv({ csv, fileName }: { csv: string; fileName: string }) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function ConversionLogToolbar({ children }: { children: React.ReactNode }) {
+  const toolbarRef = React.useRef<HTMLDivElement>(null);
+  const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
+    containerRef: toolbarRef,
+    itemSelector: "[data-conversion-log-toolbar-button]:not(:disabled)",
+    orientation: "horizontal",
+  });
+
+  React.useLayoutEffect(() => {
+    const items = rovingFocus.getItems();
+    const focusedItem = items.find((item) => item === document.activeElement);
+    const currentTabStop = items.find((item) => item.tabIndex === 0);
+    const tabStop = focusedItem ?? currentTabStop ?? items[0];
+
+    items.forEach((item) => {
+      item.tabIndex = item === tabStop ? 0 : -1;
+    });
+  });
+
+  return (
+    <div
+      ref={toolbarRef}
+      aria-label="Conversion log actions"
+      className="flex items-center gap-100"
+      onKeyDown={rovingFocus.handleKeyDown}
+      role="toolbar"
+    >
+      {children}
+    </div>
+  );
 }
 
 type ConversionLogItemProps = {
@@ -222,6 +300,17 @@ function ConversionLog({
     });
   }
 
+  function exportConversions() {
+    if (conversions.length === 0) {
+      return;
+    }
+
+    downloadCsv({
+      csv: getConversionLogCsv(conversions),
+      fileName: getConversionLogCsvFileName(),
+    });
+  }
+
   if (conversions.length === 0) {
     return (
       <TabEmptyState
@@ -247,11 +336,24 @@ function ConversionLog({
       countSlot={
         <div className="flex items-center justify-between gap-200">
           <p className="text-preset-5 text-neutral-50 opacity-70">{conversions.length} Logged</p>
-          <ClearButton
-            aria-label="Clear all conversions"
-            disabled={conversions.length === 0}
-            onClick={clearConversions}
-          />
+          <ConversionLogToolbar>
+            <ClearButton
+              aria-label="Export conversions as CSV"
+              data-conversion-log-toolbar-button
+              disabled={conversions.length === 0}
+              onClick={exportConversions}
+              tabIndex={0}
+            >
+              Export
+            </ClearButton>
+            <ClearButton
+              aria-label="Clear all conversions"
+              data-conversion-log-toolbar-button
+              disabled={conversions.length === 0}
+              onClick={clearConversions}
+              tabIndex={-1}
+            />
+          </ConversionLogToolbar>
         </div>
       }
       headerClassName="block pb-250 sm:flex sm:items-center sm:justify-between"
@@ -298,4 +400,4 @@ function ConversionLog({
   );
 }
 
-export { ConversionLog, formatRelativeTime };
+export { ConversionLog, formatRelativeTime, getConversionLogCsv };
