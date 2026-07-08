@@ -497,6 +497,14 @@ abbr {
   filter: brightness(0) invert(1);
 }
 
+.fx-log-conversion-check {
+  filter: brightness(0);
+}
+
+.light .fx-log-conversion-check {
+  filter: brightness(0) invert(1);
+}
+
 .fx-favorite-icon-pinned {
   filter: none;
 }

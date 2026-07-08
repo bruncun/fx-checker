@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Converter, type SelectedCurrency } from "../converter";
@@ -412,6 +413,62 @@ describe("Converter", () => {
     await waitFor(() => {
       expect(showDataUnavailableError).toHaveBeenCalled();
     });
+  });
+
+  it("shows a brief logged state and suppresses repeat log clicks during acknowledgement", () => {
+    vi.useFakeTimers();
+    createConversion.mockResolvedValue({
+      createdAt: "2026-07-01T22:38:21.000Z",
+      fromCurrency: "USD",
+      id: "conversion-usd-eur",
+      receiveAmount: "85.4",
+      sendAmount: "100",
+      toCurrency: "EUR",
+    });
+
+    renderConverter({ searchParams: "from=USD&to=EUR&amount=100&amountSource=send" });
+
+    fireEvent.click(screen.getByRole("button", { name: /Log 100 USD to 85.4 EUR/ }));
+
+    const loggedButton = screen.getByRole("button", { name: /Logged 100 USD to 85.4 EUR/ });
+
+    expect(loggedButton.getAttribute("aria-disabled")).toBe("true");
+    expect(loggedButton.getAttribute("aria-pressed")).toBe("true");
+    expect(loggedButton.textContent).toContain("Logged");
+
+    fireEvent.click(loggedButton);
+
+    expect(createConversion).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(
+      screen.getByRole("button", { name: /Log 100 USD to 85.4 EUR/ }).getAttribute("aria-pressed")
+    ).toBe("false");
+  });
+
+  it("clears the logged acknowledgement when the conversion values change", () => {
+    vi.useFakeTimers();
+    createConversion.mockResolvedValue({
+      createdAt: "2026-07-01T22:38:21.000Z",
+      fromCurrency: "USD",
+      id: "conversion-usd-eur",
+      receiveAmount: "85.4",
+      sendAmount: "100",
+      toCurrency: "EUR",
+    });
+
+    renderConverter({ searchParams: "from=USD&to=EUR&amount=100&amountSource=send" });
+
+    fireEvent.click(screen.getByRole("button", { name: /Log 100 USD to 85.4 EUR/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "200" },
+    });
+
+    expect(screen.queryByRole("button", { name: /Logged/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /Log 200 USD to 170.79 EUR/ })).toBeTruthy();
   });
 
   it("debounces amount updates into the search params", () => {

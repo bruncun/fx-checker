@@ -49,6 +49,8 @@ type ConverterAmountControlsProps = {
   }) => void;
 };
 
+const logConversionAcknowledgementMs = 700;
+
 function isPositiveAmount(amount: string) {
   try {
     return new MoneyDecimal(getAmountValue(amount)).gt(0);
@@ -212,6 +214,8 @@ function ConverterAmountControls({
     initialAmount,
     initialAmountSource,
   });
+  const [isLogAcknowledged, setIsLogAcknowledged] = React.useState(false);
+  const logAcknowledgementTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const exchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
@@ -223,23 +227,57 @@ function ConverterAmountControls({
   const canLogConversion =
     exchangeRate !== null && isPositiveAmount(sendAmount) && isPositiveAmount(receiveAmount);
 
+  function clearLogAcknowledgement() {
+    if (logAcknowledgementTimeoutRef.current) {
+      clearTimeout(logAcknowledgementTimeoutRef.current);
+      logAcknowledgementTimeoutRef.current = null;
+    }
+
+    setIsLogAcknowledged(false);
+  }
+
+  function acknowledgeLoggedConversion() {
+    if (logAcknowledgementTimeoutRef.current) {
+      clearTimeout(logAcknowledgementTimeoutRef.current);
+    }
+
+    setIsLogAcknowledged(true);
+    logAcknowledgementTimeoutRef.current = setTimeout(() => {
+      logAcknowledgementTimeoutRef.current = null;
+      setIsLogAcknowledged(false);
+    }, logConversionAcknowledgementMs);
+  }
+
+  React.useEffect(() => {
+    return () => {
+      if (logAcknowledgementTimeoutRef.current) {
+        clearTimeout(logAcknowledgementTimeoutRef.current);
+      }
+    };
+  }, []);
+
   function updateSendAmount(nextAmount: string) {
+    clearLogAcknowledgement();
     setAmountState({ amount: nextAmount, amountSource: "send" });
   }
 
   function updateReceiveAmount(nextAmount: string) {
+    clearLogAcknowledgement();
     setAmountState({ amount: nextAmount, amountSource: "receive" });
   }
 
   function updateSendCurrency(currency: SelectedCurrency) {
+    clearLogAcknowledgement();
     onSelectedCurrenciesChange({ sendCurrency: currency, receiveCurrency });
   }
 
   function updateReceiveCurrency(currency: SelectedCurrency) {
+    clearLogAcknowledgement();
     onSelectedCurrenciesChange({ sendCurrency, receiveCurrency: currency });
   }
 
   function exchangeCurrencies() {
+    clearLogAcknowledgement();
     onSelectedCurrenciesChange({
       sendCurrency: receiveCurrency,
       receiveCurrency: sendCurrency,
@@ -305,9 +343,19 @@ function ConverterAmountControls({
               tabIndex={0}
             />
             <LogConversionButton
-              aria-label={`Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`}
+              aria-disabled={isLogAcknowledged ? true : undefined}
+              aria-label={
+                isLogAcknowledged
+                  ? `Logged ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
+                  : `Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
+              }
               data-converter-action
               onClick={() => {
+                if (isLogAcknowledged || !canLogConversion) {
+                  return;
+                }
+
+                acknowledgeLoggedConversion();
                 onConversionLogCreate?.({
                   fromCurrency: sendCurrency.currencyCode,
                   receiveAmount,
@@ -316,6 +364,7 @@ function ConverterAmountControls({
                 });
               }}
               disabled={!canLogConversion}
+              pressed={isLogAcknowledged}
               tabIndex={-1}
             />
           </React.Suspense>

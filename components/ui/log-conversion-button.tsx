@@ -25,7 +25,9 @@ function LogConversionButton({
       type={type}
       {...props}
     >
-      {pressed ? <Icon className="size-200 brightness-0" decorative iconName="check" /> : null}
+      {pressed ? (
+        <Icon className="fx-log-conversion-check size-200" decorative iconName="check" />
+      ) : null}
       <span>{pressed ? "Logged" : "Log conversion"}</span>
     </button>
   );
