@@ -29,14 +29,21 @@ async function getHeaderAccount() {
     return { email: null, isGuest: true };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getClaims();
 
-  if (error) {
+    if (error || !data?.claims) {
+      return { email: null, isGuest: false };
+    }
+
+    return {
+      email: typeof data.claims.email === "string" ? data.claims.email : null,
+      isGuest: false,
+    };
+  } catch {
     return { email: null, isGuest: false };
   }
-
-  return { email: data.user?.email ?? null, isGuest: false };
 }
 
 function AccountFallback() {
