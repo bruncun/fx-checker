@@ -4,7 +4,6 @@ import type { AvailableCurrency } from "@/features/converter/currencies";
 import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { getCurrencyReferenceData } from "@/features/home/home-page";
-import { RateDetailsRowsFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
 
@@ -14,9 +13,7 @@ async function ConversionLogContent() {
   assertDataAvailable(currencyReferenceData);
 
   return (
-    <Suspense
-      fallback={<RateDetailsRowsFallback label="Conversion log" rowCount={8} variant="log" />}
-    >
+    <Suspense fallback={null}>
       <ConversionLogUserContent availableCurrencies={currencyReferenceData.availableCurrencies} />
     </Suspense>
   );
@@ -40,9 +37,7 @@ async function ConversionLogUserContent({
 
 export default function ConversionLogPage() {
   return (
-    <Suspense
-      fallback={<RateDetailsRowsFallback label="Conversion log" rowCount={8} variant="log" />}
-    >
+    <Suspense fallback={null}>
       <ConversionLogContent />
     </Suspense>
   );

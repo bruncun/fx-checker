@@ -76,10 +76,10 @@ function getCompareCurrencies(currencies: AvailableCurrency[], sendCurrencyCode:
 type CompareRateItemProps = {
   amount: string;
   currency: AvailableCurrency;
-  favoritesPromise: Promise<Favorite[]>;
+  favoritesPromise?: Promise<Favorite[]>;
   fromCurrencyCode: string;
   isSelected: boolean;
-  onCompareCurrencySelect: (currency: AvailableCurrency) => void;
+  onCompareCurrencySelect?: (currency: AvailableCurrency) => void;
   rate: string;
   tabIndex: 0 | -1;
 };
@@ -180,22 +180,26 @@ function CompareRateItem({
   const rowLabel = `Use ${fromCurrencyCode}/${currency.code} in converter, ${amount} ${currency.code} at ${rate}`;
 
   function selectCompareCurrency() {
-    onCompareCurrencySelect(currency);
+    onCompareCurrencySelect?.(currency);
   }
 
   return (
     <RateDetailsTreeGridRow
       aria-label={rowLabel}
-      action={(actionProps) => (
-        <React.Suspense fallback={<span aria-hidden className="block size-400" />}>
-          <CompareFavoriteButton
-            key={getFavoritePairKey(pair)}
-            actionProps={actionProps}
-            favoritesPromise={favoritesPromise}
-            pair={pair}
-          />
-        </React.Suspense>
-      )}
+      action={(actionProps) =>
+        favoritesPromise ? (
+          <React.Suspense fallback={<span aria-hidden className="block size-400" />}>
+            <CompareFavoriteButton
+              key={getFavoritePairKey(pair)}
+              actionProps={actionProps}
+              favoritesPromise={favoritesPromise}
+              pair={pair}
+            />
+          </React.Suspense>
+        ) : (
+          <span aria-hidden className="block size-400" />
+        )
+      }
       gridClassName="grid-cols-[auto_minmax(0,1fr)_auto_auto]"
       isSelected={isSelected}
       onSelect={selectCompareCurrency}
@@ -229,22 +233,25 @@ type CompareRatesProps = {
   sendCurrency: SelectedCurrency;
 };
 
-function CompareRates({
+type CompareRatesPanelProps = Omit<CompareRatesProps, "favoritesPromise"> & {
+  compareRates: CompareRateItemData[];
+  favoritesPromise?: Promise<Favorite[]>;
+  onCompareCurrencySelect?: (currency: AvailableCurrency) => void;
+  onCurrentRowIdChange?: (rowId: string) => void;
+  sendAmount: string;
+  tabStopCode: string;
+};
+
+function getCompareSendAmount({
   amount,
   amountSource,
-  availableCurrencies,
-  favoritesPromise,
   rates,
   receiveCurrency,
   sendCurrency,
-}: CompareRatesProps) {
-  const pathname = usePathname() ?? "/";
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const searchParamsString = searchParams.toString();
-  const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
-    receiveCurrency.currencyCode
-  );
+}: Pick<
+  CompareRatesProps,
+  "amount" | "amountSource" | "rates" | "receiveCurrency" | "sendCurrency"
+>) {
   const selectedExchangeRate = getExchangeRate(
     rates,
     sendCurrency.currencyCode,
@@ -252,10 +259,19 @@ function CompareRates({
   );
   const inverseExchangeRate =
     selectedExchangeRate === null ? null : new MoneyDecimal(1).div(selectedExchangeRate);
-  const sendAmount =
-    amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate) || "";
-  const hasCompareAmount = !["0", ""].includes(sendAmount.trim());
-  const compareRates = getCompareCurrencies(availableCurrencies, sendCurrency.currencyCode)
+
+  return amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate) || "";
+}
+
+function getCompareRateItems({
+  availableCurrencies,
+  rates,
+  sendAmount,
+  sendCurrency,
+}: Pick<CompareRatesProps, "availableCurrencies" | "rates" | "sendCurrency"> & {
+  sendAmount: string;
+}) {
+  return getCompareCurrencies(availableCurrencies, sendCurrency.currencyCode)
     .map((currency) => {
       const rate = getExchangeRate(rates, sendCurrency.currencyCode, currency.code);
 
@@ -270,26 +286,19 @@ function CompareRates({
       };
     })
     .filter((item): item is CompareRateItemData => item !== null);
-  const tabStopCode = compareRates.some((item) => item.currency.code === preferredTabStopCode)
-    ? preferredTabStopCode
-    : (compareRates[0]?.currency.code ?? "");
+}
 
-  function selectCompareCurrency(currency: AvailableCurrency) {
-    const nextUrl = getCurrencyPairUrl({
-      pathname,
-      receiveCurrency: {
-        countryCode: currency.countryCode,
-        currencyCode: currency.code,
-      },
-      searchParams: new URLSearchParams(searchParamsString),
-      sendCurrency,
-    });
-
-    router.replace(nextUrl, { scroll: false });
-    setPreferredTabStopCode(currency.code);
-  }
-
-  if (!hasCompareAmount) {
+function CompareRatesPanel({
+  compareRates,
+  favoritesPromise,
+  onCompareCurrencySelect,
+  onCurrentRowIdChange,
+  receiveCurrency,
+  sendAmount,
+  sendCurrency,
+  tabStopCode,
+}: CompareRatesPanelProps) {
+  if (["0", ""].includes(sendAmount.trim())) {
     return (
       <TabEmptyState
         title="No comparison available"
@@ -329,7 +338,7 @@ function CompareRates({
       <RateDetailsTreeGrid
         actionSelector="[data-compare-favorite-button]"
         labelledBy="compare-heading"
-        onCurrentRowIdChange={setPreferredTabStopCode}
+        onCurrentRowIdChange={onCurrentRowIdChange ?? (() => {})}
         columns={
           <>
             <th role="columnheader" scope="col">
@@ -355,7 +364,7 @@ function CompareRates({
             favoritesPromise={favoritesPromise}
             fromCurrencyCode={sendCurrency.currencyCode}
             isSelected={item.currency.code === receiveCurrency.currencyCode}
-            onCompareCurrencySelect={selectCompareCurrency}
+            onCompareCurrencySelect={onCompareCurrencySelect}
             rate={item.rate}
             tabIndex={item.currency.code === tabStopCode ? 0 : -1}
           />
@@ -365,4 +374,112 @@ function CompareRates({
   );
 }
 
-export { CompareRates, getCompareCurrencies };
+function CompareRates({
+  amount,
+  amountSource,
+  availableCurrencies,
+  favoritesPromise,
+  rates,
+  receiveCurrency,
+  sendCurrency,
+}: CompareRatesProps) {
+  const pathname = usePathname() ?? "/";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
+    receiveCurrency.currencyCode
+  );
+  const sendAmount = getCompareSendAmount({
+    amount,
+    amountSource,
+    rates,
+    receiveCurrency,
+    sendCurrency,
+  });
+  const compareRates = getCompareRateItems({
+    availableCurrencies,
+    rates,
+    sendAmount,
+    sendCurrency,
+  });
+  const tabStopCode = compareRates.some((item) => item.currency.code === preferredTabStopCode)
+    ? preferredTabStopCode
+    : (compareRates[0]?.currency.code ?? "");
+
+  function selectCompareCurrency(currency: AvailableCurrency) {
+    const nextUrl = getCurrencyPairUrl({
+      pathname,
+      receiveCurrency: {
+        countryCode: currency.countryCode,
+        currencyCode: currency.code,
+      },
+      searchParams: new URLSearchParams(searchParamsString),
+      sendCurrency,
+    });
+
+    router.replace(nextUrl, { scroll: false });
+    setPreferredTabStopCode(currency.code);
+  }
+
+  return (
+    <CompareRatesPanel
+      amount={amount}
+      amountSource={amountSource}
+      availableCurrencies={availableCurrencies}
+      compareRates={compareRates}
+      favoritesPromise={favoritesPromise}
+      onCompareCurrencySelect={selectCompareCurrency}
+      onCurrentRowIdChange={setPreferredTabStopCode}
+      rates={rates}
+      receiveCurrency={receiveCurrency}
+      sendAmount={sendAmount}
+      sendCurrency={sendCurrency}
+      tabStopCode={tabStopCode}
+    />
+  );
+}
+
+function CompareRatesFallback({
+  amount,
+  amountSource,
+  availableCurrencies,
+  rates,
+  receiveCurrency,
+  sendCurrency,
+}: Omit<CompareRatesProps, "favoritesPromise">) {
+  const sendAmount = getCompareSendAmount({
+    amount,
+    amountSource,
+    rates,
+    receiveCurrency,
+    sendCurrency,
+  });
+  const compareRates = getCompareRateItems({
+    availableCurrencies,
+    rates,
+    sendAmount,
+    sendCurrency,
+  });
+  const tabStopCode = compareRates.some(
+    (item) => item.currency.code === receiveCurrency.currencyCode
+  )
+    ? receiveCurrency.currencyCode
+    : (compareRates[0]?.currency.code ?? "");
+
+  return (
+    <CompareRatesPanel
+      amount={amount}
+      amountSource={amountSource}
+      availableCurrencies={availableCurrencies}
+      compareRates={compareRates}
+      rates={rates}
+      receiveCurrency={receiveCurrency}
+      sendAmount={sendAmount}
+      sendCurrency={sendCurrency}
+      tabStopCode={tabStopCode}
+    />
+  );
+}
+
+export { CompareRates, CompareRatesFallback, getCompareCurrencies };

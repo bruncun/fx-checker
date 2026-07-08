@@ -13,6 +13,10 @@ type ExchangeRateStatsProps = {
   isGuest?: boolean;
 };
 
+type ExchangeRateDataStatsProps = {
+  currencyCount: number;
+};
+
 type HeaderProps = {
   statsSlot?: ReactNode;
 };
@@ -35,23 +39,40 @@ async function getHeaderAccount() {
   return { email: data.user?.email ?? null, isGuest: false };
 }
 
+function AccountFallback() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
+    >
+      &nbsp;
+    </span>
+  );
+}
+
+function ExchangeRateDataStats({ currencyCount }: ExchangeRateDataStatsProps) {
+  return (
+    <InlineMetaList
+      className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
+      aria-label="Exchange rate data stats"
+      items={[
+        `${currencyCount} Currencies`,
+        <abbr key="eod" title="End of day">
+          EOD
+        </abbr>,
+        <span key="ecb">
+          <abbr title="European Central Bank">ECB</abbr>{" "}
+          <span className="hidden sm:inline">data</span>
+        </span>,
+      ]}
+    />
+  );
+}
+
 function ExchangeRateStats({ currencyCount, email, isGuest = false }: ExchangeRateStatsProps) {
   return (
     <div className="flex items-center gap-200">
-      <InlineMetaList
-        className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
-        aria-label="Exchange rate data stats"
-        items={[
-          `${currencyCount} Currencies`,
-          <abbr key="eod" title="End of day">
-            EOD
-          </abbr>,
-          <span key="ecb">
-            <abbr title="European Central Bank">ECB</abbr>{" "}
-            <span className="hidden sm:inline">data</span>
-          </span>,
-        ]}
-      />
+      <ExchangeRateDataStats currencyCount={currencyCount} />
       <UserDropdown email={email} isGuest={isGuest} />
     </div>
   );
@@ -66,4 +87,4 @@ export function Header({ statsSlot }: HeaderProps) {
   );
 }
 
-export { ExchangeRateStats, getHeaderAccount };
+export { AccountFallback, ExchangeRateDataStats, ExchangeRateStats, getHeaderAccount };

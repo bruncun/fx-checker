@@ -2,7 +2,8 @@ import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/co
 import { convertAmount, formatExchangeRate, getExchangeRate } from "@/features/converter/exchange";
 import { getServerConversions } from "@/features/conversion-log/server";
 import { getServerFavorites } from "@/features/favorites/server";
-import { ExchangeRateStats, getHeaderAccount } from "@/features/header/header";
+import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
+import { UserDropdown } from "@/features/header/user-dropdown";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
@@ -263,20 +264,24 @@ type HomePageShellProps = {
 };
 
 async function HeaderStats() {
-  const [currencyReferenceData, account] = await Promise.all([
-    getCurrencyReferenceData(),
-    getHeaderAccount(),
-  ]);
+  const currencyReferenceData = await getCurrencyReferenceData();
 
   assertDataAvailable(currencyReferenceData);
 
   return (
-    <ExchangeRateStats
-      currencyCount={currencyReferenceData.currencyCount}
-      email={account.email}
-      isGuest={account.isGuest}
-    />
+    <div className="flex items-center gap-200">
+      <ExchangeRateDataStats currencyCount={currencyReferenceData.currencyCount} />
+      <Suspense fallback={<AccountFallback />}>
+        <HeaderAccount />
+      </Suspense>
+    </div>
   );
+}
+
+async function HeaderAccount() {
+  const account = await getHeaderAccount();
+
+  return <UserDropdown email={account.email} isGuest={account.isGuest} />;
 }
 
 async function LiveRates() {

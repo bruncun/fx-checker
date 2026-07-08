@@ -8,7 +8,6 @@ import {
   getLiveRatesData,
 } from "@/features/home/home-page";
 import { deriveLiveRateForPair } from "@/features/live-rates";
-import { RateDetailsRowsFallback } from "@/features/rate-details/components/rate-details-fallback";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { Suspense } from "react";
 
@@ -24,9 +23,7 @@ async function FavoriteRatesContent() {
   assertDataAvailable(liveRatesData);
 
   return (
-    <Suspense
-      fallback={<RateDetailsRowsFallback label="Favorites" rowCount={8} variant="favorites" />}
-    >
+    <Suspense fallback={null}>
       <FavoriteRatesUserContent
         availableCurrencies={currencyReferenceData.availableCurrencies}
         latestRates={latestRatesData.rates}
@@ -68,9 +65,7 @@ async function FavoriteRatesUserContent({
 
 export default function FavoriteRatesPage() {
   return (
-    <Suspense
-      fallback={<RateDetailsRowsFallback label="Favorites" rowCount={8} variant="favorites" />}
-    >
+    <Suspense fallback={null}>
       <FavoriteRatesContent />
     </Suspense>
   );

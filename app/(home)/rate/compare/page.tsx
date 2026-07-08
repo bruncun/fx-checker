@@ -1,12 +1,14 @@
-import { CompareRates } from "@/features/compare-rates";
+import { CompareRates, CompareRatesFallback } from "@/features/compare-rates";
+import type { AvailableCurrency } from "@/features/converter/currencies";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { getCurrencyReferenceData, getLatestRatesData } from "@/features/home/home-page";
 import {
   getConverterAmountFromParams,
+  getDefaultCurrencyPair,
   getSelectedCurrencyPairFromParams,
 } from "@/features/home/url-state";
 import { getServerFavorites } from "@/features/favorites/server";
-import { RateDetailsRowsFallback } from "@/features/rate-details/components/rate-details-fallback";
+import type { FrankfurterRate } from "@/lib/frankfurter";
 import { Suspense } from "react";
 
 type CompareRatesPageProps = {
@@ -18,20 +20,19 @@ type CompareRatesPageProps = {
   }>;
 };
 
-async function CompareRatesContent({ searchParams }: CompareRatesPageProps) {
+async function CompareRatesContent({
+  availableCurrencies,
+  latestRates,
+  searchParams,
+}: CompareRatesPageProps & {
+  availableCurrencies: AvailableCurrency[];
+  latestRates: FrankfurterRate[];
+}) {
   const params = await searchParams;
   const favoritesPromise = getServerFavorites();
-  const [currencyReferenceData, latestRatesData] = await Promise.all([
-    getCurrencyReferenceData(),
-    getLatestRatesData(),
-  ]);
-
-  assertDataAvailable(currencyReferenceData);
-  assertDataAvailable(latestRatesData);
-
   const urlSearchParams = new URLSearchParams(params);
   const selectedCurrencies = getSelectedCurrencyPairFromParams(
-    currencyReferenceData.availableCurrencies,
+    availableCurrencies,
     urlSearchParams
   );
   const converterAmount = getConverterAmountFromParams(urlSearchParams);
@@ -40,17 +41,51 @@ async function CompareRatesContent({ searchParams }: CompareRatesPageProps) {
     <CompareRates
       {...converterAmount}
       {...selectedCurrencies}
-      availableCurrencies={currencyReferenceData.availableCurrencies}
+      availableCurrencies={availableCurrencies}
       favoritesPromise={favoritesPromise}
-      rates={latestRatesData.rates}
+      rates={latestRates}
     />
+  );
+}
+
+async function CompareRatesShell({ searchParams }: CompareRatesPageProps) {
+  const [currencyReferenceData, latestRatesData] = await Promise.all([
+    getCurrencyReferenceData(),
+    getLatestRatesData(),
+  ]);
+
+  assertDataAvailable(currencyReferenceData);
+  assertDataAvailable(latestRatesData);
+
+  const fallbackSelectedCurrencies = getDefaultCurrencyPair(
+    currencyReferenceData.availableCurrencies
+  );
+  const fallbackAmount = getConverterAmountFromParams(new URLSearchParams());
+
+  return (
+    <Suspense
+      fallback={
+        <CompareRatesFallback
+          {...fallbackAmount}
+          {...fallbackSelectedCurrencies}
+          availableCurrencies={currencyReferenceData.availableCurrencies}
+          rates={latestRatesData.rates}
+        />
+      }
+    >
+      <CompareRatesContent
+        availableCurrencies={currencyReferenceData.availableCurrencies}
+        latestRates={latestRatesData.rates}
+        searchParams={searchParams}
+      />
+    </Suspense>
   );
 }
 
 export default function CompareRatesPage({ searchParams }: CompareRatesPageProps) {
   return (
-    <Suspense fallback={<RateDetailsRowsFallback label="Compare" rowCount={8} variant="compare" />}>
-      <CompareRatesContent searchParams={searchParams} />
+    <Suspense fallback={null}>
+      <CompareRatesShell searchParams={searchParams} />
     </Suspense>
   );
 }

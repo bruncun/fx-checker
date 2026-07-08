@@ -1,1 +1,5 @@
-export { CompareRates, getCompareCurrencies } from "./components/compare-rates";
+export {
+  CompareRates,
+  CompareRatesFallback,
+  getCompareCurrencies,
+} from "./components/compare-rates";
