@@ -1,5 +1,6 @@
 import { buttonVariants } from "@/components/ui/button";
 import { Flag } from "@/components/ui/flag";
+import { GuestModeLink } from "@/components/guest-mode-link";
 import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
@@ -58,15 +59,7 @@ export default function LandingPage() {
             >
               Get started
             </Link>
-            <a
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full sm:w-auto sm:min-w-[208px]"
-              )}
-              href="/guest"
-            >
-              Try as guest
-            </a>
+            <GuestModeLink className="w-full sm:w-auto sm:min-w-[208px]" size="lg" />
           </div>
           <ul className="mt-300 grid gap-150 text-preset-5-medium text-neutral-100 uppercase sm:grid-cols-3 sm:justify-items-center lg:mb-200 lg:justify-items-start">
             {features.map((feature, index) => (

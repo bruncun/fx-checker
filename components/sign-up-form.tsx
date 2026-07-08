@@ -2,8 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { GuestModeLink } from "@/components/guest-mode-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -89,9 +90,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
-              <a className={cn(buttonVariants({ variant: "outline" }))} href="/guest">
-                Try as guest
-              </a>
+              <GuestModeLink />
             </div>
           </form>
         </CardContent>
