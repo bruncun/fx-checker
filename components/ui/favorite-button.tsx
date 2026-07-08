@@ -46,7 +46,7 @@ function FavoriteButton({
     >
       <Icon
         className={cn(
-          "size-200 self-center",
+          "fx-transition-icon size-200 self-center",
           !pinned && !disabled && "fx-favorite-unpinned",
           pinned &&
             !disabled &&

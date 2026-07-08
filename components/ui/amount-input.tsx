@@ -217,7 +217,7 @@ function AmountInput({
       onBeforeInput={handleBeforeInput}
       onKeyDown={handleKeyDown}
       className={cn(
-        "field-sizing-content h-[40px] max-w-full min-w-0 border-b border-neutral-600 text-preset-1 text-neutral-50 caret-neutral-50 outline-none placeholder:text-neutral-200 hover:border-neutral-200 focus-visible:-me-050 focus-visible:rounded-8 focus-visible:border-transparent focus-visible:bg-neutral-600 focus-visible:pe-050 focus-visible:caret-neutral-50 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] lg:h-[41px]",
+        "fx-transition-surface field-sizing-content h-[40px] max-w-full min-w-0 border-b border-neutral-600 text-preset-1 text-neutral-50 caret-neutral-50 outline-none placeholder:text-neutral-200 hover:border-neutral-200 focus-visible:-me-050 focus-visible:rounded-8 focus-visible:border-transparent focus-visible:bg-neutral-600 focus-visible:pe-050 focus-visible:caret-neutral-50 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] lg:h-[41px]",
         className
       )}
       placeholder={placeholder}

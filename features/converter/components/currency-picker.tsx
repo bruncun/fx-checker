@@ -64,7 +64,7 @@ function CurrencyItem({ currency, isActive, isSelected, onSelect }: CurrencyItem
         aria-current={isSelected ? "true" : undefined}
         aria-label={`${currency.code}, ${currency.name}`}
         className={cn(
-          "flex w-full cursor-pointer items-center gap-150 rounded-4 border-y border-transparent px-200 py-150 text-left text-neutral-50",
+          "fx-transition-surface flex w-full cursor-pointer items-center gap-150 rounded-4 border-y border-transparent px-200 py-150 text-left text-neutral-50",
           "hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
         )}
         data-currency-code={currency.code}
@@ -168,7 +168,8 @@ function CurrencyPicker({
 
     const updateAvailableHeight = () => {
       const visualViewport = window.visualViewport;
-      const panelTop = panel.getBoundingClientRect().top;
+      const rootTop = rootRef.current?.getBoundingClientRect().top ?? 0;
+      const panelTop = rootTop + panel.offsetTop;
       const isWebKit =
         typeof CSS !== "undefined" && CSS.supports("-webkit-backdrop-filter", "none");
       const viewportBottom = visualViewport
@@ -318,7 +319,10 @@ function CurrencyPicker({
   }
 
   return (
-    <div ref={rootRef} className={cn("relative inline-flex shrink-0", className)}>
+    <div
+      ref={rootRef}
+      className={cn("relative inline-flex shrink-0", isOpen ? "z-[120]" : "z-[70]", className)}
+    >
       <CurrencyButton
         ref={triggerRef}
         aria-controls={isOpen ? panelId : undefined}
@@ -348,7 +352,7 @@ function CurrencyPicker({
           aria-label="Currency picker"
           aria-modal="true"
           className={cn(
-            "absolute top-[calc(100%+20px)] right-[-16px] z-50 flex max-h-[min(458px,var(--currency-picker-available-height,458px),calc(100svh_-_var(--currency-picker-panel-top,0px)_-_16px_-_env(safe-area-inset-bottom,0px)))] w-[min(calc(100vw-64px),472px)] max-w-[376px] flex-col overflow-hidden rounded-10 bg-neutral-600 pt-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)] sm:top-[calc(100%+9.5px)] sm:max-h-[466px] sm:py-100 lg:right-0 lg:left-auto",
+            "fx-panel-in absolute top-[calc(100%+20px)] right-[-16px] z-[100] flex max-h-[min(458px,var(--currency-picker-available-height,458px),calc(100svh_-_var(--currency-picker-panel-top,0px)_-_16px_-_env(safe-area-inset-bottom,0px)))] w-[min(calc(100vw-64px),472px)] max-w-[376px] flex-col overflow-hidden rounded-10 bg-neutral-600 pt-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)] sm:top-[calc(100%+9.5px)] sm:max-h-[466px] sm:py-100 lg:right-0 lg:left-auto",
             left ? "sm:left-0" : "sm:right-0"
           )}
           id={panelId}

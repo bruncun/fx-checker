@@ -158,6 +158,17 @@ describe("home page", () => {
         expect(dialogRect.bottom).to.be.at.most(viewportHeight - 16);
         expect(dialogRect.height).to.be.lessThan(458);
       });
+      cy.findByRole("button", { name: "Select receive currency" }).then(($receiveTrigger) => {
+        cy.findByRole("dialog", { name: "Currency picker" }).should(($dialog) => {
+          const receiveRect = $receiveTrigger[0]!.getBoundingClientRect();
+          const topmostElement = $dialog[0]!.ownerDocument.elementFromPoint(
+            receiveRect.left + receiveRect.width / 2,
+            receiveRect.top + receiveRect.height / 2
+          );
+
+          expect($dialog[0]!.contains(topmostElement)).to.equal(true);
+        });
+      });
     });
   });
 });

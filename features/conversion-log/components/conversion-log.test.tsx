@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { act, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ConversionLog, formatRelativeTime, getConversionLogCsv } from "./conversion-log";
@@ -66,6 +66,7 @@ const conversions = [
 ];
 
 afterEach(() => {
+  vi.useRealTimers();
   deleteAllConversions.mockReset();
   deleteConversion.mockReset();
   routerRefresh.mockClear();
@@ -82,7 +83,7 @@ function renderConversionLog({
   conversions?: ComponentProps<typeof ConversionLog>["conversions"];
   isGuestMode?: ComponentProps<typeof ConversionLog>["isGuestMode"];
 } = {}) {
-  render(
+  return render(
     <ConversionLog
       availableCurrencies={availableCurrencies}
       conversions={selectedConversions}
@@ -119,12 +120,30 @@ describe("ConversionLog", () => {
   });
 
   it("deletes individual conversions and clears all conversions", () => {
+    vi.useFakeTimers();
     deleteAllConversions.mockResolvedValue(undefined);
     deleteConversion.mockResolvedValue(undefined);
 
     renderConversionLog();
 
+    const row = screen.getByRole("row", {
+      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
+    });
+
     fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
+
+    expect(row.className).toContain("fx-list-row-out");
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(
+      screen.queryByRole("row", {
+        name: "Load USD/EUR conversion, sent 1,000, received 853.02",
+      })
+    ).toBeNull();
+
     fireEvent.click(screen.getByRole("button", { name: "Clear all conversions" }));
 
     expect(deleteConversion).toHaveBeenCalledWith("conversion-usd-eur");
@@ -211,6 +230,23 @@ describe("ConversionLog", () => {
     });
   });
 
+  it("animates into the empty state when the last conversion exits", () => {
+    vi.useFakeTimers();
+    deleteConversion.mockResolvedValue(undefined);
+
+    renderConversionLog({ conversions: [conversions[0]] });
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(screen.getByText("No conversions logged yet").parentElement?.className).toContain(
+      "fx-state-in"
+    );
+  });
+
   it("renders the account conversion log empty state when no conversions exist", () => {
     renderConversionLog({ conversions: [] });
 
@@ -223,6 +259,116 @@ describe("ConversionLog", () => {
     expect(screen.getByText(/Your log is private to your account/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversion log" })).toBeNull();
     expect(screen.queryByRole("treegrid", { name: "Conversion Log" })).toBeNull();
+  });
+
+  it("animates the first conversion row when the log transitions from empty to populated", () => {
+    vi.useFakeTimers();
+
+    const { rerender } = renderConversionLog({ conversions: [] });
+
+    expect(screen.getByText("No conversions logged yet").parentElement?.className).not.toContain(
+      "fx-state-in"
+    );
+
+    rerender(
+      <ConversionLog availableCurrencies={availableCurrencies} conversions={[conversions[0]]} />
+    );
+
+    const region = screen.getByRole("region", { name: "Conversion log" });
+    const row = screen.getByRole("row", {
+      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
+    });
+
+    expect(region.className).toContain("fx-state-in");
+    expect(row.className).toContain("fx-list-row-in");
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(row.className).not.toContain("fx-list-row-in");
+  });
+
+  it("animates duplicate conversions as new rows", () => {
+    vi.useFakeTimers();
+
+    const duplicateConversion = {
+      ...conversions[0],
+      createdAt: "2026-07-01T22:59:21.000Z",
+      id: "conversion-usd-eur-duplicate",
+    };
+    const { rerender } = renderConversionLog({ conversions: [conversions[0]] });
+
+    rerender(
+      <ConversionLog
+        availableCurrencies={availableCurrencies}
+        conversions={[duplicateConversion, conversions[0]]}
+      />
+    );
+
+    const rows = screen.getAllByRole("row", {
+      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
+    });
+
+    expect(rows[0].className).toContain("fx-list-row-in");
+    expect(rows[1].className).not.toContain("fx-list-row-in");
+  });
+
+  it("does not replay row entry when an optimistic conversion is replaced by the server row", () => {
+    vi.useFakeTimers();
+
+    const optimisticConversion = {
+      ...conversions[0],
+      id: "optimistic:conversion-usd-eur",
+    };
+    const { rerender } = renderConversionLog({ conversions: [optimisticConversion] });
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    rerender(
+      <ConversionLog availableCurrencies={availableCurrencies} conversions={[conversions[0]]} />
+    );
+
+    const row = screen.getByRole("row", {
+      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
+    });
+
+    expect(row.className).not.toContain("fx-list-row-in");
+  });
+
+  it("continues row entry when an optimistic conversion is replaced before entry completes", () => {
+    vi.useFakeTimers();
+
+    const optimisticConversion = {
+      ...conversions[0],
+      id: "optimistic:conversion-usd-eur",
+    };
+    const { rerender } = renderConversionLog({ conversions: [] });
+
+    rerender(
+      <ConversionLog
+        availableCurrencies={availableCurrencies}
+        conversions={[optimisticConversion]}
+      />
+    );
+
+    rerender(
+      <ConversionLog availableCurrencies={availableCurrencies} conversions={[conversions[0]]} />
+    );
+
+    const row = screen.getByRole("row", {
+      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
+    });
+
+    expect(row.className).toContain("fx-list-row-in");
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(row.className).not.toContain("fx-list-row-in");
   });
 
   it("renders the guest conversion log empty state when no conversions exist", () => {

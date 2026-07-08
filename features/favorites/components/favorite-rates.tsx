@@ -11,6 +11,7 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
+import { useTransitioningList } from "@/components/ui/use-transitioning-list";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
@@ -23,6 +24,7 @@ import {
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { LiveRate } from "@/features/live-rates";
+import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type FavoriteRateItemData = {
@@ -32,7 +34,13 @@ type FavoriteRateItemData = {
   toCurrency: AvailableCurrency;
 };
 
+function getFavoriteRateMotionKey(item: FavoriteRateItemData) {
+  return getFavoritePairKey(item.favorite);
+}
+
 type FavoriteRateItemProps = FavoriteRateItemData & {
+  isEntering?: boolean;
+  isExiting?: boolean;
   onFavoriteToggle: (pair: FavoriteCurrencyPair) => void;
   onPairSelect: (currencies: {
     receiveCurrency: SelectedCurrency;
@@ -51,6 +59,8 @@ function toSelectedCurrency(currency: AvailableCurrency): SelectedCurrency {
 function FavoriteRateItem({
   favorite,
   fromCurrency,
+  isEntering = false,
+  isExiting = false,
   onFavoriteToggle,
   onPairSelect,
   rate,
@@ -87,6 +97,7 @@ function FavoriteRateItem({
           data-favorite-rate-button
         />
       )}
+      className={cn(isEntering && "fx-list-row-in", isExiting && "fx-list-row-out")}
       gridClassName="grid-cols-[minmax(0,1fr)_auto_auto]"
       onSelect={selectPair}
       rowId={rate.pair}
@@ -147,6 +158,10 @@ function FavoriteRates({
 
     return rate ? [{ favorite, fromCurrency, rate, toCurrency }] : [];
   });
+  const favoriteTransitions = useTransitioningList({
+    getKey: getFavoriteRateMotionKey,
+    items: favoriteRates,
+  });
   const tabStopPair = favoriteRates.some((item) => item.rate.pair === preferredTabStopPair)
     ? preferredTabStopPair
     : (favoriteRates[0]?.rate.pair ?? "");
@@ -166,23 +181,31 @@ function FavoriteRates({
   }
 
   function toggleFavorite(pair: FavoriteCurrencyPair) {
-    const existingFavorite = favorites.find(
-      (favorite) => getFavoritePairKey(favorite) === getFavoritePairKey(pair)
-    );
+    const pairKey = getFavoritePairKey(pair);
+    const existingFavorite = favorites.find((favorite) => getFavoritePairKey(favorite) === pairKey);
 
-    if (!existingFavorite) {
+    if (!existingFavorite || favoriteTransitions.exitingKeys.has(pairKey)) {
       return;
     }
 
-    removeOptimisticFavorite(pair);
+    favoriteTransitions.startExit(pairKey, () => {
+      removeOptimisticFavorite(pair);
+    });
 
     React.startTransition(async () => {
       try {
         await deleteFavorite(pair);
         router.refresh();
       } catch (error) {
+        const removalPending = favoriteTransitions.hasPendingExit(pairKey);
+
         console.error("Failed to delete favorite", error);
-        addOptimisticFavorite(existingFavorite);
+        favoriteTransitions.cancelExit(pairKey);
+
+        if (!removalPending) {
+          addOptimisticFavorite(existingFavorite);
+        }
+
         showDataUnavailableError();
       }
     });
@@ -191,6 +214,7 @@ function FavoriteRates({
   if (favoriteRates.length === 0) {
     return (
       <TabEmptyState
+        className={favoriteTransitions.isEmptyEntering ? "fx-state-in" : undefined}
         title="No pinned pairs yet"
         lead={
           <>
@@ -206,6 +230,7 @@ function FavoriteRates({
   return (
     <RateDetailsList
       aria-label="Favorites"
+      className={favoriteTransitions.isListEntering ? "fx-state-in" : undefined}
       countSlot={
         <p className="text-preset-5 text-neutral-50 opacity-70">{favorites.length} Favorites</p>
       }
@@ -232,8 +257,10 @@ function FavoriteRates({
       >
         {favoriteRates.map((item) => (
           <FavoriteRateItem
-            key={item.favorite.id}
+            key={getFavoritePairKey(item.favorite)}
             {...item}
+            isEntering={favoriteTransitions.enteringKeys.has(getFavoritePairKey(item.favorite))}
+            isExiting={favoriteTransitions.exitingKeys.has(getFavoritePairKey(item.favorite))}
             onFavoriteToggle={toggleFavorite}
             onPairSelect={selectCurrencyPair}
             tabIndex={item.rate.pair === tabStopPair ? 0 : -1}

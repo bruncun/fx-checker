@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { act, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { FavoriteRates } from "./favorite-rates";
@@ -59,6 +59,7 @@ const favorites = [
 ];
 
 afterEach(() => {
+  vi.useRealTimers();
   deleteFavorite.mockReset();
   routerRefresh.mockClear();
   routerReplace.mockClear();
@@ -72,7 +73,7 @@ function renderFavoriteRates({
 }: {
   favorites?: ComponentProps<typeof FavoriteRates>["favorites"];
 } = {}) {
-  render(
+  return render(
     <FavoriteRates
       availableCurrencies={availableCurrencies}
       favorites={selectedFavorites}
@@ -100,6 +101,7 @@ describe("FavoriteRates", () => {
   });
 
   it("selects a favorite pair and removes it from the star action", () => {
+    vi.useFakeTimers();
     deleteFavorite.mockResolvedValue(undefined);
 
     renderFavoriteRates();
@@ -116,7 +118,18 @@ describe("FavoriteRates", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
 
+    expect(row.className).toContain("fx-list-row-out");
     expect(deleteFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(
+      screen.queryByRole("row", {
+        name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
+      })
+    ).toBeNull();
   });
 
   it("shows the data unavailable error when removing a favorite fails", async () => {
@@ -131,6 +144,23 @@ describe("FavoriteRates", () => {
     });
   });
 
+  it("animates into the empty state when the last favorite exits", () => {
+    vi.useFakeTimers();
+    deleteFavorite.mockResolvedValue(undefined);
+
+    renderFavoriteRates({ favorites: [favorites[0]] });
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(screen.getByText("No pinned pairs yet").parentElement?.className).toContain(
+      "fx-state-in"
+    );
+  });
+
   it("renders the pinned pairs empty state when no favorites exist", () => {
     renderFavoriteRates({ favorites: [] });
 
@@ -139,6 +169,38 @@ describe("FavoriteRates", () => {
     expect(screen.getByText(/icon on any conversion or comparison row/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Favorites" })).toBeNull();
     expect(screen.queryByRole("treegrid", { name: "Pinned Pairs" })).toBeNull();
+  });
+
+  it("animates the first favorite row when favorites transition from empty to populated", () => {
+    vi.useFakeTimers();
+
+    const { rerender } = renderFavoriteRates({ favorites: [] });
+
+    expect(screen.getByText("No pinned pairs yet").parentElement?.className).not.toContain(
+      "fx-state-in"
+    );
+
+    rerender(
+      <FavoriteRates
+        availableCurrencies={availableCurrencies}
+        favorites={[favorites[0]]}
+        liveRates={favoriteRates}
+      />
+    );
+
+    const region = screen.getByRole("region", { name: "Favorites" });
+    const row = screen.getByRole("row", {
+      name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
+    });
+
+    expect(region.className).toContain("fx-state-in");
+    expect(row.className).toContain("fx-list-row-in");
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(row.className).not.toContain("fx-list-row-in");
   });
 
   it("moves from a focused favorite row to the star action and back", () => {

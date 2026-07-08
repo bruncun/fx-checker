@@ -4,13 +4,34 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/guest-session";
+import { cn } from "@/lib/utils";
+
+const alertExitAnimationMs = 160;
 
 export function DismissibleGuestModeAlert() {
   const [isDismissed, setIsDismissed] = React.useState(false);
+  const [isExiting, setIsExiting] = React.useState(false);
+  const exitTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (exitTimeoutRef.current) {
+        clearTimeout(exitTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function dismissAlert() {
+    if (isExiting) {
+      return;
+    }
+
     document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=1; Path=/; SameSite=Lax`;
-    setIsDismissed(true);
+    setIsExiting(true);
+    exitTimeoutRef.current = setTimeout(() => {
+      exitTimeoutRef.current = null;
+      setIsDismissed(true);
+    }, alertExitAnimationMs);
   }
 
   if (isDismissed) {
@@ -21,7 +42,10 @@ export function DismissibleGuestModeAlert() {
     <div
       aria-describedby="guest-mode-alert-description"
       aria-labelledby="guest-mode-alert-title"
-      className="mb-250 items-center rounded-8 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] sm:flex sm:items-center sm:justify-between sm:gap-300"
+      className={cn(
+        "mb-250 items-center rounded-8 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] sm:flex sm:items-center sm:justify-between sm:gap-300",
+        isExiting && "fx-list-row-out"
+      )}
       role="alert"
     >
       <div className="min-w-0">
@@ -37,6 +61,7 @@ export function DismissibleGuestModeAlert() {
         className="mt-200 w-full sm:mt-0 sm:w-auto"
         type="button"
         variant="outline"
+        disabled={isExiting}
         onClick={dismissAlert}
       >
         Dismiss

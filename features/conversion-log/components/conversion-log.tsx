@@ -11,6 +11,7 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
+import { useTransitioningList } from "@/components/ui/use-transitioning-list";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { Conversion } from "@/features/conversion-log";
 import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/client";
@@ -24,6 +25,7 @@ import type { AvailableCurrency } from "@/features/converter/currencies";
 import { MoneyDecimal } from "@/features/converter/exchange";
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/url-state";
+import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 function formatAmount(amount: string) {
@@ -116,6 +118,39 @@ function downloadCsv({ csv, fileName }: { csv: string; fileName: string }) {
   URL.revokeObjectURL(url);
 }
 
+function getConversionMotionKey(conversion: Conversion) {
+  return conversion.id;
+}
+
+function getConversionContentKey(conversion: Conversion) {
+  return [
+    conversion.fromCurrency,
+    conversion.toCurrency,
+    conversion.sendAmount,
+    conversion.receiveAmount,
+  ].join(":");
+}
+
+function getReplacedOptimisticConversionKey({
+  currentKeys,
+  item,
+  previousItems,
+}: {
+  currentKeys: Set<string>;
+  item: Conversion;
+  previousItems: Conversion[];
+}) {
+  const contentKey = getConversionContentKey(item);
+  const replacedOptimisticConversion = previousItems.find(
+    (conversion) =>
+      conversion.id.startsWith("optimistic:") &&
+      !currentKeys.has(getConversionMotionKey(conversion)) &&
+      getConversionContentKey(conversion) === contentKey
+  );
+
+  return replacedOptimisticConversion?.id ?? null;
+}
+
 function ConversionLogToolbar({ children }: { children: React.ReactNode }) {
   const toolbarRef = React.useRef<HTMLDivElement>(null);
   const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
@@ -150,6 +185,8 @@ function ConversionLogToolbar({ children }: { children: React.ReactNode }) {
 
 type ConversionLogItemProps = {
   conversion: Conversion;
+  isEntering?: boolean;
+  isExiting?: boolean;
   onConversionDelete: (id: string) => void;
   onConversionSelect: (conversion: Conversion) => void;
   tabIndex: 0 | -1;
@@ -157,6 +194,8 @@ type ConversionLogItemProps = {
 
 function ConversionLogItem({
   conversion,
+  isEntering = false,
+  isExiting = false,
   onConversionDelete,
   onConversionSelect,
   tabIndex,
@@ -181,7 +220,8 @@ function ConversionLogItem({
         />
       )}
       actionClassName="col-start-3 row-span-2 row-start-1 justify-self-end sm:col-start-4 sm:row-span-1 sm:row-start-auto"
-      gridClassName="grid-cols-[minmax(0,1fr)_minmax(9ch,auto)_auto] grid-rows-[auto_auto] sm:grid-rows-none sm:grid-cols-[64px_minmax(0,1fr)_auto_auto] sm:gap-x-200 sm:py-200"
+      className={cn(isEntering && "fx-list-row-in", isExiting && "fx-list-row-out")}
+      gridClassName="grid-cols-[minmax(0,1fr)_minmax(9ch,auto)_auto] grid-rows-[auto_auto] sm:grid-rows-none sm:grid-cols-[64px_minmax(0,1fr)_auto_auto] sm:gap-x-200 sm:py-200 sm:[--fx-list-row-padding-y:var(--spacing-200)]"
       onSelect={() => onConversionSelect(conversion)}
       rowId={conversion.id}
       tabIndex={tabIndex}
@@ -234,6 +274,26 @@ function ConversionLog({
   const searchParamsString = searchParams.toString();
   const conversions = useOptimisticConversions(initialConversions);
   const [preferredTabStopId, setPreferredTabStopId] = React.useState(conversions[0]?.id ?? "");
+  const shouldAnimateConversionEntry = React.useCallback(
+    ({
+      currentKeys,
+      item,
+      previousItems,
+    }: {
+      currentKeys: Set<string>;
+      item: Conversion;
+      previousItems: Conversion[];
+    }) => {
+      return getReplacedOptimisticConversionKey({ currentKeys, item, previousItems }) === null;
+    },
+    []
+  );
+  const conversionTransitions = useTransitioningList({
+    getEntryContinuationKey: getReplacedOptimisticConversionKey,
+    getKey: getConversionMotionKey,
+    items: conversions,
+    shouldAnimateEntry: shouldAnimateConversionEntry,
+  });
   const tabStopId = conversions.some((conversion) => conversion.id === preferredTabStopId)
     ? preferredTabStopId
     : (conversions[0]?.id ?? "");
@@ -259,18 +319,27 @@ function ConversionLog({
   }
 
   function removeConversion(id: string) {
+    if (conversionTransitions.exitingKeys.has(id)) {
+      return;
+    }
+
     const removedConversion = conversions.find((conversion) => conversion.id === id);
 
-    removeOptimisticConversion(id);
+    conversionTransitions.startExit(id, () => {
+      removeOptimisticConversion(id);
+    });
 
     React.startTransition(async () => {
       try {
         await deleteConversion(id);
         router.refresh();
       } catch (error) {
-        console.error("Failed to delete conversion", error);
+        const removalPending = conversionTransitions.hasPendingExit(id);
 
-        if (removedConversion) {
+        console.error("Failed to delete conversion", error);
+        conversionTransitions.cancelExit(id);
+
+        if (removedConversion && !removalPending) {
           setConversionSnapshot(conversions);
         }
 
@@ -286,15 +355,28 @@ function ConversionLog({
 
     const previousConversions = conversions;
 
-    clearOptimisticConversions();
+    previousConversions.forEach((conversion) => {
+      conversionTransitions.startExit(conversion.id, () => {
+        if (!conversionTransitions.hasPendingExits()) {
+          clearOptimisticConversions();
+        }
+      });
+    });
 
     React.startTransition(async () => {
       try {
         await deleteAllConversions();
         router.refresh();
       } catch (error) {
+        const removalPending = conversionTransitions.hasPendingExits();
+
         console.error("Failed to clear conversions", error);
-        setConversionSnapshot(previousConversions);
+        conversionTransitions.cancelAllExits();
+
+        if (!removalPending) {
+          setConversionSnapshot(previousConversions);
+        }
+
         showDataUnavailableError();
       }
     });
@@ -314,6 +396,7 @@ function ConversionLog({
   if (conversions.length === 0) {
     return (
       <TabEmptyState
+        className={conversionTransitions.isEmptyEntering ? "fx-state-in" : undefined}
         title="No conversions logged yet"
         lead={
           <>
@@ -331,7 +414,7 @@ function ConversionLog({
   return (
     <RateDetailsList
       aria-label="Conversion log"
-      className="py-250"
+      className={cn("py-250", conversionTransitions.isListEntering && "fx-state-in")}
       countClassName="mt-[10px] w-full sm:mt-0 sm:w-auto"
       countSlot={
         <div className="flex items-center justify-between gap-200">
@@ -390,6 +473,8 @@ function ConversionLog({
           <ConversionLogItem
             key={conversion.id}
             conversion={conversion}
+            isEntering={conversionTransitions.enteringKeys.has(getConversionMotionKey(conversion))}
+            isExiting={conversionTransitions.exitingKeys.has(conversion.id)}
             onConversionDelete={removeConversion}
             onConversionSelect={selectConversion}
             tabIndex={conversion.id === tabStopId ? 0 : -1}

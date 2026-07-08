@@ -129,7 +129,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   }
 
   return (
-    <div ref={rootRef} className="relative inline-flex">
+    <div ref={rootRef} className="relative z-[90] inline-flex">
       <button
         ref={triggerRef}
         aria-controls={isOpen ? panelId : undefined}
@@ -137,7 +137,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
         aria-haspopup="dialog"
         aria-label="Account menu"
         className={cn(
-          "inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
+          "fx-transition-surface inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
           "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
         )}
         onClick={() => {
@@ -163,7 +163,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
           ref={panelRef}
           aria-label="Account menu"
           aria-modal="true"
-          className="absolute top-[calc(100%+8px)] right-0 z-50 flex w-[min(calc(100vw-32px),119px)] flex-col gap-125 rounded-10 bg-neutral-600 p-100 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)]"
+          className="fx-panel-in absolute top-[calc(100%+8px)] right-0 z-[100] flex w-[min(calc(100vw-32px),119px)] flex-col gap-125 rounded-10 bg-neutral-600 p-100 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)]"
           id={panelId}
           onKeyDown={handlePanelKeyDown}
           role="dialog"
@@ -182,7 +182,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
                   aria-checked={isActive}
                   aria-label={option.label}
                   className={cn(
-                    "inline-flex h-400 cursor-pointer items-center justify-center rounded-8 p-100 text-neutral-200",
+                    "fx-transition-surface inline-flex h-400 cursor-pointer items-center justify-center rounded-8 p-100 text-neutral-200",
                     "focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
                     isActive && "bg-neutral-500 text-neutral-50"
                   )}
@@ -207,7 +207,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
           </div>
 
           <a
-            className="flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+            className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
             href="/auth/sign-out"
             onClick={signOut}
           >

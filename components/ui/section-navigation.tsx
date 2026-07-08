@@ -125,7 +125,7 @@ function SectionNavigation({
         aria-expanded={isOpen}
         aria-label={`${ariaLabel}: ${activeAccessibleName}`}
         className={cn(
-          "flex h-500 w-full items-center justify-between gap-200 rounded-4 rounded-8 bg-neutral-700 px-150 py-125 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:hidden",
+          "fx-transition-surface flex h-500 w-full items-center justify-between gap-200 rounded-4 rounded-8 bg-neutral-700 px-150 py-125 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:hidden",
           "hover:bg-neutral-600 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
         )}
         onClick={() => {
@@ -153,7 +153,7 @@ function SectionNavigation({
       {isOpen ? (
         <div
           ref={panelRef}
-          className="absolute top-[calc(100%+8px)] right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),var(--shadow-elevation-popover)] sm:hidden"
+          className="fx-panel-in absolute top-[calc(100%+8px)] right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),var(--shadow-elevation-popover)] sm:hidden"
           id={panelId}
           onKeyDown={handlePanelKeyDown}
         >
@@ -167,7 +167,7 @@ function SectionNavigation({
                     aria-current={isCurrent ? "page" : undefined}
                     aria-label={getSectionAccessibleName(item)}
                     className={cn(
-                      "flex h-500 w-full items-center justify-between gap-200 rounded-4 px-100 py-125 text-left text-preset-3 text-neutral-50 uppercase",
+                      "fx-transition-surface flex h-500 w-full items-center justify-between gap-200 rounded-4 px-100 py-125 text-left text-preset-3 text-neutral-50 uppercase",
                       "hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none active:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))]"
                     )}
                     data-section-navigation-link

@@ -53,14 +53,17 @@ function getTabButtonContent({
         <span>{label}</span>
         {shouldRenderCount ? <TabCountBadge count={count} /> : null}
       </span>
-      <span aria-hidden className={cn("h-025 bg-transparent", active && "bg-lime-500")} />
+      <span
+        aria-hidden
+        className={cn("fx-transition-surface h-025 bg-transparent", active && "bg-lime-500")}
+      />
     </>
   );
 }
 
 function getTabButtonClassName(className: string | undefined) {
   return cn(
-    "inline-flex h-[42px] flex-col items-stretch text-preset-3 text-neutral-50 uppercase focus-visible:rounded-4 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-900)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
+    "fx-transition-surface inline-flex h-[42px] flex-col items-stretch text-preset-3 text-neutral-50 uppercase focus-visible:rounded-4 focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-900)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
     className
   );
 }

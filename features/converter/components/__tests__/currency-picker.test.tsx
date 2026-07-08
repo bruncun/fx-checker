@@ -118,6 +118,16 @@ describe("CurrencyPicker", () => {
     );
   });
 
+  it("raises the open picker above adjacent currency controls", () => {
+    const { trigger } = renderCurrencyPicker();
+
+    expect(trigger.parentElement?.className).toContain("z-[70]");
+
+    fireEvent.click(trigger);
+
+    expect(trigger.parentElement?.className).toContain("z-[120]");
+  });
+
   it("moves focus from search to the active currency with Tab or Shift+Tab", () => {
     const { trigger } = renderCurrencyPicker();
 

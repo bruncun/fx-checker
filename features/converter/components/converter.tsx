@@ -128,7 +128,7 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   return (
     <section
       aria-labelledby="converter-heading"
-      className="scroll-mt-200 focus:outline-none"
+      className="relative z-[30] scroll-mt-200 focus:outline-none"
       id="converter"
       tabIndex={-1}
     >

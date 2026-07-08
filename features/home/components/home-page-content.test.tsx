@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/guest-session";
@@ -21,6 +21,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=; Path=/; Max-Age=0`;
 });
 
@@ -61,6 +62,7 @@ describe("HomePageContent", () => {
 
 describe("DismissibleGuestModeAlert", () => {
   it("renders a dismissible alert and stores dismissal in a session cookie", () => {
+    vi.useFakeTimers();
     render(<DismissibleGuestModeAlert />);
 
     expect(screen.getByRole("alert").textContent).toContain(
@@ -69,7 +71,14 @@ describe("DismissibleGuestModeAlert", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
 
-    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("alert").className).toContain("fx-list-row-out");
+    expect(screen.getByRole("button", { name: "Dismiss" }).getAttribute("disabled")).toBe("");
     expect(document.cookie).toContain(`${GUEST_ALERT_DISMISSED_COOKIE}=1`);
+
+    act(() => {
+      vi.advanceTimersByTime(160);
+    });
+
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });
