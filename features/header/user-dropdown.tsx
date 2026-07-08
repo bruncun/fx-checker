@@ -93,6 +93,8 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   });
 
   async function signOut(event: MouseEvent<HTMLAnchorElement>) {
+    closeMenu({ restoreFocus: false });
+
     if (document.cookie.includes(`${GUEST_MODE_COOKIE}=1`)) {
       return;
     }

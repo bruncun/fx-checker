@@ -78,7 +78,9 @@ function HeaderStatsFallback() {
           aria-hidden="true"
           className="inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
           key="account"
-        />,
+        >
+          &nbsp;
+        </span>,
       ]}
     />
   );

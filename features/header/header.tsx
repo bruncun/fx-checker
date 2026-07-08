@@ -37,27 +37,29 @@ async function getHeaderAccount() {
 
 function ExchangeRateStats({ currencyCount, email, isGuest = false }: ExchangeRateStatsProps) {
   return (
-    <InlineMetaList
-      className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
-      aria-label="Exchange rate data stats"
-      items={[
-        `${currencyCount} Currencies`,
-        <abbr key="eod" title="End of day">
-          EOD
-        </abbr>,
-        <span key="ecb">
-          <abbr title="European Central Bank">ECB</abbr>{" "}
-          <span className="hidden sm:inline">data</span>
-        </span>,
-        <UserDropdown key="sign-out" email={email} isGuest={isGuest} />,
-      ]}
-    />
+    <div className="flex items-center gap-200">
+      <InlineMetaList
+        className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
+        aria-label="Exchange rate data stats"
+        items={[
+          `${currencyCount} Currencies`,
+          <abbr key="eod" title="End of day">
+            EOD
+          </abbr>,
+          <span key="ecb">
+            <abbr title="European Central Bank">ECB</abbr>{" "}
+            <span className="hidden sm:inline">data</span>
+          </span>,
+        ]}
+      />
+      <UserDropdown email={email} isGuest={isGuest} />
+    </div>
   );
 }
 
 export function Header({ statsSlot }: HeaderProps) {
   return (
-    <nav className="flex w-full items-center justify-between p-200 sm:px-300 sm:py-250">
+    <nav className="flex w-full items-center justify-between p-200 sm:px-300 sm:py-[17px]">
       <Logo />
       {statsSlot}
     </nav>

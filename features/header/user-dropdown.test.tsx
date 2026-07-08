@@ -65,6 +65,15 @@ describe("UserDropdown", () => {
     );
   });
 
+  it("closes the account dialog when signing out", () => {
+    render(<UserDropdown email="mika@example.com" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("link", { name: "Sign out" }));
+
+    expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
+  });
+
   it("moves through theme options with roving focus and switches theme on focus", () => {
     render(<UserDropdown email="mika@example.com" />);
 
