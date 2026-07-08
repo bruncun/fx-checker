@@ -98,7 +98,7 @@ function useOptimisticFavorites(initialFavorites: Favorite[]) {
     setFavoriteSnapshot(initialFavorites);
   }, [initialFavorites]);
 
-  return favorites;
+  return favoriteSnapshot === null ? initialFavorites : favorites;
 }
 
 function useOptimisticFavoriteCount(initialCount: number) {

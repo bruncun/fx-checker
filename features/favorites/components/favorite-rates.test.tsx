@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { act, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { addOptimisticFavorite } from "@/features/favorites/optimistic-favorites";
 import { FavoriteRates } from "./favorite-rates";
 
 const { deleteFavorite, routerRefresh, routerReplace, showDataUnavailableError, testSearchParams } =
@@ -43,6 +44,16 @@ const favoriteRates = [
   { pair: "GBP/USD", rate: "1.3587", change: "+0.61%", direction: "up" as const },
 ];
 
+const latestRates = [
+  { base: "EUR", date: "2026-06-19", quote: "USD", rate: 1.25 },
+  { base: "EUR", date: "2026-06-19", quote: "GBP", rate: 0.92 },
+];
+
+const liveRateHistoryRates = [
+  { base: "EUR", date: "2026-06-18", quote: "USD", rate: 1.24 },
+  { base: "EUR", date: "2026-06-18", quote: "GBP", rate: 0.91 },
+];
+
 const favorites = [
   {
     createdAt: "2026-06-19T00:00:00.000Z",
@@ -77,7 +88,9 @@ function renderFavoriteRates({
     <FavoriteRates
       availableCurrencies={availableCurrencies}
       favorites={selectedFavorites}
+      latestRates={latestRates}
       liveRates={favoriteRates}
+      liveRateHistoryRates={liveRateHistoryRates}
     />
   );
 }
@@ -184,7 +197,9 @@ describe("FavoriteRates", () => {
       <FavoriteRates
         availableCurrencies={availableCurrencies}
         favorites={[favorites[0]]}
+        latestRates={latestRates}
         liveRates={favoriteRates}
+        liveRateHistoryRates={liveRateHistoryRates}
       />
     );
 
@@ -201,6 +216,26 @@ describe("FavoriteRates", () => {
     });
 
     expect(row.className).not.toContain("fx-list-row-in");
+  });
+
+  it("renders an optimistic favorite row before the server live rates refresh", () => {
+    renderFavoriteRates({ favorites: [] });
+
+    act(() => {
+      addOptimisticFavorite({
+        createdAt: "2026-06-19T00:00:00.000Z",
+        fromCurrency: "USD",
+        id: "optimistic:USD/GBP",
+        toCurrency: "GBP",
+      });
+    });
+
+    expect(screen.getByText("1 Favorites")).toBeTruthy();
+    expect(
+      screen.getByRole("row", {
+        name: "Use USD/GBP in converter, rate 0.7360, up +0.29%",
+      })
+    ).toBeTruthy();
   });
 
   it("moves from a focused favorite row to the star action and back", () => {

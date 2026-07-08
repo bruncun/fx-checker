@@ -23,7 +23,8 @@ import {
 } from "@/features/favorites/optimistic-favorites";
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
-import type { LiveRate } from "@/features/live-rates";
+import { deriveLiveRateForPair, type LiveRate } from "@/features/live-rates";
+import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -126,13 +127,17 @@ function FavoriteRateItem({
 type FavoriteRatesProps = {
   availableCurrencies: AvailableCurrency[];
   favorites: Favorite[];
+  latestRates: FrankfurterRate[];
   liveRates: LiveRate[];
+  liveRateHistoryRates: FrankfurterRate[];
 };
 
 function FavoriteRates({
   availableCurrencies,
   favorites: initialFavorites,
+  latestRates,
   liveRates,
+  liveRateHistoryRates,
 }: FavoriteRatesProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
@@ -144,6 +149,7 @@ function FavoriteRates({
     favorites[0] ? `${favorites[0].fromCurrency}/${favorites[0].toCurrency}` : ""
   );
   const currencyByCode = new Map(availableCurrencies.map((currency) => [currency.code, currency]));
+  const liveRateByPair = new Map(liveRates.map((liveRate) => [liveRate.pair, liveRate]));
   const favoriteRates = favorites.flatMap((favorite) => {
     const fromCurrency = currencyByCode.get(favorite.fromCurrency);
     const toCurrency = currencyByCode.get(favorite.toCurrency);
@@ -152,9 +158,14 @@ function FavoriteRates({
       return [];
     }
 
-    const rate = liveRates.find(
-      (liveRate) => liveRate.pair === `${favorite.fromCurrency}/${favorite.toCurrency}`
-    );
+    const rate =
+      liveRateByPair.get(`${favorite.fromCurrency}/${favorite.toCurrency}`) ??
+      deriveLiveRateForPair({
+        base: favorite.fromCurrency,
+        historicalRates: liveRateHistoryRates,
+        latestRates,
+        quote: favorite.toCurrency,
+      });
 
     return rate ? [{ favorite, fromCurrency, rate, toCurrency }] : [];
   });

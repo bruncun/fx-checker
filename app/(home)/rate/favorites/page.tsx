@@ -58,7 +58,9 @@ async function FavoriteRatesUserContent({
     <FavoriteRates
       availableCurrencies={availableCurrencies}
       favorites={favorites}
+      latestRates={latestRates}
       liveRates={favoriteRates}
+      liveRateHistoryRates={liveRateHistoryRates}
     />
   );
 }
