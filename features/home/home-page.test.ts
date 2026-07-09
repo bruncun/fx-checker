@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FrankfurterCurrency, FrankfurterRate } from "@/lib/frankfurter";
 import {
   getCurrencyReferenceData,
+  getLatestRatesData,
   getHistoryPageData,
   getLiveRatesData,
   getYearlyDateRanges,
@@ -18,9 +19,19 @@ const { getCurrencies, getRates } = vi.hoisted(() => ({
   getRates: vi.fn(),
 }));
 
+const { getLatestExchangeRateSnapshot, saveLatestExchangeRateSnapshot } = vi.hoisted(() => ({
+  getLatestExchangeRateSnapshot: vi.fn(),
+  saveLatestExchangeRateSnapshot: vi.fn(),
+}));
+
 vi.mock("@/lib/frankfurter", () => ({
   getCurrencies,
   getRates,
+}));
+
+vi.mock("@/lib/latest-exchange-rate-snapshot", () => ({
+  getLatestExchangeRateSnapshot,
+  saveLatestExchangeRateSnapshot,
 }));
 
 const currencies: FrankfurterCurrency[] = [
@@ -36,7 +47,9 @@ const latestRates: FrankfurterRate[] = [
 
 beforeEach(() => {
   getCurrencies.mockReset();
+  getLatestExchangeRateSnapshot.mockReset();
   getRates.mockReset();
+  saveLatestExchangeRateSnapshot.mockReset();
 });
 
 describe("getYearlyDateRanges", () => {
@@ -52,6 +65,50 @@ describe("getYearlyDateRanges", () => {
 });
 
 describe("home page data loaders", () => {
+  it("returns fresh latest rates and saves the latest known good snapshot", async () => {
+    getRates.mockResolvedValueOnce(latestRates);
+
+    await expect(getLatestRatesData()).resolves.toMatchObject({
+      freshness: {
+        dataStatus: "fresh",
+        source: "api",
+      },
+      rates: latestRates,
+      status: "available",
+    });
+
+    expect(saveLatestExchangeRateSnapshot).toHaveBeenCalledWith(latestRates, expect.any(String));
+    expect(getLatestExchangeRateSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the latest known good snapshot when latest rates are unavailable", async () => {
+    getRates.mockRejectedValueOnce(new Error("upstream unavailable"));
+    getLatestExchangeRateSnapshot.mockResolvedValueOnce({
+      fetchedAt: "2026-07-08T09:00:00.000Z",
+      rates: latestRates,
+      sourceUpdatedAt: "2026-07-08T00:00:00.000Z",
+    });
+
+    await expect(getLatestRatesData()).resolves.toEqual({
+      freshness: {
+        dataStatus: "stale",
+        fetchedAt: "2026-07-08T09:00:00.000Z",
+        source: "last_known_good",
+      },
+      rates: latestRates,
+      status: "available",
+    });
+
+    expect(saveLatestExchangeRateSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("returns unavailable when latest rates fail and no snapshot exists", async () => {
+    getRates.mockRejectedValueOnce(new Error("upstream unavailable"));
+    getLatestExchangeRateSnapshot.mockResolvedValueOnce(null);
+
+    await expect(getLatestRatesData()).resolves.toEqual({ status: "unavailable" });
+  });
+
   it("fetches only currencies and latest rates for currency reference data", async () => {
     getCurrencies.mockResolvedValue(currencies);
     getRates.mockResolvedValueOnce(latestRates);

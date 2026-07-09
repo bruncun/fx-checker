@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/guest-session";
 import { DismissibleGuestModeAlert } from "./guest-mode-alert-client";
 import { HomePageContent } from "./home-page-content";
+import { StaleExchangeRatesAlert } from "./stale-exchange-rates-alert";
 
 const { guestModeAlert } = vi.hoisted(() => ({
   guestModeAlert: vi.fn(() => null),
@@ -57,6 +58,17 @@ describe("HomePageContent", () => {
     );
 
     expect(guestModeAlert).toHaveBeenCalled();
+  });
+});
+
+describe("StaleExchangeRatesAlert", () => {
+  it("shows the last successful refresh date", () => {
+    render(<StaleExchangeRatesAlert fetchedAt="2026-07-08T09:00:00.000Z" />);
+
+    expect(screen.getByRole("alert").textContent).toContain("Exchange rates could not be updated");
+    expect(screen.getByRole("alert").textContent).toContain(
+      "You're viewing data last refreshed on July 8, 2026."
+    );
   });
 });
 

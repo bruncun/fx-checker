@@ -7,6 +7,10 @@ import { UserDropdown } from "@/features/header/user-dropdown";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
 import { getDateYearsBefore } from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
+import {
+  getLatestExchangeRateSnapshot,
+  saveLatestExchangeRateSnapshot,
+} from "@/lib/latest-exchange-rate-snapshot";
 import { cacheLife } from "next/cache";
 import { Suspense, type ReactNode } from "react";
 import { Converter } from "@/features/converter";
@@ -21,6 +25,7 @@ import {
 } from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
+import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
 import { getConverterAmountFromParams, getDefaultCurrencyPair } from "./url-state";
 
 const RATE_HISTORY_YEARS = 5;
@@ -37,12 +42,19 @@ type DataResult<T> =
     } & T)
   | { status: "unavailable" };
 
+type ExchangeRateDataFreshness = {
+  dataStatus: "fresh" | "stale";
+  fetchedAt: string;
+  source: "api" | "last_known_good";
+};
+
 export type CurrencyReferenceData = DataResult<{
   availableCurrencies: AvailableCurrency[];
   currencyCount: number;
 }>;
 
 export type LatestRatesData = DataResult<{
+  freshness: ExchangeRateDataFreshness;
   rates: FrankfurterRate[];
 }>;
 
@@ -145,16 +157,58 @@ async function getHistoricalRatesByYear({ from, to }: DateRange) {
 }
 
 export async function getLatestRatesData(): Promise<LatestRatesData> {
+  try {
+    return await getFreshLatestRatesData();
+  } catch {
+    try {
+      const snapshot = await getLatestExchangeRateSnapshot();
+
+      return snapshot
+        ? {
+            freshness: {
+              dataStatus: "stale",
+              fetchedAt: snapshot.fetchedAt,
+              source: "last_known_good",
+            },
+            rates: snapshot.rates,
+            status: "available",
+          }
+        : { status: "unavailable" };
+    } catch {
+      return { status: "unavailable" };
+    }
+  }
+}
+
+async function getFreshLatestRatesData(): Promise<LatestRatesData> {
   "use cache";
   cacheLife("days");
 
-  try {
-    const rates = await getRates();
+  const rates = await getRates();
 
-    return rates.length > 0 ? { status: "available", rates } : { status: "unavailable" };
-  } catch {
+  if (rates.length === 0) {
     return { status: "unavailable" };
   }
+
+  const fetchedAt = new Date().toISOString();
+
+  try {
+    await saveLatestExchangeRateSnapshot(rates, fetchedAt);
+  } catch (error) {
+    console.error("Failed to persist latest exchange rate snapshot", {
+      cause: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return {
+    freshness: {
+      dataStatus: "fresh",
+      fetchedAt,
+      source: "api",
+    },
+    rates,
+    status: "available",
+  };
 }
 
 export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData> {
@@ -331,23 +385,28 @@ async function ConverterSlot() {
       : `1 ${selectedCurrencies.sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${selectedCurrencies.receiveCurrency.currencyCode}`;
 
   return (
-    <Suspense
-      fallback={
-        <ConverterFallback
-          exchangeRateLabel={exchangeRateLabel}
-          receiveAmount={receiveAmount}
-          receiveCurrency={selectedCurrencies.receiveCurrency}
-          sendAmount={sendAmount}
-          sendCurrency={selectedCurrencies.sendCurrency}
+    <>
+      {latestRatesData.freshness.dataStatus === "stale" ? (
+        <StaleExchangeRatesAlert fetchedAt={latestRatesData.freshness.fetchedAt} />
+      ) : null}
+      <Suspense
+        fallback={
+          <ConverterFallback
+            exchangeRateLabel={exchangeRateLabel}
+            receiveAmount={receiveAmount}
+            receiveCurrency={selectedCurrencies.receiveCurrency}
+            sendAmount={sendAmount}
+            sendCurrency={selectedCurrencies.sendCurrency}
+          />
+        }
+      >
+        <Converter
+          currencies={currencyReferenceData.availableCurrencies}
+          favoritesPromise={favoritesPromise}
+          rates={latestRatesData.rates}
         />
-      }
-    >
-      <Converter
-        currencies={currencyReferenceData.availableCurrencies}
-        favoritesPromise={favoritesPromise}
-        rates={latestRatesData.rates}
-      />
-    </Suspense>
+      </Suspense>
+    </>
   );
 }
 
