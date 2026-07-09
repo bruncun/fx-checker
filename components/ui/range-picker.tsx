@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import { cn } from "@/lib/utils";
+import { ShortcutTooltip } from "./shortcut-tooltip";
 
 type RangePickerOption = {
   label: string;
@@ -16,6 +17,10 @@ type RangePickerProps = {
   disabled?: boolean;
   onValueChange?: (value: string) => void;
   options: RangePickerOption[];
+  shortcutLabels?: {
+    next: string;
+    previous: string;
+  };
   value: string;
 };
 
@@ -25,6 +30,7 @@ function RangePicker({
   disabled = false,
   onValueChange,
   options,
+  shortcutLabels,
   value,
 }: RangePickerProps) {
   const tabListRef = React.useRef<HTMLDivElement>(null);
@@ -48,13 +54,22 @@ function RangePicker({
       ref={tabListRef}
       aria-label={ariaLabel}
       className={cn("flex h-[42px] w-fit rounded-8 bg-neutral-700 p-025", className)}
+      data-range-picker
       onKeyDown={disabled ? undefined : rovingFocus.handleKeyDown}
       role="tablist"
     >
       {options.map((option) => {
         const isActive = option.value === value;
+        const optionIndex = options.findIndex((item) => item.value === option.value);
+        const activeIndex = options.findIndex((item) => item.value === value);
+        const shortcut =
+          shortcutLabels && optionIndex === activeIndex - 1
+            ? { label: "Previous range", value: shortcutLabels.previous }
+            : shortcutLabels && optionIndex === activeIndex + 1
+              ? { label: "Next range", value: shortcutLabels.next }
+              : null;
 
-        return (
+        const button = (
           <button
             aria-selected={isActive}
             className={cn(
@@ -66,7 +81,6 @@ function RangePicker({
             data-range-picker-tab
             data-range-value={option.value}
             disabled={disabled}
-            key={option.value}
             onClick={() => {
               if (!isActive) {
                 onValueChange?.(option.value);
@@ -78,6 +92,17 @@ function RangePicker({
           >
             {option.label}
           </button>
+        );
+
+        return (
+          <ShortcutTooltip
+            disabled={!shortcut}
+            key={option.value}
+            label={shortcut?.label ?? ""}
+            shortcut={shortcut?.value ?? ""}
+          >
+            {button}
+          </ShortcutTooltip>
         );
       })}
     </div>

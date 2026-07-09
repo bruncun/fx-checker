@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RateHistoryRangeModel, RateHistoryViewModel } from "../rate-history";
+import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 import { RateHistoryRangeViewer } from "./rate-history-range-viewer";
 
 const { testSearchParams } = vi.hoisted(() => ({
@@ -82,5 +83,42 @@ describe("RateHistoryRangeViewer", () => {
     fireEvent.click(screen.getByRole("tab", { name: "1Y" }));
 
     expect(window.location.search).toBe("?from=GBP&to=JPY&range=1Y");
+  });
+
+  it("moves to adjacent ranges with left and right shortcuts", () => {
+    render(
+      <KeyboardShortcutsProvider>
+        <RateHistoryRangeViewer model={model} selectedRange="3M" />
+      </KeyboardShortcutsProvider>
+    );
+
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+
+    expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
+    expect(window.location.search).toBe("?range=1M");
+
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+
+    expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
+    expect(window.location.search).toBe("?range=3M");
+  });
+
+  it("preserves range picker roving focus while global history shortcuts are registered", () => {
+    render(
+      <KeyboardShortcutsProvider>
+        <RateHistoryRangeViewer model={model} selectedRange="1M" />
+      </KeyboardShortcutsProvider>
+    );
+
+    const selectedRange = screen.getByRole("tab", { name: "1M" });
+
+    selectedRange.focus();
+    fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
+
+    const nextRange = screen.getByRole("tab", { name: "3M" });
+
+    expect(nextRange.getAttribute("aria-selected")).toBe("true");
+    expect(document.activeElement).toBe(nextRange);
+    expect(window.location.search).toBe("?range=3M");
   });
 });

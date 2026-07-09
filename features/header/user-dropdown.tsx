@@ -5,6 +5,7 @@ import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { GUEST_MODE_COOKIE } from "@/features/guest-session/guest-session";
+import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
@@ -34,6 +35,7 @@ function getAccountInitials({ email, isGuest }: UserDropdownProps) {
 }
 
 export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
+  const shortcuts = useOptionalKeyboardShortcuts();
   const router = useRouter();
   const { setTheme, theme } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
@@ -163,7 +165,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
           ref={panelRef}
           aria-label="Account menu"
           aria-modal="true"
-          className="fx-panel-in absolute top-[calc(100%+8px)] right-0 z-[100] flex w-[min(calc(100vw-32px),119px)] flex-col gap-125 rounded-10 bg-neutral-600 p-100 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)]"
+          className="fx-panel-in absolute top-[calc(100%+8px)] right-0 z-[100] flex w-[min(calc(100vw-32px),220px)] flex-col gap-125 rounded-10 bg-neutral-600 p-100 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)]"
           id={panelId}
           onKeyDown={handlePanelKeyDown}
           role="dialog"
@@ -205,6 +207,23 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
               );
             })}
           </div>
+
+          <button
+            className="fx-transition-surface flex h-500 w-full items-center justify-between gap-150 rounded-4 px-100 py-125 text-left text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+            onClick={(event) => {
+              closeMenu({ restoreFocus: false });
+              shortcuts?.openShortcutsDialog(triggerRef.current ?? event.currentTarget);
+            }}
+            type="button"
+          >
+            <span>Keyboard Shortcuts</span>
+            <kbd
+              aria-hidden="true"
+              className="pointer-events-none ml-auto shrink-0 rounded-4 px-100 py-050 text-preset-6 text-neutral-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]"
+            >
+              {shortcuts?.formatShortcut({ key: "/", modifier: "primary" }) ?? "Ctrl /"}
+            </kbd>
+          </button>
 
           <a
             className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"

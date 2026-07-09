@@ -248,6 +248,20 @@ describe("CurrencyPicker", () => {
     expect(screen.queryByRole("button", { name: "JPY, Japanese Yen" })).toBeNull();
   });
 
+  it("shows the shortcut badge only while search is empty", () => {
+    const { trigger } = renderCurrencyPicker();
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByText(/K$/)).toBeTruthy();
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search currencies" }), {
+      target: { value: "yen" },
+    });
+
+    expect(screen.queryByText(/K$/)).toBeNull();
+  });
+
   it("only shows currency group headers before searching", () => {
     const { trigger } = renderCurrencyPicker();
 

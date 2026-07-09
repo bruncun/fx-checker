@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { UserDropdown, getAccountInitials } from "./user-dropdown";
+import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 
 const setTheme = vi.fn();
 
@@ -63,6 +64,28 @@ describe("UserDropdown", () => {
     expect(screen.getByRole("link", { name: "Sign out" }).getAttribute("href")).toBe(
       "/auth/sign-out"
     );
+  });
+
+  it("opens keyboard shortcuts from the account dialog, closes the menu, and restores focus to the account trigger", async () => {
+    render(
+      <KeyboardShortcutsProvider>
+        <UserDropdown email="mika@example.com" />
+      </KeyboardShortcutsProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keyboard Shortcuts" }));
+
+    expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
+    await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Close keyboard shortcuts" }));
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Account menu" }));
+    });
   });
 
   it("closes the account dialog when signing out", () => {

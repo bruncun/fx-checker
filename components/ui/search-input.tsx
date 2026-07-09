@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 
 export interface SearchInputProps extends Omit<React.ComponentProps<"input">, "type"> {
   inputClassName?: string;
+  shortcutBadge?: string;
 }
 
 function SearchInput({
@@ -13,8 +14,12 @@ function SearchInput({
   inputClassName,
   placeholder = "Search currencies...",
   ref,
+  shortcutBadge,
   ...props
 }: SearchInputProps) {
+  const inputValue = props.value ?? props.defaultValue ?? "";
+  const showShortcutBadge = Boolean(shortcutBadge) && String(inputValue).length === 0;
+
   return (
     <div
       className={cn(
@@ -35,6 +40,14 @@ function SearchInput({
         placeholder={placeholder}
         {...props}
       />
+      {showShortcutBadge ? (
+        <kbd
+          aria-hidden="true"
+          className="pointer-events-none ml-auto shrink-0 rounded-4 px-100 py-050 text-preset-6 text-neutral-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]"
+        >
+          {shortcutBadge}
+        </kbd>
+      ) : null}
     </div>
   );
 }

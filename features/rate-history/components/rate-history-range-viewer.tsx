@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { RateChange } from "@/components/ui/rate-change";
 import { RangePicker, type RangePickerOption } from "@/components/ui/range-picker";
+import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import {
   historyRanges,
   type HistoryRange,
@@ -23,6 +24,7 @@ type RateHistoryRangeViewerProps = {
 };
 
 function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewerProps) {
+  const shortcuts = useOptionalKeyboardShortcuts();
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
@@ -30,21 +32,53 @@ function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewer
   const selectedPanel =
     model.ranges.find((panel) => panel.range === currentRange) ?? model.ranges[0];
 
-  function selectRange(value: string) {
-    if (!historyRanges.includes(value as HistoryRange) || value === currentRange) {
-      return;
-    }
+  const selectRange = useCallback(
+    (value: string) => {
+      if (!historyRanges.includes(value as HistoryRange) || value === currentRange) {
+        return;
+      }
 
-    const nextRange = value as HistoryRange;
-    const nextSearchParams = new URLSearchParams(searchParamsString);
-    nextSearchParams.set("range", nextRange);
+      const nextRange = value as HistoryRange;
+      const nextSearchParams = new URLSearchParams(searchParamsString);
+      nextSearchParams.set("range", nextRange);
 
-    const queryString = nextSearchParams.toString();
-    const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      const queryString = nextSearchParams.toString();
+      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
-    setCurrentRange(nextRange);
-    window.history.replaceState(window.history.state, "", nextUrl);
-  }
+      setCurrentRange(nextRange);
+      window.history.replaceState(window.history.state, "", nextUrl);
+    },
+    [currentRange, pathname, searchParamsString]
+  );
+
+  const selectAdjacentRange = useCallback(
+    (direction: -1 | 1) => {
+      const currentIndex = historyRanges.indexOf(currentRange);
+      const nextRange = historyRanges[currentIndex + direction];
+
+      if (!nextRange) {
+        return;
+      }
+
+      selectRange(nextRange);
+    },
+    [currentRange, selectRange]
+  );
+
+  useEffect(() => {
+    shortcuts?.registerHistoryRangeNavigation({
+      nextRange: () => {
+        selectAdjacentRange(1);
+      },
+      previousRange: () => {
+        selectAdjacentRange(-1);
+      },
+    });
+
+    return () => {
+      shortcuts?.registerHistoryRangeNavigation(null);
+    };
+  }, [selectAdjacentRange, shortcuts]);
 
   if (!selectedPanel) {
     return null;
@@ -82,6 +116,10 @@ function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewer
           className="mt-250 lg:mt-0 lg:shrink-0"
           onValueChange={selectRange}
           options={ranges}
+          shortcutLabels={{
+            next: shortcuts?.formatShortcut({ key: "ArrowRight" }) ?? "→",
+            previous: shortcuts?.formatShortcut({ key: "ArrowLeft" }) ?? "←",
+          }}
           value={currentRange}
         />
       </div>

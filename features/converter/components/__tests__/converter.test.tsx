@@ -5,6 +5,7 @@ import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Converter, type SelectedCurrency } from "../converter";
+import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 import type { AvailableCurrency } from "../../currencies";
 import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -93,11 +94,13 @@ function renderConverter({
   }
 
   return render(
-    <Converter
-      currencies={converterCurrencies}
-      favoritesPromise={fulfilledPromise(favorites)}
-      rates={converterRates}
-    />
+    <KeyboardShortcutsProvider>
+      <Converter
+        currencies={converterCurrencies}
+        favoritesPromise={fulfilledPromise(favorites)}
+        rates={converterRates}
+      />
+    </KeyboardShortcutsProvider>
   );
 }
 
@@ -251,6 +254,87 @@ describe("Converter", () => {
       "USD"
     );
     expect(screen.getByText("1 EUR = 1.1710 USD")).toBeTruthy();
+  });
+
+  it("opens send currency search with the primary K shortcut", async () => {
+    renderConverter();
+
+    fireEvent.keyDown(window, {
+      key: "k",
+      ...(/Mac|iPhone|iPad|iPod/.test(navigator.platform) ? { metaKey: true } : { ctrlKey: true }),
+    });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(
+        screen.getByRole("searchbox", { name: "Search currencies" })
+      );
+    });
+    expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
+      "USD"
+    );
+  });
+
+  it("opens receive currency search after the receive amount was edited most recently", async () => {
+    renderConverter();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
+      target: { value: "25" },
+    });
+    fireEvent.keyDown(window, {
+      key: "k",
+      ...(/Mac|iPhone|iPad|iPod/.test(navigator.platform) ? { metaKey: true } : { ctrlKey: true }),
+    });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(
+        screen.getByRole("searchbox", { name: "Search currencies" })
+      );
+    });
+    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
+      "EUR"
+    );
+    expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
+  });
+
+  it("opens the last opened currency picker side after an amount edit", async () => {
+    renderConverter();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+      target: { value: "100" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Select receive currency" }));
+    fireEvent.keyDown(screen.getByRole("dialog", { name: "Currency picker" }), { key: "Escape" });
+    fireEvent.keyDown(window, {
+      key: "k",
+      ...(/Mac|iPhone|iPad|iPod/.test(navigator.platform) ? { metaKey: true } : { ctrlKey: true }),
+    });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(
+        screen.getByRole("searchbox", { name: "Search currencies" })
+      );
+    });
+    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
+      "EUR"
+    );
+  });
+
+  it("swaps currencies with X unless a text field is active", () => {
+    renderConverter();
+
+    fireEvent.keyDown(window, { key: "x" });
+
+    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
+      "EUR"
+    );
+
+    screen.getByRole("textbox", { name: "Send amount" }).focus();
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Send amount" }), { key: "x" });
+
+    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
+      "EUR"
+    );
   });
 
   it("keeps the send amount in place and recalculates the receive amount", () => {

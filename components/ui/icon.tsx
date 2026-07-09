@@ -17,6 +17,7 @@ export const iconAssets = {
     lightSrc: "/images/icon-chevron-down-dark.svg",
     width: 12,
   },
+  close: { alt: "Close", height: 16, lightSrc: "/images/icon-close-dark.svg", width: 16 },
   delete: { alt: "Delete", height: 16, lightSrc: "/images/icon-delete-dark.svg", width: 16 },
   "delete-filled": {
     alt: "Delete filled",

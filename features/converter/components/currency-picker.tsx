@@ -7,6 +7,7 @@ import { CurrencyButton } from "@/components/ui/currency-button";
 import { Flag, type FlagCountryCode } from "@/components/ui/flag";
 import { Icon } from "@/components/ui/icon";
 import { SearchInput } from "@/components/ui/search-input";
+import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { AvailableCurrency } from "../currencies";
@@ -46,9 +47,15 @@ export interface CurrencyPickerProps {
   countryCode: FlagCountryCode;
   currencies: AvailableCurrency[];
   currencyCode: string;
+  ref?: React.Ref<CurrencyPickerHandle>;
+  onPickerOpen?: () => void;
   onCurrencySelect?: (currency: CurrencyPickerItem) => void;
   left?: boolean;
 }
+
+export type CurrencyPickerHandle = {
+  focusSearch: () => void;
+};
 
 interface CurrencyItemProps {
   currency: CurrencyPickerItem;
@@ -92,9 +99,12 @@ function CurrencyPicker({
   countryCode,
   currencies,
   currencyCode,
+  ref,
+  onPickerOpen,
   onCurrencySelect,
   left = false,
 }: CurrencyPickerProps) {
+  const shortcuts = useOptionalKeyboardShortcuts();
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeCurrencyCode, setActiveCurrencyCode] = React.useState(currencyCode);
@@ -141,7 +151,22 @@ function CurrencyPicker({
     setSearchQuery("");
     setActiveCurrencyCode(initialCurrency?.code ?? "");
     setIsOpen(true);
+    onPickerOpen?.();
   }
+
+  function focusSearch() {
+    if (!isOpen) {
+      openPicker();
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      searchRef.current?.focus();
+      searchRef.current?.select();
+    });
+  }
+
+  React.useImperativeHandle(ref, () => ({ focusSearch }));
 
   function closePicker(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
@@ -159,6 +184,7 @@ function CurrencyPicker({
     }
 
     searchRef.current?.focus();
+    searchRef.current?.select();
 
     const panel = panelRef.current;
 
@@ -366,6 +392,7 @@ function CurrencyPicker({
               setSearchQuery(event.currentTarget.value);
             }}
             onKeyDown={handleSearchInputKeyDown}
+            shortcutBadge={shortcuts?.formatShortcut({ key: "K", modifier: "primary" }) ?? "Ctrl K"}
             value={searchQuery}
           />
 

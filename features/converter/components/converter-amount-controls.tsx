@@ -7,15 +7,17 @@ import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
+import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { AvailableCurrency } from "../currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../exchange";
 import type { SelectedCurrency } from "./converter";
 import { ConverterFavoriteButton } from "./converter-favorite-button";
-import { CurrencyPicker } from "./currency-picker";
+import { CurrencyPicker, type CurrencyPickerHandle } from "./currency-picker";
 import { FavoriteButton } from "@/components/ui/favorite-button";
 
 type ConverterAmountState = {
@@ -25,12 +27,15 @@ type ConverterAmountState = {
 
 type ConverterAmountPanelProps = {
   amount: string;
+  amountSide: AmountSide;
   countryCode: FlagCountryCode;
   currencies: AvailableCurrency[];
   currencyCode: string;
   label: string;
+  pickerRef?: React.Ref<CurrencyPickerHandle>;
   onAmountChange: (amount: string) => void;
   onCurrencyChange: (currency: SelectedCurrency) => void;
+  onInteraction: (side: AmountSide) => void;
 };
 
 type ConverterAmountControlsProps = {
@@ -119,12 +124,15 @@ function usePersistedConverterAmount({
 
 function ConverterAmountPanel({
   amount,
+  amountSide,
   countryCode,
   currencies,
   currencyCode,
   label,
+  pickerRef,
   onAmountChange,
   onCurrencyChange,
+  onInteraction,
 }: ConverterAmountPanelProps) {
   return (
     <section className="flex flex-col justify-between rounded-16 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:min-w-0 sm:flex-1 sm:p-250">
@@ -143,6 +151,7 @@ function ConverterAmountPanel({
             }
           }}
           onChange={(event) => {
+            onInteraction(amountSide);
             onAmountChange(event.currentTarget.value);
           }}
           value={amount}
@@ -153,6 +162,10 @@ function ConverterAmountPanel({
           countryCode={countryCode}
           currencies={currencies}
           currencyCode={currencyCode}
+          ref={pickerRef}
+          onPickerOpen={() => {
+            onInteraction(amountSide);
+          }}
           onCurrencySelect={(currency) => {
             onCurrencyChange({
               countryCode: currency.countryCode,
@@ -210,6 +223,10 @@ function ConverterAmountControls({
   onConversionLogCreate,
   onSelectedCurrenciesChange,
 }: ConverterAmountControlsProps) {
+  const shortcuts = useOptionalKeyboardShortcuts();
+  const sendCurrencyPickerRef = React.useRef<CurrencyPickerHandle>(null);
+  const receiveCurrencyPickerRef = React.useRef<CurrencyPickerHandle>(null);
+  const [lastInteractedSide, setLastInteractedSide] = React.useState<AmountSide>("send");
   const [{ amount, amountSource }, setAmountState] = usePersistedConverterAmount({
     initialAmount,
     initialAmountSource,
@@ -276,13 +293,28 @@ function ConverterAmountControls({
     onSelectedCurrenciesChange({ sendCurrency, receiveCurrency: currency });
   }
 
-  function exchangeCurrencies() {
+  const exchangeCurrencies = React.useCallback(() => {
     clearLogAcknowledgement();
     onSelectedCurrenciesChange({
       sendCurrency: receiveCurrency,
       receiveCurrency: sendCurrency,
     });
-  }
+  }, [onSelectedCurrenciesChange, receiveCurrency, sendCurrency]);
+
+  React.useEffect(() => {
+    shortcuts?.registerFocusCurrencySearch(() => {
+      const pickerRef =
+        lastInteractedSide === "receive" ? receiveCurrencyPickerRef : sendCurrencyPickerRef;
+
+      pickerRef.current?.focusSearch();
+    });
+    shortcuts?.registerSwapCurrencies(exchangeCurrencies);
+
+    return () => {
+      shortcuts?.registerFocusCurrencySearch(null);
+      shortcuts?.registerSwapCurrencies(null);
+    };
+  }, [exchangeCurrencies, lastInteractedSide, shortcuts]);
 
   return (
     <>
@@ -290,17 +322,29 @@ function ConverterAmountControls({
         <ConverterAmountPanel
           {...sendCurrency}
           amount={sendAmount}
+          amountSide="send"
           currencies={currencies}
           label="Send"
+          pickerRef={sendCurrencyPickerRef}
+          onInteraction={setLastInteractedSide}
           onAmountChange={updateSendAmount}
           onCurrencyChange={updateSendCurrency}
         />
-        <ExchangeButton className="self-center" onClick={exchangeCurrencies} />
+        <ShortcutTooltip
+          className="self-center"
+          label="Swap currencies"
+          shortcut={shortcuts?.formatShortcut({ key: "X" }) ?? "X"}
+        >
+          <ExchangeButton onClick={exchangeCurrencies} />
+        </ShortcutTooltip>
         <ConverterAmountPanel
           {...receiveCurrency}
           amount={receiveAmount}
+          amountSide="receive"
           currencies={currencies}
           label="Receive"
+          pickerRef={receiveCurrencyPickerRef}
+          onInteraction={setLastInteractedSide}
           onAmountChange={updateReceiveAmount}
           onCurrencyChange={updateReceiveCurrency}
         />
