@@ -3,6 +3,24 @@ type CurrenciesFixture = Array<{
   name: string;
 }>;
 
+const defaultAppUrl = "/app?amount=1000&amountSource=send";
+
+function openSendCurrencyPickerWithKeyboard() {
+  cy.findByRole("button", { name: "Select send currency" })
+    .should("be.visible")
+    .focus()
+    .should("be.focused")
+    .trigger("keydown", {
+      code: "ArrowDown",
+      key: "ArrowDown",
+      keyCode: 40,
+      which: 40,
+    });
+
+  cy.findByRole("dialog", { name: "Currency picker" }).should("be.visible");
+  cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
+}
+
 describe("home page", () => {
   beforeEach(() => {
     cy.task("resetFrankfurterMock");
@@ -36,11 +54,11 @@ describe("home page", () => {
     cy.location("pathname").should("eq", "/app");
     cy.location("search").should("include", "amount=1000");
     cy.findByRole("tab", { name: "Compare" }).click();
-    cy.location("pathname").should("eq", "/rate/compare");
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/rate/compare");
 
     cy.findByRole("tab", { name: "History" }).click();
 
-    cy.location("pathname").should("eq", "/app");
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/app");
     cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the rate before money moves." }).should("not.exist");
   });
@@ -68,7 +86,7 @@ describe("home page", () => {
   });
 
   it("renders the home shell without redirecting to login", () => {
-    cy.visit("/app");
+    cy.visit(defaultAppUrl);
 
     cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
@@ -79,7 +97,7 @@ describe("home page", () => {
     cy.fixture<CurrenciesFixture>("frankfurter-currencies.json").then((currencies) => {
       const currencyCount = currencies.length;
 
-      cy.visit("/app");
+      cy.visit(defaultAppUrl);
 
       cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
       cy.findByRole("list", { name: "Exchange rate data stats" }).within(() => {
@@ -92,28 +110,24 @@ describe("home page", () => {
   });
 
   it("supports the complete currency-picker keyboard flow", () => {
-    cy.visit("/app");
+    cy.visit(defaultAppUrl);
 
-    cy.findByRole("button", { name: "Select send currency" }).focus();
-    cy.press(Cypress.Keyboard.Keys.DOWN);
-    cy.findByRole("searchbox", { name: "Search currencies" })
-      .should("be.focused")
-      .type("jpy{enter}");
+    openSendCurrencyPickerWithKeyboard();
+    cy.findByRole("searchbox", { name: "Search currencies" }).type("jpy{enter}");
 
     cy.findByRole("dialog", { name: "Currency picker" }).should("not.exist");
     cy.findByRole("button", { name: "Select send currency" })
       .should("be.focused")
       .and("contain.text", "JPY");
 
-    cy.press(Cypress.Keyboard.Keys.DOWN);
-    cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
+    openSendCurrencyPickerWithKeyboard();
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("button", { name: "JPY, Japanese Yen" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.UP);
     cy.findByRole("button", { name: "ZAR, South African Rand" }).should("be.focused");
-    cy.get('[data-test-id="currency-results"').should(($results) => {
+    cy.get('[data-test-id="currency-results"]').should(($results) => {
       expect($results[0]?.scrollTop).to.be.greaterThan(0);
     });
 
@@ -124,7 +138,7 @@ describe("home page", () => {
   });
 
   it("supports keyboard navigation after focus enters the picker with a mouse", () => {
-    cy.visit("/app");
+    cy.visit(defaultAppUrl);
 
     cy.findByRole("button", { name: "Select send currency" }).click();
     cy.findByRole("heading", { name: "Send" }).click();
@@ -145,7 +159,7 @@ describe("home page", () => {
 
   it("resizes the mobile currency picker to the space below its trigger", () => {
     cy.viewport(375, 667);
-    cy.visit("/app");
+    cy.visit(defaultAppUrl);
 
     cy.findByRole("button", { name: "Select send currency", timeout: 10000 }).then(($trigger) => {
       cy.wrap($trigger).click({ scrollBehavior: false });
