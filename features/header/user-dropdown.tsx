@@ -4,13 +4,11 @@ import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside"
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
-import { GUEST_MODE_COOKIE } from "@/features/guest-session/guest-session";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import type { MouseEvent } from "react";
 
 type ThemeValue = "system" | "dark" | "light";
 
@@ -93,17 +91,11 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
     ref: rootRef,
   });
 
-  async function signOut(event: MouseEvent<HTMLAnchorElement>) {
+  async function signOut() {
     closeMenu({ restoreFocus: false });
 
-    if (document.cookie.includes(`${GUEST_MODE_COOKIE}=1`)) {
-      return;
-    }
-
-    event.preventDefault();
-
     try {
-      const response = await fetch("/auth/sign-out");
+      const response = await fetch("/auth/sign-out", { method: "POST" });
 
       if (!response.ok) {
         throw new Error("Failed to sign out");
@@ -222,13 +214,13 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
             </kbd>
           </button>
 
-          <a
+          <button
             className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
-            href="/auth/sign-out"
             onClick={signOut}
+            type="button"
           >
             Sign out
-          </a>
+          </button>
         </div>
       ) : null}
     </div>

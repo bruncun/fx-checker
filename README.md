@@ -108,6 +108,7 @@ The Supabase starter expects these variables when authentication-backed flows ar
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 The Frankfurter integration can be pointed at another compatible API base URL for tests or local development:
@@ -121,6 +122,7 @@ The Frankfurter cache warmup cron route is protected with a bearer secret:
 
 ```env
 CRON_SECRET=
+APP_ORIGIN=
 ```
 
 ### Quality Gates

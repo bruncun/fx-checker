@@ -1,6 +1,8 @@
 export {
+  InvalidConversionInputError,
   mapConversion,
   normalizeConversionInput,
+  parseCreateConversionInput,
   type Conversion,
   type ConversionCurrencyPair,
   type CreateConversionInput,

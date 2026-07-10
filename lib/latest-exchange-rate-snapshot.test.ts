@@ -44,6 +44,7 @@ beforeEach(() => {
   upsert.mockReset();
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://supabase.test");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "publishable-key");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key");
 });
 
 describe("latest exchange rate snapshot", () => {
@@ -52,7 +53,7 @@ describe("latest exchange rate snapshot", () => {
 
     await saveLatestExchangeRateSnapshot(rates, "2026-07-08T09:00:00.000Z");
 
-    expect(createClient).toHaveBeenCalledWith("https://supabase.test", "publishable-key", {
+    expect(createClient).toHaveBeenCalledWith("https://supabase.test", "service-role-key", {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -84,6 +85,12 @@ describe("latest exchange rate snapshot", () => {
       sourceUpdatedAt: "2026-07-08T00:00:00.000Z",
     });
 
+    expect(createClient).toHaveBeenCalledWith("https://supabase.test", "publishable-key", {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
     expect(select).toHaveBeenCalledWith("id,payload,fetched_at,source_updated_at");
     expect(eq).toHaveBeenCalledWith("id", "latest");
   });

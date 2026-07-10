@@ -45,7 +45,7 @@ describe("UserDropdown", () => {
     expect(getAccountInitials({ email: "mika@example.com" })).toBe("M");
   });
 
-  it("opens an account dialog with a theme toggle and sign out link", () => {
+  it("opens an account dialog with a theme toggle and sign out button", () => {
     render(<UserDropdown email="mika@example.com" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
@@ -53,9 +53,7 @@ describe("UserDropdown", () => {
     expect(screen.getByRole("dialog", { name: "Account menu" })).toBeTruthy();
     expect(screen.getByRole("radiogroup", { name: "Theme" })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "System" }).getAttribute("aria-checked")).toBe("true");
-    expect(screen.getByRole("link", { name: "Sign out" }).getAttribute("href")).toBe(
-      "/auth/sign-out"
-    );
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
   });
 
   it("opens keyboard shortcuts from the account dialog, closes the menu, and restores focus to the account trigger", async () => {
@@ -84,7 +82,7 @@ describe("UserDropdown", () => {
     render(<UserDropdown email="mika@example.com" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
-    fireEvent.click(screen.getByRole("link", { name: "Sign out" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
   });

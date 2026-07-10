@@ -1,7 +1,9 @@
 export {
   findFavorite,
   getFavoritePairKey,
+  InvalidFavoritePairError,
   normalizeFavoritePair,
+  parseFavoritePair,
   type Favorite,
   type FavoriteCurrencyPair,
 } from "./favorites";

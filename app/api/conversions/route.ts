@@ -2,10 +2,32 @@ import {
   createConversionAction,
   deleteAllConversionsAction,
 } from "@/features/conversion-log/actions";
+import {
+  InvalidConversionInputError,
+  parseCreateConversionInput,
+} from "@/features/conversion-log/conversion-log";
 import { NextResponse, type NextRequest } from "next/server";
 
+async function readConversionInput(request: NextRequest) {
+  try {
+    return parseCreateConversionInput(await request.json());
+  } catch (error) {
+    if (error instanceof InvalidConversionInputError || error instanceof SyntaxError) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 export async function POST(request: NextRequest) {
-  const conversion = await createConversionAction(await request.json());
+  const input = await readConversionInput(request);
+
+  if (!input) {
+    return NextResponse.json({ error: "Invalid conversion" }, { status: 400 });
+  }
+
+  const conversion = await createConversionAction(input);
 
   return NextResponse.json(conversion);
 }

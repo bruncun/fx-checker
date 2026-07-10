@@ -15,6 +15,16 @@ export type FavoriteRow = {
   to_currency: string;
 };
 
+export class InvalidFavoritePairError extends Error {
+  constructor() {
+    super("Favorite currency pair must contain two distinct three-letter currency codes.");
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function mapFavorite(row: FavoriteRow): Favorite {
   return {
     createdAt: row.created_at,
@@ -33,6 +43,31 @@ export function normalizeFavoritePair(pair: FavoriteCurrencyPair): FavoriteCurre
     fromCurrency: normalizeCurrencyCode(pair.fromCurrency),
     toCurrency: normalizeCurrencyCode(pair.toCurrency),
   };
+}
+
+export function parseFavoritePair(value: unknown): FavoriteCurrencyPair {
+  if (
+    !isRecord(value) ||
+    typeof value.fromCurrency !== "string" ||
+    typeof value.toCurrency !== "string"
+  ) {
+    throw new InvalidFavoritePairError();
+  }
+
+  const pair = normalizeFavoritePair({
+    fromCurrency: value.fromCurrency,
+    toCurrency: value.toCurrency,
+  });
+
+  if (
+    !/^[A-Z]{3}$/.test(pair.fromCurrency) ||
+    !/^[A-Z]{3}$/.test(pair.toCurrency) ||
+    pair.fromCurrency === pair.toCurrency
+  ) {
+    throw new InvalidFavoritePairError();
+  }
+
+  return pair;
 }
 
 export function getFavoritePairKey(pair: FavoriteCurrencyPair) {

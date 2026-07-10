@@ -29,6 +29,24 @@ function getSafeRedirectPath(redirectTo: string | null) {
 }
 
 async function getOrigin() {
+  const configuredOrigin = process.env.APP_ORIGIN?.trim();
+
+  if (configuredOrigin) {
+    try {
+      const url = new URL(configuredOrigin);
+
+      return url.origin;
+    } catch {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error("APP_ORIGIN must be a valid URL");
+      }
+    }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("APP_ORIGIN is required in production");
+  }
+
   const headerStore = await headers();
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const protocol = headerStore.get("x-forwarded-proto") ?? "http";

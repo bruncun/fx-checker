@@ -5,6 +5,7 @@ import {
   GUEST_MODE_COOKIE,
 } from "@/features/guest-session/guest-session";
 import { createClient } from "@/lib/supabase/server";
+import { hasEnvVars } from "@/lib/utils";
 import { NextResponse, type NextRequest } from "next/server";
 
 const guestSessionCookies = [
@@ -14,15 +15,18 @@ const guestSessionCookies = [
   GUEST_ALERT_DISMISSED_COOKIE,
 ];
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const url = request.nextUrl.clone();
   url.pathname = "/auth/login";
   url.search = "";
 
-  const response = NextResponse.redirect(url);
-  const supabase = await createClient();
+  const response = NextResponse.redirect(url, 303);
 
-  await supabase.auth.signOut();
+  if (hasEnvVars) {
+    const supabase = await createClient();
+
+    await supabase.auth.signOut();
+  }
 
   guestSessionCookies.forEach((name) => {
     response.cookies.set(name, "", {

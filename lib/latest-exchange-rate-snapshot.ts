@@ -64,7 +64,7 @@ function parseSnapshotRates(payload: unknown) {
   return payload;
 }
 
-function createSnapshotClient() {
+function createSnapshotReadClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -75,6 +75,21 @@ function createSnapshotClient() {
       },
     }
   );
+}
+
+function createSnapshotWriteClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required to save latest exchange rate snapshots");
+  }
+
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
 function getSourceUpdatedAt(rates: FrankfurterRate[]) {
@@ -88,7 +103,7 @@ function getSourceUpdatedAt(rates: FrankfurterRate[]) {
 }
 
 export async function saveLatestExchangeRateSnapshot(rates: FrankfurterRate[], fetchedAt: string) {
-  const supabase = createSnapshotClient();
+  const supabase = createSnapshotWriteClient();
   const { error } = await supabase.from("latest_exchange_rate_snapshot").upsert({
     fetched_at: fetchedAt,
     id: LATEST_SNAPSHOT_ID,
@@ -102,7 +117,7 @@ export async function saveLatestExchangeRateSnapshot(rates: FrankfurterRate[], f
 }
 
 export async function getLatestExchangeRateSnapshot(): Promise<LatestExchangeRateSnapshot | null> {
-  const supabase = createSnapshotClient();
+  const supabase = createSnapshotReadClient();
   const { data, error } = await supabase
     .from("latest_exchange_rate_snapshot")
     .select("id,payload,fetched_at,source_updated_at")
