@@ -3,7 +3,6 @@ import "server-only";
 const DEFAULT_FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2";
 const EXCHANGE_RATES_REVALIDATE_SECONDS = 60 * 60 * 24;
 const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
-const FRANKFURTER_REQUEST_TIMEOUT_MS = 5_000;
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
 const FRANKFURTER_PROVIDER = "ECB";
 
@@ -13,12 +12,6 @@ type FrankfurterRatesParams = {
   providers?: string;
   quotes?: string[];
   to?: string;
-};
-type FrankfurterFetchInit = RequestInit & {
-  next: {
-    revalidate: number;
-    tags: string[];
-  };
 };
 
 const FRANKFURTER_ENDPOINT_PATHS: Record<FrankfurterEndpoint, string> = {
@@ -148,10 +141,6 @@ function isRetryableStatus(status: number) {
   return status >= 500;
 }
 
-function isAbortError(error: unknown) {
-  return error instanceof Error && error.name === "AbortError";
-}
-
 function logFrankfurterFailure({
   endpoint,
   error,
@@ -173,20 +162,6 @@ function logFrankfurterFailure({
 
 function getResponseUrl(response: Response) {
   return response.url || undefined;
-}
-
-async function fetchWithTimeout(url: string, init: FrankfurterFetchInit) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FRANKFURTER_REQUEST_TIMEOUT_MS);
-
-  try {
-    return await fetch(url, {
-      ...init,
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 async function fetchFrankfurterEndpoint(
@@ -211,7 +186,7 @@ async function fetchFrankfurterEndpoint(
 
   for (let attempt = 1; attempt <= FRANKFURTER_REQUEST_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetchWithTimeout(url, {
+      const response = await fetch(url, {
         next: {
           revalidate: EXCHANGE_RATES_REVALIDATE_SECONDS,
           tags: [EXCHANGE_RATES_CACHE_TAG],
@@ -229,9 +204,7 @@ async function fetchFrankfurterEndpoint(
         break;
       }
     } catch (error) {
-      lastError = isAbortError(error)
-        ? new Error(`Frankfurter request timed out after ${FRANKFURTER_REQUEST_TIMEOUT_MS}ms`)
-        : error;
+      lastError = error;
     }
   }
 

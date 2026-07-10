@@ -93,7 +93,6 @@ describe("getCurrencies", () => {
         revalidate: 86_400,
         tags: ["exchange-rates"],
       },
-      signal: expect.any(AbortSignal),
     });
   });
 
@@ -130,7 +129,6 @@ describe("getCurrencies", () => {
           revalidate: 86_400,
           tags: ["exchange-rates"],
         },
-        signal: expect.any(AbortSignal),
       }
     );
   });
@@ -222,7 +220,6 @@ describe("getRates", () => {
         revalidate: 86_400,
         tags: ["exchange-rates"],
       },
-      signal: expect.any(AbortSignal),
     });
   });
 
@@ -247,7 +244,6 @@ describe("getRates", () => {
           revalidate: 86_400,
           tags: ["exchange-rates"],
         },
-        signal: expect.any(AbortSignal),
       }
     );
   });
@@ -274,7 +270,6 @@ describe("getRates", () => {
           revalidate: 86_400,
           tags: ["exchange-rates"],
         },
-        signal: expect.any(AbortSignal),
       }
     );
   });
