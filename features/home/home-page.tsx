@@ -1,5 +1,4 @@
 import { deriveAvailableCurrencies, type AvailableCurrency } from "@/features/converter/currencies";
-import { convertAmount, formatExchangeRate, getExchangeRate } from "@/features/converter/exchange";
 import { getServerConversions } from "@/features/conversion-log/server";
 import { getServerFavorites } from "@/features/favorites/server";
 import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
@@ -30,7 +29,6 @@ import {
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
-import { getConverterAmountFromParams, getDefaultCurrencyPair } from "./url-state";
 
 const RATE_HISTORY_YEARS = 5;
 const LIVE_RATE_LOOKBACK_DAYS = 7;
@@ -412,50 +410,12 @@ async function ConverterSlot() {
   assertDataAvailable(currencyReferenceData);
   assertDataAvailable(latestRatesData);
 
-  const selectedCurrencies = getDefaultCurrencyPair(currencyReferenceData.availableCurrencies);
-  const defaultAmount = getConverterAmountFromParams(new URLSearchParams());
-  const exchangeRate = getExchangeRate(
-    latestRatesData.rates,
-    selectedCurrencies.sendCurrency.currencyCode,
-    selectedCurrencies.receiveCurrency.currencyCode
-  );
-  const inverseExchangeRate =
-    exchangeRate === null
-      ? null
-      : getExchangeRate(
-          latestRatesData.rates,
-          selectedCurrencies.receiveCurrency.currencyCode,
-          selectedCurrencies.sendCurrency.currencyCode
-        );
-  const receiveAmount =
-    defaultAmount.amountSource === "receive"
-      ? defaultAmount.amount
-      : convertAmount(defaultAmount.amount, exchangeRate);
-  const sendAmount =
-    defaultAmount.amountSource === "send"
-      ? defaultAmount.amount
-      : convertAmount(defaultAmount.amount, inverseExchangeRate);
-  const exchangeRateLabel =
-    exchangeRate === null
-      ? `Rate unavailable for ${selectedCurrencies.sendCurrency.currencyCode}/${selectedCurrencies.receiveCurrency.currencyCode}`
-      : `1 ${selectedCurrencies.sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${selectedCurrencies.receiveCurrency.currencyCode}`;
-
   return (
     <>
       {latestRatesData.freshness.dataStatus === "stale" ? (
         <StaleExchangeRatesAlert fetchedAt={latestRatesData.freshness.fetchedAt} />
       ) : null}
-      <Suspense
-        fallback={
-          <ConverterFallback
-            exchangeRateLabel={exchangeRateLabel}
-            receiveAmount={receiveAmount}
-            receiveCurrency={selectedCurrencies.receiveCurrency}
-            sendAmount={sendAmount}
-            sendCurrency={selectedCurrencies.sendCurrency}
-          />
-        }
-      >
+      <Suspense fallback={<ConverterFallback />}>
         <Converter
           currencies={currencyReferenceData.availableCurrencies}
           favoritesPromise={favoritesPromise}

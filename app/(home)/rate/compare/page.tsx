@@ -4,7 +4,6 @@ import { assertDataAvailable } from "@/features/home/components/data-unavailable
 import { getCurrencyReferenceData, getLatestRatesData } from "@/features/home/home-page";
 import {
   getConverterAmountFromParams,
-  getDefaultCurrencyPair,
   getSelectedCurrencyPairFromParams,
 } from "@/features/home/url-state";
 import { getServerFavorites } from "@/features/favorites/server";
@@ -57,22 +56,8 @@ async function CompareRatesShell({ searchParams }: CompareRatesPageProps) {
   assertDataAvailable(currencyReferenceData);
   assertDataAvailable(latestRatesData);
 
-  const fallbackSelectedCurrencies = getDefaultCurrencyPair(
-    currencyReferenceData.availableCurrencies
-  );
-  const fallbackAmount = getConverterAmountFromParams(new URLSearchParams());
-
   return (
-    <Suspense
-      fallback={
-        <CompareRatesFallback
-          {...fallbackAmount}
-          {...fallbackSelectedCurrencies}
-          availableCurrencies={currencyReferenceData.availableCurrencies}
-          rates={latestRatesData.rates}
-        />
-      }
-    >
+    <Suspense fallback={<CompareRatesFallback />}>
       <CompareRatesContent
         availableCurrencies={currencyReferenceData.availableCurrencies}
         latestRates={latestRatesData.rates}

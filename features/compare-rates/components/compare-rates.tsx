@@ -440,44 +440,11 @@ function CompareRates({
   );
 }
 
-function CompareRatesFallback({
-  amount,
-  amountSource,
-  availableCurrencies,
-  rates,
-  receiveCurrency,
-  sendCurrency,
-}: Omit<CompareRatesProps, "favoritesPromise">) {
-  const sendAmount = getCompareSendAmount({
-    amount,
-    amountSource,
-    rates,
-    receiveCurrency,
-    sendCurrency,
-  });
-  const compareRates = getCompareRateItems({
-    availableCurrencies,
-    rates,
-    sendAmount,
-    sendCurrency,
-  });
-  const tabStopCode = compareRates.some(
-    (item) => item.currency.code === receiveCurrency.currencyCode
-  )
-    ? receiveCurrency.currencyCode
-    : (compareRates[0]?.currency.code ?? "");
-
+function CompareRatesFallback() {
   return (
-    <CompareRatesPanel
-      amount={amount}
-      amountSource={amountSource}
-      availableCurrencies={availableCurrencies}
-      compareRates={compareRates}
-      rates={rates}
-      receiveCurrency={receiveCurrency}
-      sendAmount={sendAmount}
-      sendCurrency={sendCurrency}
-      tabStopCode={tabStopCode}
+    <div
+      aria-hidden
+      className="min-h-[369px] rounded-16 bg-neutral-700 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))]"
     />
   );
 }
