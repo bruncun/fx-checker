@@ -5,4 +5,4 @@ export {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "./favorites";
-export { FavoriteRates } from "./components/favorite-rates";
+export { FavoriteRates, FavoriteRatesFallback } from "./components/favorite-rates";

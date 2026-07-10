@@ -11,6 +11,7 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
+import { TabPendingState } from "@/components/ui/tab-pending-state";
 import { useTransitioningList } from "@/components/ui/use-transitioning-list";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
 import type { Conversion } from "@/features/conversion-log";
@@ -485,4 +486,8 @@ function ConversionLog({
   );
 }
 
-export { ConversionLog, formatRelativeTime, getConversionLogCsv };
+function ConversionLogFallback() {
+  return <TabPendingState label="Loading conversion log" />;
+}
+
+export { ConversionLog, ConversionLogFallback, formatRelativeTime, getConversionLogCsv };

@@ -1,5 +1,5 @@
 import type { AvailableCurrency } from "@/features/converter/currencies";
-import { FavoriteRates } from "@/features/favorites";
+import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites";
 import { getServerFavorites } from "@/features/favorites/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
@@ -23,7 +23,7 @@ async function FavoriteRatesContent() {
   assertDataAvailable(liveRatesData);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<FavoriteRatesFallback />}>
       <FavoriteRatesUserContent
         availableCurrencies={currencyReferenceData.availableCurrencies}
         latestRates={latestRatesData.rates}
@@ -67,7 +67,7 @@ async function FavoriteRatesUserContent({
 
 export default function FavoriteRatesPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<FavoriteRatesFallback />}>
       <FavoriteRatesContent />
     </Suspense>
   );

@@ -1,4 +1,4 @@
-import { ConversionLog } from "@/features/conversion-log";
+import { ConversionLog, ConversionLogFallback } from "@/features/conversion-log";
 import { getServerConversions } from "@/features/conversion-log/server";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
@@ -13,7 +13,7 @@ async function ConversionLogContent() {
   assertDataAvailable(currencyReferenceData);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ConversionLogFallback />}>
       <ConversionLogUserContent availableCurrencies={currencyReferenceData.availableCurrencies} />
     </Suspense>
   );
@@ -37,7 +37,7 @@ async function ConversionLogUserContent({
 
 export default function ConversionLogPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ConversionLogFallback />}>
       <ConversionLogContent />
     </Suspense>
   );

@@ -11,6 +11,7 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
+import { TabPendingState } from "@/components/ui/tab-pending-state";
 import { useTransitioningList } from "@/components/ui/use-transitioning-list";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
@@ -282,4 +283,8 @@ function FavoriteRates({
   );
 }
 
-export { FavoriteRates };
+function FavoriteRatesFallback() {
+  return <TabPendingState label="Loading favorites" />;
+}
+
+export { FavoriteRates, FavoriteRatesFallback };

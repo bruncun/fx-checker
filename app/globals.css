@@ -397,6 +397,25 @@
     }
   }
 
+  @keyframes fx-skeleton-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  @keyframes fx-skeleton-trace {
+    0%,
+    100% {
+      opacity: 0.42;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
   .fx-page-in {
     animation: fx-page-in var(--fx-motion-duration-base) var(--fx-motion-ease-snap) both;
   }
@@ -438,6 +457,53 @@
     transition-timing-function: var(--fx-motion-ease-snap);
   }
 
+  .fx-skeleton {
+    --fx-skeleton-base: hsl(var(--neutral-500) / 0.46);
+    --fx-skeleton-highlight: hsl(var(--neutral-300) / 0.14);
+    background-color: var(--fx-skeleton-base);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--fx-skeleton-highlight) 42%,
+      transparent 84%
+    );
+    background-size: 220% 100%;
+    animation: fx-skeleton-shimmer 1.7s var(--fx-motion-ease-snap) infinite;
+  }
+
+  .fx-skeleton-control {
+    --fx-skeleton-base: hsl(var(--neutral-400) / 0.28);
+    --fx-skeleton-highlight: hsl(var(--neutral-200) / 0.12);
+  }
+
+  .fx-skeleton-lime {
+    --fx-skeleton-base: hsl(var(--lime-800) / 0.78);
+    --fx-skeleton-highlight: hsl(var(--lime-500) / 0.1);
+    background-color: var(--fx-skeleton-base);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--fx-skeleton-highlight) 42%,
+      transparent 84%
+    );
+    background-size: 220% 100%;
+    animation: fx-skeleton-shimmer 1.7s var(--fx-motion-ease-snap) infinite;
+  }
+
+  .fx-skeleton-trace {
+    animation: fx-skeleton-trace 1.7s var(--fx-motion-ease-snap) infinite;
+  }
+
+  .light .fx-skeleton {
+    --fx-skeleton-base: hsl(var(--neutral-500) / 0.36);
+    --fx-skeleton-highlight: hsl(var(--neutral-300) / 0.12);
+  }
+
+  .light .fx-skeleton-control {
+    --fx-skeleton-base: hsl(var(--neutral-400) / 0.24);
+    --fx-skeleton-highlight: hsl(var(--neutral-300) / 0.1);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .fx-page-in,
     .fx-tab-panel-in,
@@ -452,6 +518,23 @@
     .fx-transition-surface,
     .fx-transition-icon {
       transition-duration: 1ms;
+    }
+
+    .fx-skeleton {
+      animation: fx-state-in 1ms linear both;
+      background-image: none;
+      background-position: 0 0;
+    }
+
+    .fx-skeleton-lime {
+      animation: fx-state-in 1ms linear both;
+      background-image: none;
+      background-position: 0 0;
+    }
+
+    .fx-skeleton-trace {
+      animation: none;
+      opacity: 0.6;
     }
   }
 }

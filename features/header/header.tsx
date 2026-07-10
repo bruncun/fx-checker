@@ -50,10 +50,8 @@ function AccountFallback() {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
-    >
-      &nbsp;
-    </span>
+      className="fx-skeleton inline-flex size-400 shrink-0 rounded-full shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
+    />
   );
 }
 

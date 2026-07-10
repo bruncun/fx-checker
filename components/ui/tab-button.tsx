@@ -16,6 +16,7 @@ function TabCountBadge({ className, count, ...props }: TabCountBadgeProps) {
       aria-hidden={isEmpty ? true : props["aria-hidden"]}
       className={cn(
         "inline-flex size-[20px] shrink-0 items-center justify-center rounded-full bg-lime-800 text-preset-6 text-lime-500",
+        isEmpty && "fx-skeleton-lime text-transparent",
         className
       )}
     >

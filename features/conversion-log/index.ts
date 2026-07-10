@@ -5,4 +5,4 @@ export {
   type ConversionCurrencyPair,
   type CreateConversionInput,
 } from "./conversion-log";
-export { ConversionLog } from "./components/conversion-log";
+export { ConversionLog, ConversionLogFallback } from "./components/conversion-log";

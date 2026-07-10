@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
+import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
 import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
@@ -18,7 +19,6 @@ import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from ".
 import type { SelectedCurrency } from "./converter";
 import { ConverterFavoriteButton } from "./converter-favorite-button";
 import { CurrencyPicker, type CurrencyPickerHandle } from "./currency-picker";
-import { FavoriteButton } from "@/components/ui/favorite-button";
 
 type ConverterAmountState = {
   amount: string;
@@ -211,6 +211,25 @@ function ConverterActionToolbar({ children }: { children: React.ReactNode }) {
   );
 }
 
+function FavoriteButtonFallback() {
+  return (
+    <button
+      aria-label="Loading favorite state"
+      className={`${interactiveSurfaceClassName} px-150 py-100`}
+      data-converter-action
+      disabled
+      tabIndex={-1}
+      type="button"
+    >
+      <span aria-hidden="true" className="fx-skeleton fx-skeleton-control size-200 rounded-4" />
+      <span
+        aria-hidden="true"
+        className="fx-skeleton fx-skeleton-control h-[15px] w-[62px] rounded-4"
+      />
+    </button>
+  );
+}
+
 function ConverterAmountControls({
   currencies,
   exchangeRateLabel,
@@ -372,7 +391,7 @@ function ConverterAmountControls({
           <React.Suspense
             fallback={
               <>
-                <FavoriteButton data-converter-action />
+                <FavoriteButtonFallback />
                 <LogConversionButton data-converter-action disabled tabIndex={-1} />
               </>
             }
@@ -418,4 +437,4 @@ function ConverterAmountControls({
   );
 }
 
-export { ConverterAmountControls, usePersistedConverterAmount };
+export { ConverterAmountControls, usePersistedConverterAmount, FavoriteButtonFallback };

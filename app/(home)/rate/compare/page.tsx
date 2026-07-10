@@ -69,7 +69,7 @@ async function CompareRatesShell({ searchParams }: CompareRatesPageProps) {
 
 export default function CompareRatesPage({ searchParams }: CompareRatesPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<CompareRatesFallback />}>
       <CompareRatesShell searchParams={searchParams} />
     </Suspense>
   );

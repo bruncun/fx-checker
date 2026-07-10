@@ -11,6 +11,7 @@ import {
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
+import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import {
   convertAmount,
@@ -36,9 +37,36 @@ import {
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import { getCurrencyPairUrl } from "@/features/home/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];
+const COMPARE_FALLBACK_CURRENCIES = [
+  { code: "GBP", countryCode: "gb", name: "British Pound" },
+  { code: "JPY", countryCode: "jp", name: "Japanese Yen" },
+  { code: "CHF", countryCode: "ch", name: "Swiss Franc" },
+  { code: "CAD", countryCode: "ca", name: "Canadian Dollar" },
+  { code: "AUD", countryCode: "au", name: "Australian Dollar" },
+  { code: "INR", countryCode: "in", name: "Indian Rupee" },
+  { code: "CNY", countryCode: "cn", name: "Chinese Renminbi Yuan" },
+  { code: "BRL", countryCode: "br", name: "Brazilian Real" },
+] as const;
+const COMPARE_FALLBACK_AMOUNT_WIDTHS = [76, 92, 84, 70, 86, 96, 78, 88];
+
+function SkeletonBlock({ className, style }: { className: string; style?: React.CSSProperties }) {
+  return <span aria-hidden className={cn("fx-skeleton block", className)} style={style} />;
+}
+
+function SkeletonIconButton() {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(interactiveSurfaceClassName, "pointer-events-none p-100")}
+    >
+      <span className="fx-skeleton fx-skeleton-control block size-200 rounded-4" />
+    </span>
+  );
+}
 
 function formatMoneyValue(value: string, fallback = "0") {
   if (!value) {
@@ -91,6 +119,23 @@ type CompareFavoriteButtonProps = {
   favoritesPromise: Promise<Favorite[]>;
   pair: FavoriteCurrencyPair;
 };
+
+function CompareFavoriteButtonFallback({
+  actionProps,
+}: Pick<CompareFavoriteButtonProps, "actionProps">) {
+  return (
+    <button
+      {...actionProps}
+      aria-label="Loading favorite state"
+      className={cn(interactiveSurfaceClassName, "p-100")}
+      data-compare-favorite-button
+      disabled
+      type="button"
+    >
+      <span aria-hidden="true" className="fx-skeleton fx-skeleton-control size-200 rounded-4" />
+    </button>
+  );
+}
 
 function CompareFavoriteButton({
   actionProps,
@@ -188,7 +233,7 @@ function CompareRateItem({
       aria-label={rowLabel}
       action={(actionProps) =>
         favoritesPromise ? (
-          <React.Suspense fallback={<span aria-hidden className="block size-400" />}>
+          <React.Suspense fallback={<CompareFavoriteButtonFallback actionProps={actionProps} />}>
             <CompareFavoriteButton
               key={getFavoritePairKey(pair)}
               actionProps={actionProps}
@@ -197,7 +242,7 @@ function CompareRateItem({
             />
           </React.Suspense>
         ) : (
-          <span aria-hidden className="block size-400" />
+          <CompareFavoriteButtonFallback actionProps={actionProps} />
         )
       }
       gridClassName="grid-cols-[auto_minmax(0,1fr)_auto_auto]"
@@ -322,7 +367,7 @@ function CompareRatesPanel({
       }
       headerClassName="block sm:flex sm:items-center sm:justify-between"
       headingId="compare-heading"
-      headingClassName="flex min-w-0 flex-wrap gap-x-125 text-preset-4 text-neutral-200 items-baseline"
+      headingClassName="flex min-w-0 flex-wrap gap-x-125 text-preset-4 text-neutral-200 items-end"
       headingSlot={
         <>
           <span>Multi-Currency</span>
@@ -442,10 +487,52 @@ function CompareRates({
 
 function CompareRatesFallback() {
   return (
-    <div
-      aria-hidden
-      className="min-h-[369px] rounded-16 bg-neutral-700 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))]"
-    />
+    <RateDetailsList
+      aria-label="Compare"
+      className="min-h-[369px]"
+      countClassName="mt-125 sm:mt-0"
+      countSlot={<p className="text-preset-5 text-neutral-50 opacity-70">8 Pairs</p>}
+      headerClassName="block sm:flex sm:items-center sm:justify-between"
+      headingId="compare-heading"
+      headingClassName="flex min-w-0 flex-wrap gap-x-125 text-preset-4 text-neutral-200 items-end"
+      headingSlot={
+        <>
+          <span>Multi-Currency</span>
+          <span className="inline-flex min-w-0 gap-125 text-preset-3-medium text-neutral-50">
+            <SkeletonBlock className="h-[19px] w-[53px] rounded-4" />
+            <span className="inline-flex shrink-0 items-center gap-125">
+              <span>From</span>
+              <SkeletonBlock className="h-[19px] w-[32px] rounded-4" />
+            </span>
+          </span>
+        </>
+      }
+    >
+      <div aria-hidden="true" className="flex flex-col gap-150">
+        {COMPARE_FALLBACK_CURRENCIES.map((currency, index) => (
+          <div
+            className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-x-125 rounded-16 bg-neutral-600 px-150 py-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:gap-x-250 sm:px-200"
+            key={currency.code}
+          >
+            <Flag className="size-300" countryCode={currency.countryCode} />
+            <div className="max-w-[16ch] min-w-0 sm:max-w-none">
+              <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
+              <span className="mt-075 block truncate text-preset-5 text-neutral-200">
+                {currency.name}
+              </span>
+            </div>
+            <div className="min-w-0 justify-self-end">
+              <SkeletonBlock
+                className="h-[19px] rounded-4"
+                style={{ width: COMPARE_FALLBACK_AMOUNT_WIDTHS[index] }}
+              />
+              <SkeletonBlock className="mt-075 ml-auto h-[10px] w-[52px] rounded-4" />
+            </div>
+            <SkeletonIconButton />
+          </div>
+        ))}
+      </div>
+    </RateDetailsList>
   );
 }
 
