@@ -14,7 +14,7 @@ import {
 } from "@/features/guest-session/guest-session";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
@@ -41,6 +41,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const redirectPath = getSafeRedirectPath(searchParams.get("redirectTo"));
 
+  useEffect(() => {
+    return () => {
+      setEmail("");
+      setPassword("");
+      setError(null);
+      setIsLoading(false);
+    };
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
@@ -57,7 +66,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       router.push(redirectPath);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
