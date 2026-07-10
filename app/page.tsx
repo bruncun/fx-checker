@@ -30,7 +30,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-neutral-900 text-neutral-50">
       <UnauthOnlyRoute />
       <header className="mx-auto flex w-full max-w-[1180px] items-center justify-between px-200 py-200 sm:px-400 sm:py-300">
-        <Logo priority />
+        <Logo />
         <Link
           className={cn(buttonVariants({ variant: "outline", size: "default" }))}
           href="/auth/login"
@@ -90,7 +90,7 @@ export default function LandingPage() {
               </div>
               <div className="px-150 pt-200 pb-150">
                 <nav className="flex items-center justify-between">
-                  <Logo alt="" className="h-200 sm:h-200" priority />
+                  <Logo alt="" className="h-200 sm:h-200" />
                   <ul className="flex items-center gap-100 text-preset-6 text-neutral-200 uppercase">
                     <li>29 Currencies</li>
                     <li className="text-neutral-400">/</li>

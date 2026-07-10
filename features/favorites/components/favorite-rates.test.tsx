@@ -110,7 +110,7 @@ describe("FavoriteRates", () => {
     expect(screen.getByText("0.8000")).toBeTruthy();
     expect(screen.getByText("-0.80%")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
-    expect(document.querySelector('img[src="/images/icon-arrow-right-dark.svg"]')).toBeTruthy();
+    expect(document.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
   });
 
   it("selects a favorite pair and removes it from the star action", () => {

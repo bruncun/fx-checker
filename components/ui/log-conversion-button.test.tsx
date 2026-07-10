@@ -19,7 +19,7 @@ describe("LogConversionButton", () => {
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect(button.querySelector("span")?.className).toContain("fx-log-conversion-check");
     expect(button.querySelector("span")?.className).not.toContain("brightness-0");
-    expect(button.querySelector('img[src="/images/icon-check.svg"]')).toBeTruthy();
-    expect(button.querySelector('img[src="/images/icon-check-dark.svg"]')).toBeTruthy();
+    expect(button.querySelector("svg.fx-themed-icon-dark")).toBeTruthy();
+    expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
   });
 });

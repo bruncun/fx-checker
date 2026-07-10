@@ -1,32 +1,62 @@
-import Image from "next/image";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-export type LogoProps = Omit<
-  React.ComponentProps<typeof Image>,
-  "alt" | "height" | "src" | "width"
-> & {
+export type LogoProps = Omit<React.HTMLAttributes<HTMLSpanElement>, "children"> & {
   alt?: string;
   variant?: "full" | "mark";
 };
+
+const logoMarkPath =
+  "M1.947 2.145C3.223.777 5.047 0 7.228 0H18.77c2.186 0 4.012.776 5.287 2.146C25.327 3.51 26 5.406 26 7.562v10.876c0 2.156-.673 4.052-1.943 5.416C22.78 25.224 20.956 26 18.769 26H7.23c-2.187 0-4.012-.776-5.286-2.146C.673 22.49 0 20.594 0 18.438V7.562C0 5.405.676 3.51 1.947 2.145M17.314 9.02a1.026 1.026 0 1 0-1.635-1.241l-6.993 9.204a1.026 1.026 0 0 0 1.635 1.242z";
+
+const logoTextPath =
+  "M35.28 19V7.32h7.264v1.856h-5.296v3.12h4.88v1.856H37.28V19zm9.762 0 3.232-5.984-3.04-5.696h2.24l1.472 2.928q.159.32.288.624.128.288.192.448.047-.16.176-.448.127-.304.288-.624l1.488-2.928h2.176l-3.04 5.648L53.746 19h-2.24l-1.648-3.232a32 32 0 0 1-.304-.624q-.129-.304-.192-.48a11 11 0 0 1-.48 1.104L47.218 19zm11.106 2.208V19.4h7.68v1.808zm14.497-2.048q-1.119 0-1.968-.416a3.2 3.2 0 0 1-1.296-1.2q-.448-.784-.448-1.84v-5.088q0-1.072.448-1.84.465-.768 1.296-1.184.849-.432 1.968-.432 1.136 0 1.952.432.832.416 1.296 1.184t.464 1.84h-2.016q0-.832-.448-1.264-.432-.432-1.248-.432t-1.264.432-.448 1.248v5.104q0 .816.448 1.264.448.432 1.264.432t1.248-.432q.448-.448.448-1.264h2.016q0 1.04-.464 1.824a3.17 3.17 0 0 1-1.296 1.216q-.816.416-1.952.416m6.962-.16V7.32h2v4.688h3.136V7.32h2V19h-2v-5.136h-3.136V19zm10.77 0V7.32h7.008v1.744h-5.04v3.04h4.48v1.728h-4.48v3.424h5.04V19zm14.05.16q-1.12 0-1.968-.416a3.2 3.2 0 0 1-1.297-1.2q-.447-.784-.448-1.84v-5.088q0-1.072.448-1.84.465-.768 1.297-1.184.847-.432 1.968-.432 1.136 0 1.952.432.831.416 1.296 1.184.464.768.464 1.84h-2.016q0-.832-.448-1.264-.432-.432-1.248-.432t-1.264.432-.448 1.248v5.104q0 .816.448 1.264.448.432 1.264.432t1.248-.432q.447-.448.448-1.264h2.016q0 1.04-.464 1.824-.465.784-1.296 1.216-.816.416-1.952.416m6.945-.16V7.32h2v4.72h1.392l2.192-4.72h2.176l-2.608 5.6L117.26 19h-2.224l-2.304-5.136h-1.36V19zm10.786 0V7.32h7.008v1.744h-5.04v3.04h4.48v1.728h-4.48v3.424h5.04V19zm10.402 0V7.32h3.696q1.167 0 2.016.432a3.23 3.23 0 0 1 1.344 1.216q.48.768.48 1.824 0 1.152-.592 2.032a3.13 3.13 0 0 1-1.568 1.248l2.32 4.928h-2.24l-2.032-4.64h-1.424V19zm2-6.4h1.696q.848 0 1.328-.464.48-.465.48-1.28 0-.833-.48-1.296-.48-.48-1.328-.48h-1.696z";
 
 const logoVariants = {
   full: {
     className: "h-250 w-auto sm:h-[26px]",
     height: 26,
-    src: "/images/logo.svg",
-    lightSrc: "/images/logo-light.svg",
+    viewBox: "0 0 139 26",
     width: 139,
   },
   mark: {
     className: "size-[26px]",
     height: 26,
-    src: "/images/auth-logo.svg",
-    lightSrc: "/images/auth-logo-light.svg",
+    viewBox: "0 0 26 26",
     width: 26,
   },
 } as const;
+
+function LogoSvg({
+  className,
+  markFill,
+  textFill,
+  variant,
+}: {
+  className: string;
+  markFill: string;
+  textFill?: string;
+  variant: "full" | "mark";
+}) {
+  const logo = logoVariants[variant];
+
+  return (
+    <svg
+      aria-hidden="true"
+      className={cn("h-full w-auto", className)}
+      fill="none"
+      focusable="false"
+      height={logo.height}
+      viewBox={logo.viewBox}
+      width={logo.width}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path clipRule="evenodd" d={logoMarkPath} fill={markFill} fillRule="evenodd" />
+      {variant === "full" && textFill ? <path d={logoTextPath} fill={textFill} /> : null}
+    </svg>
+  );
+}
 
 function Logo({ alt = "FX Checker", className, variant = "full", ...props }: LogoProps) {
   const logo = logoVariants[variant];
@@ -36,25 +66,10 @@ function Logo({ alt = "FX Checker", className, variant = "full", ...props }: Log
       aria-label={alt}
       className={cn("inline-flex shrink-0", logo.className, className)}
       role="img"
+      {...props}
     >
-      <Image
-        alt=""
-        aria-hidden="true"
-        className="fx-logo-dark h-full w-auto"
-        height={logo.height}
-        src={logo.src}
-        width={logo.width}
-        {...props}
-      />
-      <Image
-        alt=""
-        aria-hidden="true"
-        className="fx-logo-light h-full w-auto"
-        height={logo.height}
-        src={logo.lightSrc}
-        width={logo.width}
-        {...props}
-      />
+      <LogoSvg className="fx-logo-dark" markFill="#cef739" textFill="#fff" variant={variant} />
+      <LogoSvg className="fx-logo-light" markFill="#0611dd" textFill="#050a2f" variant={variant} />
     </span>
   );
 }

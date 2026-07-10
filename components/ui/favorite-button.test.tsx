@@ -25,7 +25,7 @@ describe("FavoriteButton", () => {
     const button = screen.getByRole("button", { name: "Favorite" });
 
     expect(button.querySelector("span")?.className).toContain("fx-favorite-unpinned");
-    expect(button.querySelector('img[src="/images/icon-star-dark.svg"]')).toBeTruthy();
+    expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
   });
 
   it("restores the original pinned styling for the default variant", () => {
@@ -50,7 +50,7 @@ describe("FavoriteButton", () => {
     expect(button.className).not.toContain("!bg-lime-500");
     expect(button.className).not.toContain("text-neutral-900");
     expect(button.querySelector("span")?.className).toContain("fx-favorite-icon-pinned");
-    expect(button.querySelector('img[src="/images/icon-star-filled-dark.svg"]')).toBeTruthy();
+    expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
   });
 
   it("keeps the original disabled styling for the default variant", () => {

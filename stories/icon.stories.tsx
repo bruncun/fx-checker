@@ -19,7 +19,7 @@ export const AllIcons: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-[24px]">
       {icons.map((iconName) => (
-        <Icon key={iconName} iconName={iconName} unoptimized />
+        <Icon key={iconName} iconName={iconName} />
       ))}
     </div>
   ),

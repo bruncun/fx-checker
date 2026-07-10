@@ -28,7 +28,6 @@ describe("DeleteButton", () => {
     expect(icons[0]?.className).toContain("group-hover:opacity-0");
     expect(icons[1]?.className).toContain("opacity-0");
     expect(icons[1]?.className).toContain("group-hover:opacity-100");
-    expect(button.querySelector('img[src="/images/icon-delete-dark.svg"]')).toBeTruthy();
-    expect(button.querySelector('img[src="/images/icon-delete-filled-dark.svg"]')).toBeTruthy();
+    expect(button.querySelectorAll("svg.fx-themed-icon-light")).toHaveLength(2);
   });
 });

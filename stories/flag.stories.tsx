@@ -19,7 +19,7 @@ export const AllFlags: Story = {
   render: () => (
     <div className="grid grid-cols-[repeat(auto-fill,24px)] gap-[24px]">
       {countryCodes.map((countryCode) => (
-        <Flag key={countryCode} className="size-[24px]" countryCode={countryCode} unoptimized />
+        <Flag key={countryCode} className="size-[24px]" countryCode={countryCode} />
       ))}
     </div>
   ),
