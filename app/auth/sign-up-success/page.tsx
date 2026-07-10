@@ -1,9 +1,11 @@
 import { AuthShell } from "@/components/auth-shell";
+import { UnauthOnlyRoute } from "@/components/unauth-only-route";
 import { CardTitle } from "@/components/ui/card";
 
 export default function Page() {
   return (
     <AuthShell>
+      <UnauthOnlyRoute />
       <div className="flex flex-col">
         <CardTitle>Thank you for signing up!</CardTitle>
         <p className="text-preset-3-mobile text-center text-neutral-200">

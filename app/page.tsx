@@ -3,6 +3,7 @@ import { Flag } from "@/components/ui/flag";
 import { GuestModeLink } from "@/components/guest-mode-link";
 import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/logo";
+import { UnauthOnlyRoute } from "@/components/unauth-only-route";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -27,6 +28,7 @@ const liveRates = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-neutral-900 text-neutral-50">
+      <UnauthOnlyRoute />
       <header className="mx-auto flex w-full max-w-[1180px] items-center justify-between px-200 py-200 sm:px-400 sm:py-300">
         <Logo priority />
         <Link

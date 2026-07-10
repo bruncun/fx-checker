@@ -57,6 +57,17 @@ describe("updateSession", () => {
     expect(response.headers.get("location")).toBe("https://fx-checker.test/app?from=USD&to=EUR");
   });
 
+  it.each(["/auth/login", "/auth/forgot-password", "/auth/sign-up", "/auth/sign-up-success"])(
+    "redirects authenticated %s visits to the app",
+    async (path) => {
+      getClaims.mockResolvedValue({ data: { claims: { sub: "user-1" } } });
+
+      const response = await updateSessionFor(`${path}?redirectTo=%2Frate%2Flog`);
+
+      expect(response.headers.get("location")).toBe("https://fx-checker.test/app");
+    }
+  );
+
   it("shows the root landing page to visitors with a stale guest cookie", async () => {
     const response = await updateSessionFor("/", `${GUEST_MODE_COOKIE}=1`);
 

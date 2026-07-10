@@ -4,10 +4,24 @@ import { hasEnvVars } from "../utils";
 import { GUEST_MODE_COOKIE, isGuestCookieValue } from "@/features/guest-session/guest-session";
 
 const publicRoutes = new Set(["/guest"]);
+const unauthOnlyRoutes = new Set([
+  "/",
+  "/auth/forgot-password",
+  "/auth/login",
+  "/auth/sign-up",
+  "/auth/sign-up-success",
+]);
 
-function redirectToApp(request: NextRequest, responseToCopy?: NextResponse) {
+function redirectToApp(
+  request: NextRequest,
+  responseToCopy?: NextResponse,
+  { preserveSearch = false }: { preserveSearch?: boolean } = {}
+) {
   const url = request.nextUrl.clone();
   url.pathname = "/app";
+  if (!preserveSearch) {
+    url.search = "";
+  }
 
   const response = NextResponse.redirect(url);
 
@@ -76,8 +90,8 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (user && pathname === "/") {
-    return redirectToApp(request, supabaseResponse);
+  if (user && unauthOnlyRoutes.has(pathname)) {
+    return redirectToApp(request, supabaseResponse, { preserveSearch: pathname === "/" });
   }
 
   if (!user && pathname === "/") {
