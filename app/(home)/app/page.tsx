@@ -6,7 +6,7 @@ import {
   historyRanges,
   type HistoryRange,
 } from "@/features/rate-history";
-import { deriveRateHistoryViewModel } from "@/features/rate-history/rate-history-chart-model";
+import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/rate-history-chart-model";
 import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
 
@@ -37,7 +37,11 @@ async function HomeContent({ searchParams }: HomeProps) {
   const receiveCurrency = normalizeCurrencyCode(params.to, DEFAULT_RECEIVE_CURRENCY);
   const selectedRange = normalizeHistoryRange(params.range);
   const selectedPair = `${sendCurrency}/${receiveCurrency}`;
-  const data = await getHistoryPageData();
+  const data = await getHistoryPageData({
+    baseCurrency: sendCurrency,
+    quoteCurrency: receiveCurrency,
+    range: selectedRange,
+  });
 
   assertDataAvailable(data);
 
@@ -46,7 +50,7 @@ async function HomeContent({ searchParams }: HomeProps) {
     quoteCurrency: receiveCurrency,
     rates: data.historicalRates,
   });
-  const model = deriveRateHistoryViewModel(history);
+  const model = deriveRateHistoryRangeViewModel(history, selectedRange);
 
   return <RateHistory model={model} pair={selectedPair} selectedRange={selectedRange} />;
 }

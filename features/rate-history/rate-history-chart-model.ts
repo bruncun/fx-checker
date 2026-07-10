@@ -138,17 +138,39 @@ export function deriveRateHistoryViewModel(
     return null;
   }
 
-  const ranges: RateHistoryRangeModel[] = historyRanges.flatMap((range) => {
-    const points = getRateHistoryRangePoints(history.points, range);
-    const stats = getRateHistoryStats(points);
-    const chart = getRateHistoryChartModel(points);
+  const ranges = historyRanges.flatMap((range) => {
+    const rangeModel = deriveRateHistoryRangeModel(history, range);
 
-    if (points.length === 0 || stats.length === 0 || !chart) {
-      return [];
-    }
-
-    return [{ chart, range, stats }];
+    return rangeModel ? [rangeModel] : [];
   });
 
   return ranges.length > 0 ? { pair: history.pair, ranges } : null;
+}
+
+export function deriveRateHistoryRangeViewModel(
+  history: RateHistoryData | null,
+  range: RateHistoryRangeModel["range"]
+): RateHistoryViewModel | null {
+  if (!history?.points.length) {
+    return null;
+  }
+
+  const rangeModel = deriveRateHistoryRangeModel(history, range);
+
+  return rangeModel ? { pair: history.pair, ranges: [rangeModel] } : null;
+}
+
+function deriveRateHistoryRangeModel(
+  history: RateHistoryData,
+  range: RateHistoryRangeModel["range"]
+): RateHistoryRangeModel | null {
+  const points = getRateHistoryRangePoints(history.points, range);
+  const stats = getRateHistoryStats(points);
+  const chart = getRateHistoryChartModel(points);
+
+  if (points.length === 0 || stats.length === 0 || !chart) {
+    return null;
+  }
+
+  return { chart, range, stats };
 }

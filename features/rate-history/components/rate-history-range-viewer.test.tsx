@@ -3,110 +3,69 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { RateHistoryRangeModel, RateHistoryViewModel } from "../rate-history";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
-import { RateHistoryRangeViewer } from "./rate-history-range-viewer";
+import { RateHistoryRangePicker } from "./rate-history-range-viewer";
 
-const { testSearchParams } = vi.hoisted(() => ({
+const { replace, testSearchParams } = vi.hoisted(() => ({
+  replace: vi.fn(),
   testSearchParams: { current: "" },
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useRouter: () => ({ replace }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-function createRange(range: RateHistoryRangeModel["range"], open: string): RateHistoryRangeModel {
-  return {
-    chart: {
-      areaPath: "M0,272L267,0L267,272Z",
-      firstDateLabel: "19 May",
-      firstRate: open,
-      lastDateLabel: "19 Jun",
-      lastRate: "0.8600",
-      linePath: "M0,272L267,0",
-      points: [
-        { dateLabel: "19 May 2026", rateLabel: open, x: 0, y: 272 },
-        { dateLabel: "19 Jun 2026", rateLabel: "0.8600", x: 267, y: 0 },
-      ],
-      xAxisLabels: [
-        { label: "19 May", x: 0 },
-        { label: "19 Jun", x: 267 },
-      ],
-      yAxisLabels: [
-        { label: "0.9000", y: 0 },
-        { label: "0.8750", y: 136 },
-        { label: "0.8500", y: 272 },
-      ],
-    },
-    range,
-    stats: [
-      { label: "Open", value: open },
-      { label: "Last", value: "0.8600" },
-      ...(range === "3M"
-        ? [{ direction: "down" as const, label: "Change", showIndicator: false, value: "-0.0400" }]
-        : []),
-    ],
-  };
-}
-
-const model: RateHistoryViewModel = {
-  pair: "USD/EUR",
-  ranges: [createRange("1M", "0.8500"), createRange("1Y", "0.7000"), createRange("3M", "0.9000")],
-};
-
 afterEach(() => {
-  window.history.replaceState(null, "", "/");
+  replace.mockReset();
   testSearchParams.current = "";
   cleanup();
 });
 
-describe("RateHistoryRangeViewer", () => {
-  it("selects the clicked range locally without waiting on route data", () => {
-    render(<RateHistoryRangeViewer model={model} selectedRange="1M" />);
+describe("RateHistoryRangePicker", () => {
+  it("selects the clicked range and navigates without scrolling", () => {
+    render(<RateHistoryRangePicker selectedRange="1M" />);
 
     fireEvent.click(screen.getByRole("tab", { name: "3M" }));
 
     expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("false");
-    expect(screen.getByRole("img", { name: "3M USD/EUR rate history chart" })).toBeTruthy();
-    expect(screen.queryByRole("img", { name: "1M USD/EUR rate history chart" })).toBeNull();
-    expect(screen.getAllByText("0.9000").length).toBeGreaterThan(0);
-    expect(window.location.search).toBe("?range=3M");
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
   });
 
   it("preserves existing URL state when selecting a new range", () => {
     testSearchParams.current = "from=GBP&to=JPY&range=1M";
 
-    render(<RateHistoryRangeViewer model={model} selectedRange="1M" />);
+    render(<RateHistoryRangePicker selectedRange="1M" />);
 
     fireEvent.click(screen.getByRole("tab", { name: "1Y" }));
 
-    expect(window.location.search).toBe("?from=GBP&to=JPY&range=1Y");
+    expect(replace).toHaveBeenCalledWith("/?from=GBP&to=JPY&range=1Y", { scroll: false });
   });
 
   it("moves to adjacent ranges with left and right shortcuts", () => {
     render(
       <KeyboardShortcutsProvider>
-        <RateHistoryRangeViewer model={model} selectedRange="3M" />
+        <RateHistoryRangePicker selectedRange="3M" />
       </KeyboardShortcutsProvider>
     );
 
     fireEvent.keyDown(window, { key: "ArrowLeft" });
 
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
-    expect(window.location.search).toBe("?range=1M");
+    expect(replace).toHaveBeenLastCalledWith("/?range=1M", { scroll: false });
 
     fireEvent.keyDown(window, { key: "ArrowRight" });
 
     expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
-    expect(window.location.search).toBe("?range=3M");
+    expect(replace).toHaveBeenLastCalledWith("/?range=3M", { scroll: false });
   });
 
   it("preserves range picker roving focus while global history shortcuts are registered", () => {
     render(
       <KeyboardShortcutsProvider>
-        <RateHistoryRangeViewer model={model} selectedRange="1M" />
+        <RateHistoryRangePicker selectedRange="1M" />
       </KeyboardShortcutsProvider>
     );
 
@@ -119,6 +78,23 @@ describe("RateHistoryRangeViewer", () => {
 
     expect(nextRange.getAttribute("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(nextRange);
-    expect(window.location.search).toBe("?range=3M");
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
+  });
+
+  it("activates a roving-focused range with Enter", () => {
+    render(
+      <KeyboardShortcutsProvider>
+        <RateHistoryRangePicker selectedRange="1M" />
+      </KeyboardShortcutsProvider>
+    );
+
+    const selectedRange = screen.getByRole("tab", { name: "1M" });
+
+    selectedRange.focus();
+    fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
+    fireEvent.keyDown(screen.getByRole("tab", { name: "3M" }), { key: "Enter" });
+
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
   });
 });

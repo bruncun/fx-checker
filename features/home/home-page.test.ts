@@ -123,7 +123,59 @@ describe("home page data loaders", () => {
     expect(getRates).toHaveBeenNthCalledWith(1);
   });
 
-  it("fetches five yearly historical rate ranges instead of one oversized cache item", async () => {
+  it("fetches only the selected short history range and current pair quotes", async () => {
+    getRates.mockResolvedValueOnce(latestRates).mockResolvedValueOnce([
+      { date: "2026-05-19", base: "EUR", quote: "USD", rate: 1.18 },
+      { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.2 },
+    ]);
+
+    await expect(
+      getHistoryPageData({
+        baseCurrency: "USD",
+        quoteCurrency: "EUR",
+        range: "1M",
+      })
+    ).resolves.toMatchObject({
+      status: "available",
+      historicalRates: [
+        { date: "2026-05-19", base: "EUR", quote: "USD", rate: 1.18 },
+        { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.2 },
+      ],
+    });
+
+    expect(getRates).toHaveBeenCalledTimes(2);
+    expect(getRates).toHaveBeenNthCalledWith(1);
+    expect(getRates).toHaveBeenNthCalledWith(2, {
+      from: "2026-05-19",
+      quotes: ["USD"],
+      to: "2026-06-19",
+    });
+  });
+
+  it("uses one fallback quote for provider-base same-currency history requests", async () => {
+    getRates.mockResolvedValueOnce(latestRates).mockResolvedValueOnce([
+      { date: "2026-06-12", base: "EUR", quote: "GBP", rate: 0.85 },
+      { date: "2026-06-19", base: "EUR", quote: "GBP", rate: 0.86 },
+    ]);
+
+    await expect(
+      getHistoryPageData({
+        baseCurrency: "EUR",
+        quoteCurrency: "EUR",
+        range: "1W",
+      })
+    ).resolves.toMatchObject({
+      status: "available",
+    });
+
+    expect(getRates).toHaveBeenNthCalledWith(2, {
+      from: "2026-06-12",
+      quotes: ["GBP"],
+      to: "2026-06-19",
+    });
+  });
+
+  it("fetches five yearly historical rate ranges only for the five-year view", async () => {
     getRates
       .mockResolvedValueOnce(latestRates)
       .mockResolvedValueOnce([
@@ -138,7 +190,13 @@ describe("home page data loaders", () => {
         { date: "2026-06-18", base: "EUR", quote: "USD", rate: 1.18 },
       ]);
 
-    await expect(getHistoryPageData()).resolves.toMatchObject({
+    await expect(
+      getHistoryPageData({
+        baseCurrency: "GBP",
+        quoteCurrency: "USD",
+        range: "5Y",
+      })
+    ).resolves.toMatchObject({
       status: "available",
       historicalRates: [
         { date: "2021-06-19", base: "EUR", quote: "GBP", rate: 0.84 },
@@ -152,22 +210,27 @@ describe("home page data loaders", () => {
     expect(getRates).toHaveBeenNthCalledWith(1);
     expect(getRates).toHaveBeenNthCalledWith(2, {
       from: "2021-06-19",
+      quotes: ["GBP", "USD"],
       to: "2022-06-18",
     });
     expect(getRates).toHaveBeenNthCalledWith(3, {
       from: "2022-06-19",
+      quotes: ["GBP", "USD"],
       to: "2023-06-18",
     });
     expect(getRates).toHaveBeenNthCalledWith(4, {
       from: "2023-06-19",
+      quotes: ["GBP", "USD"],
       to: "2024-06-18",
     });
     expect(getRates).toHaveBeenNthCalledWith(5, {
       from: "2024-06-19",
+      quotes: ["GBP", "USD"],
       to: "2025-06-18",
     });
     expect(getRates).toHaveBeenNthCalledWith(6, {
       from: "2025-06-19",
+      quotes: ["GBP", "USD"],
       to: "2026-06-19",
     });
   });

@@ -67,6 +67,62 @@ describe("RangePicker", () => {
     expect(document.activeElement).toBe(screen.getByRole("tab", { name: "3M" }));
   });
 
+  it("wraps roving focus at the range picker edges", () => {
+    const onValueChange = vi.fn();
+
+    const { rerender } = render(
+      <RangePicker
+        aria-label="History range"
+        onValueChange={onValueChange}
+        options={options}
+        value="3M"
+      />
+    );
+
+    const firstRange = screen.getByRole("tab", { name: "1D" });
+    const lastRange = screen.getByRole("tab", { name: "3M" });
+
+    lastRange.focus();
+    fireEvent.keyDown(lastRange, { key: "ArrowRight" });
+
+    expect(document.activeElement).toBe(firstRange);
+    expect(onValueChange).toHaveBeenCalledWith("1D");
+
+    rerender(
+      <RangePicker
+        aria-label="History range"
+        onValueChange={onValueChange}
+        options={options}
+        value="1D"
+      />
+    );
+
+    fireEvent.keyDown(firstRange, { key: "ArrowLeft" });
+
+    expect(document.activeElement).toBe(lastRange);
+    expect(onValueChange).toHaveBeenCalledWith("3M");
+  });
+
+  it("activates the focused range with Enter or Space", () => {
+    const onValueChange = vi.fn();
+
+    render(
+      <RangePicker
+        aria-label="History range"
+        onValueChange={onValueChange}
+        options={options}
+        value="1M"
+      />
+    );
+
+    const nextRange = screen.getByRole("tab", { name: "3M" });
+
+    nextRange.focus();
+    fireEvent.keyDown(nextRange, { key: "Enter" });
+
+    expect(onValueChange).toHaveBeenCalledWith("3M");
+  });
+
   it("keeps enabled ranges focusable and applies the lime focus ring style", () => {
     render(<RangePicker aria-label="History range" options={options} value="1M" />);
 

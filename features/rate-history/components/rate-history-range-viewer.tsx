@@ -1,36 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { RateChange } from "@/components/ui/rate-change";
 import { RangePicker, type RangePickerOption } from "@/components/ui/range-picker";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
-import {
-  historyRanges,
-  type HistoryRange,
-  type RateHistoryViewModel,
-} from "@/features/rate-history/rate-history";
-import { RateHistoryChart } from "./rate-history-chart";
+import { historyRanges, type HistoryRange } from "@/features/rate-history/rate-history";
 
 const ranges: RangePickerOption[] = historyRanges.map((range) => ({
   label: range,
   value: range,
 }));
 
-type RateHistoryRangeViewerProps = {
-  model: RateHistoryViewModel;
+type RateHistoryRangePickerProps = {
   selectedRange: HistoryRange;
 };
 
-function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewerProps) {
+function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) {
+  const router = useRouter();
   const shortcuts = useOptionalKeyboardShortcuts();
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [currentRange, setCurrentRange] = useState(selectedRange);
-  const selectedPanel =
-    model.ranges.find((panel) => panel.range === currentRange) ?? model.ranges[0];
 
   const selectRange = useCallback(
     (value: string) => {
@@ -46,9 +38,9 @@ function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewer
       const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
       setCurrentRange(nextRange);
-      window.history.replaceState(window.history.state, "", nextUrl);
+      router.replace(nextUrl, { scroll: false });
     },
-    [currentRange, pathname, searchParamsString]
+    [currentRange, pathname, router, searchParamsString]
   );
 
   const selectAdjacentRange = useCallback(
@@ -80,58 +72,19 @@ function RateHistoryRangeViewer({ model, selectedRange }: RateHistoryRangeViewer
     };
   }, [selectAdjacentRange, shortcuts]);
 
-  if (!selectedPanel) {
-    return null;
-  }
-
   return (
-    <>
-      <div className="lg:flex lg:items-center lg:justify-between lg:gap-400">
-        <div
-          className="grid grid-cols-2 gap-125 sm:inline-grid sm:grid-cols-4 sm:gap-200"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {selectedPanel.stats.map((stat) => (
-            <article
-              className="rounded-16 bg-neutral-700 px-250 py-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:min-w-[140px]"
-              key={stat.label}
-            >
-              <p className="text-preset-4 text-neutral-50/70">{stat.label}</p>
-              {stat.direction ? (
-                <RateChange
-                  className="mt-200 text-preset-2 sm:mt-200"
-                  direction={stat.direction}
-                  showIndicator={stat.showIndicator ?? false}
-                  value={stat.value}
-                />
-              ) : (
-                <p className="mt-200 text-preset-2 text-neutral-50">{stat.value}</p>
-              )}
-            </article>
-          ))}
-        </div>
-        <RangePicker
-          aria-label="History range"
-          className="mt-250 lg:mt-0 lg:shrink-0"
-          onValueChange={selectRange}
-          options={ranges}
-          shortcutLabels={{
-            next: shortcuts?.formatShortcut({ key: "ArrowRight" }) ?? "→",
-            previous: shortcuts?.formatShortcut({ key: "ArrowLeft" }) ?? "←",
-          }}
-          value={currentRange}
-        />
-      </div>
-      <div className="mt-200 sm:mt-250">
-        {model.ranges.map((panel) => (
-          <div hidden={panel.range !== currentRange} key={panel.range}>
-            <RateHistoryChart chart={panel.chart} pair={model.pair} range={panel.range} />
-          </div>
-        ))}
-      </div>
-    </>
+    <RangePicker
+      aria-label="History range"
+      className="mt-250 lg:mt-0 lg:shrink-0"
+      onValueChange={selectRange}
+      options={ranges}
+      shortcutLabels={{
+        next: shortcuts?.formatShortcut({ key: "ArrowRight" }) ?? "→",
+        previous: shortcuts?.formatShortcut({ key: "ArrowLeft" }) ?? "←",
+      }}
+      value={currentRange}
+    />
   );
 }
 
-export { RateHistoryRangeViewer };
+export { RateHistoryRangePicker };

@@ -55,7 +55,15 @@ function RangePicker({
       aria-label={ariaLabel}
       className={cn("flex h-[42px] w-fit rounded-8 bg-neutral-700 p-025", className)}
       data-range-picker
-      onKeyDown={disabled ? undefined : rovingFocus.handleKeyDown}
+      onKeyDown={
+        disabled
+          ? undefined
+          : (event) => {
+              if (rovingFocus.handleKeyDown(event)) {
+                event.stopPropagation();
+              }
+            }
+      }
       role="tablist"
     >
       {options.map((option) => {
@@ -81,6 +89,17 @@ function RangePicker({
             data-range-picker-tab
             data-range-value={option.value}
             disabled={disabled}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") {
+                return;
+              }
+
+              event.preventDefault();
+
+              if (!isActive) {
+                onValueChange?.(option.value);
+              }
+            }}
             onClick={() => {
               if (!isActive) {
                 onValueChange?.(option.value);

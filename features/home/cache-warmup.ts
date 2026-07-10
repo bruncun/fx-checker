@@ -22,7 +22,11 @@ export async function warmFrankfurterCache(): Promise<FrankfurterCacheWarmupResu
   const [currencyReferenceData, liveRatesData, historyPageData] = await Promise.all([
     getCurrencyReferenceData(),
     getLiveRatesData(),
-    getHistoryPageData(),
+    getHistoryPageData({
+      baseCurrency: "USD",
+      quoteCurrency: "EUR",
+      range: "1M",
+    }),
   ]);
 
   const results = {

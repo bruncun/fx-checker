@@ -2,6 +2,7 @@ export { RateHistory } from "./components/rate-history";
 export {
   deriveRateHistoryData,
   getDateYearsBefore,
+  getRateHistoryRangeStartDate,
   getRateHistoryRangePoints,
   getRateHistoryStats,
   historyRanges,

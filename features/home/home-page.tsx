@@ -5,7 +5,11 @@ import { getServerFavorites } from "@/features/favorites/server";
 import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
-import { getDateYearsBefore } from "@/features/rate-history/rate-history";
+import {
+  getDateYearsBefore,
+  getRateHistoryRangeStartDate,
+  type HistoryRange,
+} from "@/features/rate-history/rate-history";
 import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
 import {
   getLatestExchangeRateSnapshot,
@@ -149,11 +153,43 @@ export function getYearlyDateRanges({
   return ranges;
 }
 
-async function getHistoricalRatesByYear({ from, to }: DateRange) {
+async function getHistoricalRates({
+  from,
+  quotes,
+  range,
+  to,
+}: DateRange & {
+  quotes: string[];
+  range: HistoryRange;
+}) {
+  if (range !== "5Y") {
+    return getRates({ from, quotes, to });
+  }
+
   const ranges = getYearlyDateRanges({ from, to, years: RATE_HISTORY_YEARS });
-  const rateGroups = await Promise.all(ranges.map((range) => getRates(range)));
+  const rateGroups = await Promise.all(
+    ranges.map((dateRange) => getRates({ ...dateRange, quotes }))
+  );
 
   return rateGroups.flat();
+}
+
+function getHistoryQuotes({
+  baseCurrency,
+  fallbackQuoteCurrency,
+  quoteCurrency,
+  sharedBaseCurrency,
+}: {
+  baseCurrency: string;
+  fallbackQuoteCurrency: string;
+  quoteCurrency: string;
+  sharedBaseCurrency: string;
+}) {
+  const quotes = [
+    ...new Set([baseCurrency, quoteCurrency].filter((currency) => currency !== sharedBaseCurrency)),
+  ];
+
+  return quotes.length > 0 ? quotes : [fallbackQuoteCurrency];
 }
 
 export async function getLatestRatesData(): Promise<LatestRatesData> {
@@ -281,7 +317,15 @@ export async function getLiveRatesData(): Promise<LiveRatesData> {
   }
 }
 
-export async function getHistoryPageData(): Promise<HistoryPageData> {
+export async function getHistoryPageData({
+  baseCurrency,
+  quoteCurrency,
+  range,
+}: {
+  baseCurrency: string;
+  quoteCurrency: string;
+  range: HistoryRange;
+}): Promise<HistoryPageData> {
   "use cache";
   cacheLife("days");
 
@@ -292,15 +336,27 @@ export async function getHistoryPageData(): Promise<HistoryPageData> {
       return { status: "unavailable" };
     }
 
-    const latestDate = latestRatesData.rates[0]?.date;
-    const historyStartDate = latestDate ? getDateYearsBefore(latestDate, RATE_HISTORY_YEARS) : null;
+    const latestRate = latestRatesData.rates[0];
+    const latestDate = latestRate?.date;
+    const historyStartDate = latestDate
+      ? range === "5Y"
+        ? getDateYearsBefore(latestDate, RATE_HISTORY_YEARS)
+        : getRateHistoryRangeStartDate(latestDate, range)
+      : null;
 
-    if (!latestDate || !historyStartDate) {
+    if (!latestRate || !latestDate || !historyStartDate) {
       return { status: "unavailable" };
     }
 
-    const historicalRates = await getHistoricalRatesByYear({
+    const historicalRates = await getHistoricalRates({
       from: historyStartDate,
+      quotes: getHistoryQuotes({
+        baseCurrency,
+        fallbackQuoteCurrency: latestRate.quote,
+        quoteCurrency,
+        sharedBaseCurrency: latestRate.base,
+      }),
+      range,
       to: latestDate,
     });
 

@@ -88,7 +88,7 @@ export function getDateYearsBefore(date: string, years: number) {
   return formatIsoDate(targetDate);
 }
 
-function getRangeStartDate(date: string, range: HistoryRange) {
+export function getRateHistoryRangeStartDate(date: string, range: HistoryRange) {
   const targetDate = parseIsoDate(date);
 
   if (!targetDate) {
@@ -193,7 +193,7 @@ function derivePairRate(
 
 export function getRateHistoryRangePoints(points: RateHistoryPoint[], range: HistoryRange) {
   const latestDate = points.at(-1)?.date;
-  const rangeStartDate = latestDate ? getRangeStartDate(latestDate, range) : null;
+  const rangeStartDate = latestDate ? getRateHistoryRangeStartDate(latestDate, range) : null;
 
   if (!rangeStartDate) {
     return [];
