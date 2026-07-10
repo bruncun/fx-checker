@@ -7,7 +7,6 @@ import { useDataUnavailableError } from "@/features/home/components/use-data-una
 import { GUEST_MODE_COOKIE } from "@/features/guest-session/guest-session";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -103,13 +102,11 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
 
     event.preventDefault();
 
-    const supabase = createClient();
-
     try {
-      const { error } = await supabase.auth.signOut();
+      const response = await fetch("/auth/sign-out");
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error("Failed to sign out");
       }
 
       router.push("/auth/login");

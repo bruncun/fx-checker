@@ -5,9 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getSafeRedirectPath, LoginForm } from "./login-form";
 
-const { routerPush, signInWithPassword } = vi.hoisted(() => ({
+const { fetchMock, routerPush } = vi.hoisted(() => ({
+  fetchMock: vi.fn(),
   routerPush: vi.fn(),
-  signInWithPassword: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -17,17 +17,10 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    auth: {
-      signInWithPassword,
-    },
-  }),
-}));
-
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("login form redirects", () => {
@@ -38,7 +31,10 @@ describe("login form redirects", () => {
   });
 
   it("keeps the loading state after successful sign-in navigation starts", async () => {
-    signInWithPassword.mockResolvedValue({ error: null });
+    fetchMock.mockResolvedValue({
+      json: async () => ({ error: null, redirectTo: "/app" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<LoginForm />);
 
@@ -54,7 +50,10 @@ describe("login form redirects", () => {
   });
 
   it("resets the loading state when sign-in fails", async () => {
-    signInWithPassword.mockResolvedValue({ error: new Error("Invalid credentials") });
+    fetchMock.mockResolvedValue({
+      json: async () => ({ error: "Invalid credentials" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<LoginForm />);
 

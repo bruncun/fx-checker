@@ -21,14 +21,6 @@ vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    auth: {
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-    },
-  }),
-}));
-
 afterEach(() => {
   cleanup();
   setTheme.mockClear();

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
@@ -10,11 +10,26 @@ import {
 
 import { GET } from "./route";
 
+const { signOut } = vi.hoisted(() => ({
+  signOut: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: async () => ({
+    auth: {
+      signOut,
+    },
+  }),
+}));
+
 describe("sign-out route", () => {
-  it("clears guest session cookies before redirecting to login", () => {
-    const response = GET(new NextRequest("https://fx-checker.test/auth/sign-out"));
+  it("signs out, clears guest session cookies, and redirects to login", async () => {
+    signOut.mockResolvedValue({ error: null });
+
+    const response = await GET(new NextRequest("https://fx-checker.test/auth/sign-out"));
     const setCookie = response.headers.getSetCookie();
 
+    expect(signOut).toHaveBeenCalled();
     expect(response.headers.get("location")).toBe("https://fx-checker.test/auth/login");
     expect(setCookie).toHaveLength(4);
 

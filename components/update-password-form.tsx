@@ -1,60 +1,58 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+type AuthActionState = {
+  error: string | null;
+  redirectTo?: string;
+};
 
 export function UpdatePasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [password, setPassword] = useState("");
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
-  useEffect(() => {
-    return () => {
-      setPassword("");
-      setError(null);
-      setIsLoading(false);
-    };
-  }, []);
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError(null);
+    setIsLoading(true);
 
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      router.push("/app");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-      setIsLoading(false);
+    const response = await fetch("/auth/update-password/action", {
+      body: new FormData(event.currentTarget),
+      method: "POST",
+    });
+    const state = (await response.json()) as AuthActionState;
+
+    if (state.redirectTo) {
+      router.push(state.redirectTo);
+      return;
     }
-  };
+
+    setError(state.error);
+    setIsLoading(false);
+  }
 
   return (
     <div className={cn("flex flex-col", className)} {...props}>
       <CardTitle>Reset Your Password</CardTitle>
       <Card>
         <CardContent>
-          <form onSubmit={handleForgotPassword}>
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-250">
               <div className="flex flex-col gap-100">
                 <Label htmlFor="password">New password</Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="New password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}

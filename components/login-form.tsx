@@ -1,20 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  GUEST_ALERT_DISMISSED_COOKIE,
-  GUEST_CONVERSIONS_COOKIE,
-  GUEST_FAVORITES_COOKIE,
-  GUEST_MODE_COOKIE,
-} from "@/features/guest-session/guest-session";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+type AuthActionState = {
+  error: string | null;
+  redirectTo?: string;
+};
 
 export function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
@@ -24,69 +22,45 @@ export function getSafeRedirectPath(redirectTo: string | null) {
   return redirectTo;
 }
 
-function clearGuestSessionCookies() {
-  document.cookie = `${GUEST_MODE_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
-  document.cookie = `${GUEST_FAVORITES_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
-  document.cookie = `${GUEST_CONVERSIONS_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
-  document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
-}
-
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const redirectPath = getSafeRedirectPath(searchParams.get("redirectTo"));
 
-  useEffect(() => {
-    return () => {
-      setEmail("");
-      setPassword("");
-      setError(null);
-      setIsLoading(false);
-    };
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError(null);
+    setIsLoading(true);
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      clearGuestSessionCookies();
-      router.push(redirectPath);
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-      setIsLoading(false);
+    const response = await fetch("/auth/login/action", {
+      body: new FormData(event.currentTarget),
+      method: "POST",
+    });
+    const state = (await response.json()) as AuthActionState;
+
+    if (state.redirectTo) {
+      router.push(state.redirectTo);
+      return;
     }
-  };
+
+    setError(state.error);
+    setIsLoading(false);
+  }
 
   return (
     <div className={cn("flex flex-col", className)} {...props}>
       <CardTitle>Login</CardTitle>
       <Card>
         <CardContent>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleSubmit}>
+            <input name="redirectTo" type="hidden" value={redirectPath} />
             <div className="flex flex-col gap-250">
               <div className="flex flex-col gap-100">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
               </div>
               <div className="flex flex-col gap-100">
                 <div className="flex items-center justify-between pe-100">
@@ -98,13 +72,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
               <Button type="submit" disabled={isLoading}>

@@ -15,7 +15,7 @@ import { useTransitioningList } from "@/components/ui/use-transitioning-list";
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
-import { deleteFavorite } from "@/features/favorites/actions";
+import { deleteFavorite } from "@/features/favorites/client";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,

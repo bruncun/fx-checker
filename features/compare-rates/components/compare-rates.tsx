@@ -26,7 +26,7 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites";
-import { createFavorite, deleteFavorite } from "@/features/favorites/actions";
+import { createFavorite, deleteFavorite } from "@/features/favorites/client";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,

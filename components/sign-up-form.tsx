@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { GuestModeLink } from "@/components/guest-mode-link";
@@ -9,91 +8,56 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+type AuthActionState = {
+  error: string | null;
+  redirectTo?: string;
+};
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [repeatPassword, setRepeatPassword] = useState("");
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
-  useEffect(() => {
-    return () => {
-      setEmail("");
-      setPassword("");
-      setRepeatPassword("");
-      setError(null);
-      setIsLoading(false);
-    };
-  }, []);
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError(null);
+    setIsLoading(true);
 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
+    const response = await fetch("/auth/sign-up/action", {
+      body: new FormData(event.currentTarget),
+      method: "POST",
+    });
+    const state = (await response.json()) as AuthActionState;
+
+    if (state.redirectTo) {
+      router.push(state.redirectTo);
       return;
     }
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}`,
-        },
-      });
-      if (error) throw error;
-      router.push("/auth/sign-up-success");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-      setIsLoading(false);
-    }
-  };
+    setError(state.error);
+    setIsLoading(false);
+  }
 
   return (
     <div className={cn("flex flex-col", className)} {...props}>
       <CardTitle>Sign up</CardTitle>
       <Card>
         <CardContent>
-          <form onSubmit={handleSignUp}>
+          <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-250">
               <div className="flex flex-col gap-100">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
               </div>
               <div className="flex flex-col gap-100">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
               <div className="flex flex-col gap-100">
                 <Label htmlFor="repeat-password">Repeat Password</Label>
-                <Input
-                  id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
-                />
+                <Input id="repeat-password" name="repeatPassword" type="password" required />
               </div>
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
               <Button type="submit" disabled={isLoading}>

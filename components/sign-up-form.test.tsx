@@ -5,9 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SignUpForm } from "./sign-up-form";
 
-const { routerPush, signUp } = vi.hoisted(() => ({
+const { fetchMock, routerPush } = vi.hoisted(() => ({
+  fetchMock: vi.fn(),
   routerPush: vi.fn(),
-  signUp: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -16,17 +16,10 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    auth: {
-      signUp,
-    },
-  }),
-}));
-
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("SignUpForm", () => {
@@ -37,7 +30,10 @@ describe("SignUpForm", () => {
   });
 
   it("keeps the loading state after successful sign-up navigation starts", async () => {
-    signUp.mockResolvedValue({ error: null });
+    fetchMock.mockResolvedValue({
+      json: async () => ({ error: null, redirectTo: "/auth/sign-up-success" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<SignUpForm />);
 
@@ -59,7 +55,10 @@ describe("SignUpForm", () => {
   });
 
   it("resets the loading state when sign-up fails", async () => {
-    signUp.mockResolvedValue({ error: new Error("Email already registered") });
+    fetchMock.mockResolvedValue({
+      json: async () => ({ error: "Email already registered" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<SignUpForm />);
 
