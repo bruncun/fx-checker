@@ -1,7 +1,7 @@
 import { CompareRates, CompareRatesFallback } from "@/features/compare-rates";
 import type { AvailableCurrency } from "@/features/converter/currencies";
+import { getCurrencyReferenceData, getLatestRatesData } from "@/features/exchange-rates/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
-import { getCurrencyReferenceData, getLatestRatesData } from "@/features/home/home-page";
 import {
   getConverterAmountFromParams,
   getSelectedCurrencyPairFromParams,

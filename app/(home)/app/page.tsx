@@ -1,4 +1,3 @@
-import { getHistoryPageData } from "@/features/home/home-page";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   RateHistory,
@@ -7,6 +6,7 @@ import {
   type HistoryRange,
 } from "@/features/rate-history";
 import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/rate-history-chart-model";
+import { getHistoryPageData } from "@/features/rate-history/server";
 import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
 

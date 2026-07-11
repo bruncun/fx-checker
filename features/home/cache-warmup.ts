@@ -1,9 +1,9 @@
 import {
   getCurrencyReferenceData,
-  getHistoryPageData,
   getLatestRatesData,
   getLiveRatesData,
-} from "./home-page";
+} from "@/features/exchange-rates/server";
+import { getHistoryPageData } from "@/features/rate-history/server";
 
 type WarmupStatus = "available" | "unavailable";
 

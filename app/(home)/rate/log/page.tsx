@@ -1,9 +1,9 @@
 import { ConversionLog, ConversionLogFallback } from "@/features/conversion-log";
 import { getServerConversions } from "@/features/conversion-log/server";
 import type { AvailableCurrency } from "@/features/converter/currencies";
+import { getCurrencyReferenceData } from "@/features/exchange-rates/server";
 import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
-import { getCurrencyReferenceData } from "@/features/home/home-page";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
 
