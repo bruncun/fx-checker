@@ -440,7 +440,11 @@ async function RateDetailsNavigationSlot() {
 export function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
-      converterSlot={<ConverterSlot />}
+      converterSlot={
+        <Suspense fallback={<ConverterFallback />}>
+          <ConverterSlot />
+        </Suspense>
+      }
       headerStatsSlot={
         <Suspense fallback={<HeaderStatsFallback />}>
           <HeaderStats />
