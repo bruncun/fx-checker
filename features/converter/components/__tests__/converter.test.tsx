@@ -499,7 +499,7 @@ describe("Converter", () => {
     });
   });
 
-  it("shows a brief logged state and suppresses repeat log clicks during acknowledgement", () => {
+  it("shows a brief logged state and suppresses repeat log clicks during acknowledgement", async () => {
     vi.useFakeTimers();
     createConversion.mockResolvedValue({
       createdAt: "2026-07-01T22:38:21.000Z",
@@ -522,6 +522,11 @@ describe("Converter", () => {
 
     fireEvent.click(loggedButton);
 
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
     expect(createConversion).toHaveBeenCalledTimes(1);
 
     act(() => {

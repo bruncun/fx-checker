@@ -75,7 +75,7 @@ describe("KeyboardShortcutsProvider", () => {
     screen.getByRole("button", { name: "Invoker" }).focus();
     fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
 
-    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
+    expect(await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
     expect(screen.getByText("Focus currency search")).toBeTruthy();
     expect(screen.getByText("Available while viewing the History tab.")).toBeTruthy();
     expect(document.activeElement).toBe(
@@ -100,7 +100,7 @@ describe("KeyboardShortcutsProvider", () => {
     });
   });
 
-  it("traps focus and supports Escape and backdrop dismissal", () => {
+  it("traps focus and supports Escape and backdrop dismissal", async () => {
     render(
       <KeyboardShortcutsProvider>
         <button type="button">Invoker</button>
@@ -110,7 +110,7 @@ describe("KeyboardShortcutsProvider", () => {
     screen.getByRole("button", { name: "Invoker" }).focus();
     fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
 
-    const dialog = screen.getByRole("dialog", { name: "Keyboard Shortcuts" });
+    const dialog = await screen.findByRole("dialog", { name: "Keyboard Shortcuts" });
     const closeButton = screen.getByRole("button", { name: "Close keyboard shortcuts" });
 
     fireEvent.keyDown(dialog, { key: "Tab" });
@@ -123,7 +123,9 @@ describe("KeyboardShortcutsProvider", () => {
     expect(screen.queryByRole("dialog", { name: "Keyboard Shortcuts" })).toBeNull();
 
     fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
-    fireEvent.mouseDown(screen.getByRole("dialog", { name: "Keyboard Shortcuts" }).parentElement!);
+    fireEvent.mouseDown(
+      (await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })).parentElement!
+    );
 
     expect(screen.queryByRole("dialog", { name: "Keyboard Shortcuts" })).toBeNull();
   });

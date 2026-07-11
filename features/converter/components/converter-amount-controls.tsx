@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
+import { CurrencyButton } from "@/components/ui/currency-button";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
@@ -17,8 +18,7 @@ import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { AvailableCurrency } from "../currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../exchange";
 import type { SelectedCurrency } from "./converter";
-import { ConverterFavoriteButton } from "./converter-favorite-button";
-import { CurrencyPicker, type CurrencyPickerHandle } from "./currency-picker";
+import type { CurrencyPickerHandle, CurrencyPickerProps } from "./currency-picker";
 
 type ConverterAmountState = {
   amount: string;
@@ -31,11 +31,15 @@ type ConverterAmountPanelProps = {
   countryCode: FlagCountryCode;
   currencies: AvailableCurrency[];
   currencyCode: string;
+  focusSearchRequest: number;
   label: string;
-  pickerRef?: React.Ref<CurrencyPickerHandle>;
   onAmountChange: (amount: string) => void;
   onCurrencyChange: (currency: SelectedCurrency) => void;
   onInteraction: (side: AmountSide) => void;
+};
+
+type DeferredCurrencyPickerProps = CurrencyPickerProps & {
+  focusSearchRequest: number;
 };
 
 type ConverterAmountControlsProps = {
@@ -55,6 +59,112 @@ type ConverterAmountControlsProps = {
 };
 
 const logConversionAcknowledgementMs = 700;
+
+const LazyCurrencyPicker = React.lazy(async () => ({
+  default: (await import("./currency-picker")).CurrencyPicker,
+})) as React.LazyExoticComponent<(props: CurrencyPickerProps) => React.ReactNode>;
+
+const LazyConverterFavoriteButton = React.lazy(async () => ({
+  default: (await import("./converter-favorite-button")).ConverterFavoriteButton,
+}));
+
+function DeferredCurrencyPicker({
+  focusSearchRequest,
+  onPickerOpen,
+  ...props
+}: DeferredCurrencyPickerProps) {
+  const pickerRef = React.useRef<CurrencyPickerHandle>(null);
+  const [shouldRenderPicker, setShouldRenderPicker] = React.useState(false);
+  const [shouldFocusSearch, setShouldFocusSearch] = React.useState(false);
+
+  function loadAndFocusPicker() {
+    setShouldRenderPicker(true);
+    setShouldFocusSearch(true);
+  }
+
+  React.useEffect(() => {
+    if (!shouldFocusSearch) {
+      return;
+    }
+
+    let isCancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    function focusWhenReady() {
+      if (isCancelled) {
+        return;
+      }
+
+      if (pickerRef.current) {
+        pickerRef.current.focusSearch();
+        setShouldFocusSearch(false);
+        return;
+      }
+
+      timeoutId = setTimeout(focusWhenReady, 16);
+    }
+
+    focusWhenReady();
+
+    return () => {
+      isCancelled = true;
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [shouldFocusSearch]);
+
+  React.useEffect(() => {
+    if (focusSearchRequest === 0) {
+      return;
+    }
+
+    const timeoutId = setTimeout(loadAndFocusPicker, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [focusSearchRequest]);
+
+  const fallback = (
+    <CurrencyButton
+      aria-expanded={false}
+      aria-haspopup="dialog"
+      aria-label={props["aria-label"]}
+      countryCode={props.countryCode}
+      currencyCode={props.currencyCode}
+      onClick={() => {
+        onPickerOpen?.();
+        loadAndFocusPicker();
+      }}
+      onKeyDown={(event) => {
+        if (
+          event.key !== "ArrowDown" &&
+          event.key !== "Enter" &&
+          event.key !== " " &&
+          event.key !== "Spacebar"
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        onPickerOpen?.();
+        loadAndFocusPicker();
+      }}
+    />
+  );
+
+  if (!shouldRenderPicker) {
+    return fallback;
+  }
+
+  return (
+    <React.Suspense fallback={fallback}>
+      <LazyCurrencyPicker {...props} ref={pickerRef} onPickerOpen={onPickerOpen} />
+    </React.Suspense>
+  );
+}
 
 function isPositiveAmount(amount: string) {
   try {
@@ -128,8 +238,8 @@ function ConverterAmountPanel({
   countryCode,
   currencies,
   currencyCode,
+  focusSearchRequest,
   label,
-  pickerRef,
   onAmountChange,
   onCurrencyChange,
   onInteraction,
@@ -157,12 +267,12 @@ function ConverterAmountPanel({
           value={amount}
           className={label === "Receive" ? "text-lime-500" : ""}
         />
-        <CurrencyPicker
+        <DeferredCurrencyPicker
           aria-label={`Select ${label.toLowerCase()} currency`}
           countryCode={countryCode}
           currencies={currencies}
           currencyCode={currencyCode}
-          ref={pickerRef}
+          focusSearchRequest={focusSearchRequest}
           onPickerOpen={() => {
             onInteraction(amountSide);
           }}
@@ -243,8 +353,10 @@ function ConverterAmountControls({
   onSelectedCurrenciesChange,
 }: ConverterAmountControlsProps) {
   const shortcuts = useOptionalKeyboardShortcuts();
-  const sendCurrencyPickerRef = React.useRef<CurrencyPickerHandle>(null);
-  const receiveCurrencyPickerRef = React.useRef<CurrencyPickerHandle>(null);
+  const [focusSearchRequests, setFocusSearchRequests] = React.useState({
+    receive: 0,
+    send: 0,
+  });
   const [lastInteractedSide, setLastInteractedSide] = React.useState<AmountSide>("send");
   const [{ amount, amountSource }, setAmountState] = usePersistedConverterAmount({
     initialAmount,
@@ -322,10 +434,10 @@ function ConverterAmountControls({
 
   React.useEffect(() => {
     shortcuts?.registerFocusCurrencySearch(() => {
-      const pickerRef =
-        lastInteractedSide === "receive" ? receiveCurrencyPickerRef : sendCurrencyPickerRef;
-
-      pickerRef.current?.focusSearch();
+      setFocusSearchRequests((requests) => ({
+        ...requests,
+        [lastInteractedSide]: requests[lastInteractedSide] + 1,
+      }));
     });
     shortcuts?.registerSwapCurrencies(exchangeCurrencies);
 
@@ -343,8 +455,8 @@ function ConverterAmountControls({
           amount={sendAmount}
           amountSide="send"
           currencies={currencies}
+          focusSearchRequest={focusSearchRequests.send}
           label="Send"
-          pickerRef={sendCurrencyPickerRef}
           onInteraction={setLastInteractedSide}
           onAmountChange={updateSendAmount}
           onCurrencyChange={updateSendCurrency}
@@ -361,8 +473,8 @@ function ConverterAmountControls({
           amount={receiveAmount}
           amountSide="receive"
           currencies={currencies}
+          focusSearchRequest={focusSearchRequests.receive}
           label="Receive"
-          pickerRef={receiveCurrencyPickerRef}
           onInteraction={setLastInteractedSide}
           onAmountChange={updateReceiveAmount}
           onCurrencyChange={updateReceiveCurrency}
@@ -396,7 +508,7 @@ function ConverterAmountControls({
               </>
             }
           >
-            <ConverterFavoriteButton
+            <LazyConverterFavoriteButton
               data-converter-action
               favoritesPromise={favoritesPromise}
               pair={{

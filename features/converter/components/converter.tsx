@@ -3,17 +3,7 @@
 import * as React from "react";
 
 import type { FlagCountryCode } from "@/components/ui/flag";
-import {
-  normalizeConversionInput,
-  type Conversion,
-  type CreateConversionInput,
-} from "@/features/conversion-log";
-import { createConversion } from "@/features/conversion-log/client";
-import {
-  addOptimisticConversion,
-  removeOptimisticConversion,
-  replaceOptimisticConversion,
-} from "@/features/conversion-log/optimistic-conversions";
+import type { Conversion, CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
 import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
 import {
@@ -97,21 +87,30 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   }
 
   function logConversion(input: CreateConversionInput) {
-    const normalizedInput = normalizeConversionInput(input);
-
-    if (!normalizedInput.sendAmount || !normalizedInput.receiveAmount) {
-      return;
-    }
-
-    const pendingConversion: Conversion = {
-      ...normalizedInput,
-      createdAt: new Date().toISOString(),
-      id: getOptimisticId(),
-    };
-
-    addOptimisticConversion(pendingConversion);
-
     React.startTransition(async () => {
+      const [
+        { normalizeConversionInput },
+        { createConversion },
+        { addOptimisticConversion, removeOptimisticConversion, replaceOptimisticConversion },
+      ] = await Promise.all([
+        import("@/features/conversion-log/conversion-log"),
+        import("@/features/conversion-log/client"),
+        import("@/features/conversion-log/optimistic-conversions"),
+      ]);
+      const normalizedInput = normalizeConversionInput(input);
+
+      if (!normalizedInput.sendAmount || !normalizedInput.receiveAmount) {
+        return;
+      }
+
+      const pendingConversion: Conversion = {
+        ...normalizedInput,
+        createdAt: new Date().toISOString(),
+        id: getOptimisticId(),
+      };
+
+      addOptimisticConversion(pendingConversion);
+
       try {
         const createdConversion = await createConversion(normalizedInput);
 
