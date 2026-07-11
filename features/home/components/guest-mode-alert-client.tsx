@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
+import { CloseButton } from "@/components/ui/close-button";
 import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/model/guest-session";
 import { cn } from "@/lib/utils";
 
@@ -41,31 +41,23 @@ export function DismissibleGuestModeAlert() {
   return (
     <div
       aria-describedby="guest-mode-alert-description"
-      aria-labelledby="guest-mode-alert-title"
       className={cn(
-        "mb-250 items-center rounded-8 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] sm:flex sm:items-center sm:justify-between sm:gap-300",
+        "mb-250 flex items-center gap-200 rounded-8 bg-neutral-600 p-100 shadow-[inset_0_0_0_1px_hsl(var(--lime-500))]",
         isExiting && "fx-list-row-out"
       )}
       role="alert"
     >
-      <div className="min-w-0">
-        <h2 id="guest-mode-alert-title" className="text-preset-4 text-neutral-50 uppercase">
-          Guest mode
-        </h2>
-        <p id="guest-mode-alert-description" className="mt-075 text-preset-5 text-neutral-100">
+      <div className="flex min-w-0 flex-1">
+        <p id="guest-mode-alert-description" className="text-preset-5 text-neutral-100">
           Your data will not be stored to an account in guest mode and will be lost when the session
           ends.
         </p>
       </div>
-      <Button
-        className="mt-200 w-full sm:mt-0 sm:w-auto"
-        type="button"
-        variant="outline"
+      <CloseButton
+        aria-label="Dismiss guest mode alert"
         disabled={isExiting}
         onClick={dismissAlert}
-      >
-        Dismiss
-      </Button>
+      />
     </div>
   );
 }

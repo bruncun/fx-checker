@@ -83,10 +83,12 @@ describe("DismissibleGuestModeAlert", () => {
       "Your data will not be stored to an account in guest mode"
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss guest mode alert" }));
 
     expect(screen.getByRole("alert").className).toContain("fx-list-row-out");
-    expect(screen.getByRole("button", { name: "Dismiss" }).getAttribute("disabled")).toBe("");
+    expect(
+      screen.getByRole("button", { name: "Dismiss guest mode alert" }).getAttribute("disabled")
+    ).toBe("");
     expect(document.cookie).toContain(`${GUEST_ALERT_DISMISSED_COOKIE}=1`);
 
     act(() => {

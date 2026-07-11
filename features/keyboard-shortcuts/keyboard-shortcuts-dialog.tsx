@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Icon } from "@/components/ui/icon";
+import { CloseButton } from "@/components/ui/close-button";
 import type { ShortcutDefinition } from "./keyboard-shortcuts";
 
 type KeyboardShortcutsDialogProps = {
@@ -85,15 +85,11 @@ function KeyboardShortcutsDialog({ formatShortcut, onClose }: KeyboardShortcutsD
           <h2 id={titleId} className="text-preset-3 text-neutral-50 uppercase">
             Keyboard Shortcuts
           </h2>
-          <button
+          <CloseButton
             ref={closeButtonRef}
             aria-label="Close keyboard shortcuts"
-            className="fx-transition-surface flex size-400 shrink-0 items-center justify-center rounded-4 text-preset-4 text-neutral-50 hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
             onClick={onClose}
-            type="button"
-          >
-            <Icon className="size-200" decorative iconName="close" />
-          </button>
+          />
         </div>
 
         <section className="mt-300">
