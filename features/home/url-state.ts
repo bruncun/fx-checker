@@ -1,9 +1,70 @@
 import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/currencies";
 import type { AmountSide } from "@/features/converter/exchange";
+import { historyRanges, type HistoryRange } from "@/features/rate-history";
 
 const DEFAULT_CONVERTER_AMOUNT = "1000";
 const DEFAULT_CONVERTER_AMOUNT_SOURCE: AmountSide = "send";
+const DEFAULT_SEND_CURRENCY = "USD";
+const DEFAULT_RECEIVE_CURRENCY = "EUR";
+const DEFAULT_HISTORY_RANGE: HistoryRange = "1M";
+
+type SearchParamsInput = URLSearchParams | Record<string, string | undefined>;
+
+function createUrlSearchParams(input: SearchParamsInput) {
+  if (input instanceof URLSearchParams) {
+    return input;
+  }
+
+  const searchParams = new URLSearchParams();
+
+  Object.entries(input).forEach(([key, value]) => {
+    if (value !== undefined) {
+      searchParams.set(key, value);
+    }
+  });
+
+  return searchParams;
+}
+
+function normalizeCurrencyCode(value: string | undefined, fallback: string) {
+  const normalizedValue = value?.trim().toUpperCase();
+
+  return normalizedValue && /^[A-Z]{3}$/.test(normalizedValue) ? normalizedValue : fallback;
+}
+
+function normalizeHistoryRange(value: string | undefined): HistoryRange {
+  return historyRanges.includes(value as HistoryRange)
+    ? (value as HistoryRange)
+    : DEFAULT_HISTORY_RANGE;
+}
+
+function getCurrencyCodePairFromParams(input: SearchParamsInput) {
+  const searchParams = createUrlSearchParams(input);
+
+  return {
+    receiveCurrencyCode: normalizeCurrencyCode(
+      searchParams.get("to") ?? undefined,
+      DEFAULT_RECEIVE_CURRENCY
+    ),
+    sendCurrencyCode: normalizeCurrencyCode(
+      searchParams.get("from") ?? undefined,
+      DEFAULT_SEND_CURRENCY
+    ),
+  };
+}
+
+function getRateHistoryUrlStateFromParams(input: SearchParamsInput) {
+  const searchParams = createUrlSearchParams(input);
+  const { receiveCurrencyCode, sendCurrencyCode } = getCurrencyCodePairFromParams(searchParams);
+
+  return {
+    receiveCurrencyCode,
+    selectedPair: `${sendCurrencyCode}/${receiveCurrencyCode}`,
+    selectedRange: normalizeHistoryRange(searchParams.get("range") ?? undefined),
+    sendCurrencyCode,
+  };
+}
 
 function getCurrencyByCode(currencies: AvailableCurrency[], code: string): SelectedCurrency | null {
   const currency = currencies.find((availableCurrency) => availableCurrency.code === code);
@@ -45,11 +106,9 @@ function getSelectedCurrencyPairFromParams(
   searchParams: URLSearchParams
 ) {
   const defaultCurrencyPair = getDefaultCurrencyPair(currencies);
-  const sendCurrency = getCurrencyByCode(currencies, searchParams.get("from")?.toUpperCase() ?? "");
-  const receiveCurrency = getCurrencyByCode(
-    currencies,
-    searchParams.get("to")?.toUpperCase() ?? ""
-  );
+  const { receiveCurrencyCode, sendCurrencyCode } = getCurrencyCodePairFromParams(searchParams);
+  const sendCurrency = getCurrencyByCode(currencies, sendCurrencyCode);
+  const receiveCurrency = getCurrencyByCode(currencies, receiveCurrencyCode);
 
   return {
     sendCurrency: sendCurrency ?? defaultCurrencyPair.sendCurrency,
@@ -114,10 +173,13 @@ function getConverterAmountFromParams(searchParams: URLSearchParams) {
 }
 
 export {
+  createUrlSearchParams,
   getConverterAmountFromParams,
+  getCurrencyCodePairFromParams,
   getCurrencyByCode,
   getCurrencyPairUrl,
   getDefaultCurrencyPair,
+  getRateHistoryUrlStateFromParams,
   getSelectedCurrencyPairFromParams,
   getSelectedCurrencyPairKey,
 };
