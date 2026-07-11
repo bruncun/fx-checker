@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
-import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import type { CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
@@ -295,33 +294,9 @@ function ConverterAmountPanel({
   );
 }
 
-function ConverterActionToolbar({ children }: { children: React.ReactNode }) {
-  const toolbarRef = React.useRef<HTMLDivElement>(null);
-  const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
-    containerRef: toolbarRef,
-    itemSelector: "[data-converter-action]:not(:disabled)",
-    orientation: "horizontal",
-  });
-
-  React.useLayoutEffect(() => {
-    const items = rovingFocus.getItems();
-    const focusedItem = items.find((item) => item === document.activeElement);
-    const currentTabStop = items.find((item) => item.tabIndex === 0);
-    const tabStop = focusedItem ?? currentTabStop ?? items[0];
-
-    items.forEach((item) => {
-      item.tabIndex = item === tabStop ? 0 : -1;
-    });
-  });
-
+function ConverterActionGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      ref={toolbarRef}
-      aria-label="Conversion actions"
-      className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end"
-      onKeyDown={rovingFocus.handleKeyDown}
-      role="toolbar"
-    >
+    <div className="mt-200 flex flex-wrap justify-center gap-100 sm:mt-0 sm:justify-end">
       {children}
     </div>
   );
@@ -336,9 +311,7 @@ function FavoriteButtonFallback() {
         interactiveSurfaceFocusOnNeutral700ClassName,
         "px-150 py-100"
       )}
-      data-converter-action
       disabled
-      tabIndex={-1}
       type="button"
     >
       <span aria-hidden="true" className="fx-skeleton fx-skeleton-control size-200 rounded-4" />
@@ -509,23 +482,21 @@ function ConverterAmountControls({
         >
           {exchangeRateLabel}
         </p>
-        <ConverterActionToolbar>
+        <ConverterActionGroup>
           <React.Suspense
             fallback={
               <>
                 <FavoriteButtonFallback />
-                <LogConversionButton data-converter-action disabled tabIndex={-1} />
+                <LogConversionButton disabled />
               </>
             }
           >
             <LazyConverterFavoriteButton
-              data-converter-action
               favoritesPromise={favoritesPromise}
               pair={{
                 fromCurrency: sendCurrency.currencyCode,
                 toCurrency: receiveCurrency.currencyCode,
               }}
-              tabIndex={0}
             />
             <LogConversionButton
               aria-disabled={isLogAcknowledged ? true : undefined}
@@ -534,7 +505,6 @@ function ConverterAmountControls({
                   ? `Logged ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
                   : `Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
               }
-              data-converter-action
               onClick={() => {
                 if (isLogAcknowledged || !canLogConversion) {
                   return;
@@ -550,10 +520,9 @@ function ConverterAmountControls({
               }}
               disabled={!canLogConversion}
               pressed={isLogAcknowledged}
-              tabIndex={-1}
             />
           </React.Suspense>
-        </ConverterActionToolbar>
+        </ConverterActionGroup>
       </div>
     </>
   );

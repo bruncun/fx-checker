@@ -447,20 +447,18 @@ describe("Converter", () => {
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
   });
 
-  it("groups converter actions in a toolbar with one tab stop", () => {
+  it("renders converter actions as independent buttons without a toolbar", () => {
     renderConverter();
 
-    const toolbar = screen.getByRole("toolbar", { name: "Conversion actions" });
     const favoriteButton = screen.getByRole("button", { name: "Favorite USD/EUR" });
     const logButton = screen.getByRole("button", { name: /Log .* USD to .* EUR/ });
 
-    expect(toolbar.contains(favoriteButton)).toBe(true);
-    expect(toolbar.contains(logButton)).toBe(true);
+    expect(screen.queryByRole("toolbar")).toBeNull();
     expect(favoriteButton.tabIndex).toBe(0);
-    expect(logButton.tabIndex).toBe(-1);
+    expect(logButton.tabIndex).toBe(0);
   });
 
-  it("moves focus between enabled converter toolbar actions with arrow keys", () => {
+  it("does not move focus between converter actions with arrow keys", () => {
     renderConverter();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
@@ -471,20 +469,21 @@ describe("Converter", () => {
     const logButton = screen.getByRole("button", { name: /Log .* USD to .* EUR/ });
 
     expect(favoriteButton.tabIndex).toBe(0);
-    expect(logButton.tabIndex).toBe(-1);
+    expect(logButton.tabIndex).toBe(0);
 
     favoriteButton.focus();
     fireEvent.keyDown(favoriteButton, { key: "ArrowRight" });
 
-    expect(document.activeElement).toBe(logButton);
-    expect(favoriteButton.tabIndex).toBe(-1);
-    expect(logButton.tabIndex).toBe(0);
-
-    fireEvent.keyDown(logButton, { key: "ArrowLeft" });
-
     expect(document.activeElement).toBe(favoriteButton);
     expect(favoriteButton.tabIndex).toBe(0);
-    expect(logButton.tabIndex).toBe(-1);
+    expect(logButton.tabIndex).toBe(0);
+
+    logButton.focus();
+    fireEvent.keyDown(logButton, { key: "ArrowLeft" });
+
+    expect(document.activeElement).toBe(logButton);
+    expect(favoriteButton.tabIndex).toBe(0);
+    expect(logButton.tabIndex).toBe(0);
   });
 
   it("shows the data unavailable error when logging a conversion fails", async () => {
