@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
-import type { FrankfurterRate } from "./frankfurter";
+import { parseFrankfurterRates, type FrankfurterRate } from "./frankfurter";
 
 const LATEST_SNAPSHOT_ID = "latest";
 
@@ -19,49 +19,12 @@ export type LatestExchangeRateSnapshot = {
   sourceUpdatedAt: string | null;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isOptionalBoolean(value: unknown) {
-  return value === undefined || typeof value === "boolean";
-}
-
-function isFrankfurterProviderRate(value: unknown) {
-  return (
-    isRecord(value) &&
-    typeof value.key === "string" &&
-    value.key.length > 0 &&
-    typeof value.rate === "number" &&
-    Number.isFinite(value.rate) &&
-    value.rate > 0 &&
-    isOptionalBoolean(value.excluded)
-  );
-}
-
-function isFrankfurterRate(value: unknown): value is FrankfurterRate {
-  return (
-    isRecord(value) &&
-    typeof value.date === "string" &&
-    value.date.length > 0 &&
-    typeof value.base === "string" &&
-    value.base.length > 0 &&
-    typeof value.quote === "string" &&
-    value.quote.length > 0 &&
-    typeof value.rate === "number" &&
-    Number.isFinite(value.rate) &&
-    value.rate > 0 &&
-    (value.providers === undefined ||
-      (Array.isArray(value.providers) && value.providers.every(isFrankfurterProviderRate)))
-  );
-}
-
 function parseSnapshotRates(payload: unknown) {
-  if (!Array.isArray(payload) || !payload.every(isFrankfurterRate)) {
+  try {
+    return parseFrankfurterRates(payload);
+  } catch {
     throw new Error("Unexpected latest exchange rate snapshot payload");
   }
-
-  return payload;
 }
 
 function createSnapshotReadClient() {

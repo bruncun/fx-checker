@@ -68,6 +68,20 @@ describe("parseFrankfurterRates", () => {
       parseFrankfurterRates([{ date: "2026-06-19", base: "EUR", quote: "USD", rate: 0 }])
     ).toThrow("Unexpected Frankfurter rates response");
   });
+
+  it("throws for invalid provider rate rows", () => {
+    expect(() =>
+      parseFrankfurterRates([
+        {
+          date: "2026-06-19",
+          base: "EUR",
+          quote: "USD",
+          rate: 1.171,
+          providers: [{ key: "ECB", rate: -1 }],
+        },
+      ])
+    ).toThrow("Unexpected Frankfurter rates response");
+  });
 });
 
 describe("getCurrencies", () => {

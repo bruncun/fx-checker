@@ -120,7 +120,7 @@ function isFrankfurterProviderRate(value: unknown) {
   );
 }
 
-function isFrankfurterRate(value: unknown): value is FrankfurterRate {
+export function isFrankfurterRate(value: unknown): value is FrankfurterRate {
   return (
     isRecord(value) &&
     typeof value.date === "string" &&
