@@ -67,6 +67,43 @@ describe("RateHistory", () => {
     expect(gradient?.getAttribute("y2")).toBe("272");
   });
 
+  it("updates chart details and marker from the hovered chart point", () => {
+    render(
+      <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
+    );
+
+    const chart = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
+    const hoverSurface = chart.querySelector(".cursor-crosshair");
+    const details = screen.getByRole("list", { name: "Chart details" });
+
+    expect(hoverSurface).toBeInstanceOf(HTMLElement);
+    expect(details.textContent).toContain("0.8600");
+    expect(details.textContent).toContain("Jun 19 16:00 CET");
+
+    vi.spyOn(hoverSurface as HTMLElement, "getBoundingClientRect").mockReturnValue({
+      bottom: 272,
+      height: 272,
+      left: 0,
+      right: 267,
+      toJSON: () => ({}),
+      top: 0,
+      width: 267,
+      x: 0,
+      y: 0,
+    });
+
+    fireEvent.pointerMove(hoverSurface as HTMLElement, { clientX: 0 });
+
+    expect(details.textContent).toContain("0.8500");
+    expect(details.textContent).toContain("May 19, 2026 16:00 CET");
+    expect(hoverSurface?.querySelector(".rounded-full")).toBeTruthy();
+
+    fireEvent.pointerLeave(hoverSurface as HTMLElement);
+
+    expect(details.textContent).toContain("0.8600");
+    expect(details.textContent).toContain("Jun 19 16:00 CET");
+  });
+
   it("renders the tab empty state with the selected pair when history data is missing", () => {
     render(<RateHistory model={null} pair="USD/EUR" />);
 
