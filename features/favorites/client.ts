@@ -1,6 +1,15 @@
+import {
+  createGuestFavorite,
+  deleteGuestFavorite,
+  isGuestMode,
+} from "@/features/guest-session/client";
 import { normalizeFavoritePair, type Favorite, type FavoriteCurrencyPair } from "./favorites";
 
 export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
+  if (isGuestMode()) {
+    return createGuestFavorite(pair);
+  }
+
   const response = await fetch("/api/favorites", {
     body: JSON.stringify(normalizeFavoritePair(pair)),
     headers: {
@@ -17,6 +26,12 @@ export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favori
 }
 
 export async function deleteFavorite(pair: FavoriteCurrencyPair): Promise<void> {
+  if (isGuestMode()) {
+    deleteGuestFavorite(pair);
+
+    return;
+  }
+
   const response = await fetch("/api/favorites", {
     body: JSON.stringify(normalizeFavoritePair(pair)),
     headers: {
