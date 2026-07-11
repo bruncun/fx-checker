@@ -17,12 +17,32 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
+        url: "/images/favicon.svg",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
+      {
         url: "/images/favicon-32x32.png",
         type: "image/png",
         sizes: "32x32",
       },
     ],
+    shortcut: [
+      {
+        url: "/images/favicon-32x32.png",
+        type: "image/png",
+        sizes: "32x32",
+      },
+    ],
+    apple: [
+      {
+        url: "/images/apple-touch-icon.png",
+        type: "image/png",
+        sizes: "180x180",
+      },
+    ],
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
