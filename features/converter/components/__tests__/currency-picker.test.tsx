@@ -18,6 +18,8 @@ const currencies: AvailableCurrency[] = [
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") {
@@ -57,6 +59,36 @@ describe("CurrencyPicker", () => {
         screen.getByRole("searchbox", { name: "Search currencies" })
       );
     });
+    expect(
+      screen.getByRole("searchbox", { name: "Search currencies" }).getAttribute("aria-controls")
+    ).toBe(screen.getByLabelText("Currency results").id);
+  });
+
+  it("scrolls coarse-pointer triggers to the mobile picker position before focusing search", () => {
+    const { trigger } = renderCurrencyPicker();
+    const scrollTo = vi.fn();
+
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+    vi.stubGlobal("scrollTo", scrollTo);
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 280,
+      height: 40,
+      left: 0,
+      right: 120,
+      top: 240,
+      width: 120,
+      x: 0,
+      y: 240,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(trigger);
+
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: "auto", top: 188 });
+    expect(document.activeElement).toBe(
+      screen.getByRole("searchbox", { name: "Search currencies" })
+    );
   });
 
   it("toggles closed when the trigger is clicked again", () => {

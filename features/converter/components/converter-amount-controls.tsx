@@ -4,7 +4,6 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
-import { CurrencyButton } from "@/components/ui/currency-button";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import {
@@ -21,7 +20,12 @@ import { cn } from "@/lib/utils";
 import type { AvailableCurrency } from "../model/currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
 import type { SelectedCurrency } from "./converter";
-import type { CurrencyPickerHandle, CurrencyPickerProps } from "./currency-picker";
+import { ConverterFavoriteButton } from "./converter-favorite-button";
+import {
+  CurrencyPicker,
+  type CurrencyPickerHandle,
+  type CurrencyPickerProps,
+} from "./currency-picker";
 
 type ConverterAmountState = {
   amount: string;
@@ -63,110 +67,28 @@ type ConverterAmountControlsProps = {
 
 const logConversionAcknowledgementMs = 700;
 
-const LazyCurrencyPicker = React.lazy(async () => ({
-  default: (await import("./currency-picker")).CurrencyPicker,
-})) as React.LazyExoticComponent<(props: CurrencyPickerProps) => React.ReactNode>;
-
-const LazyConverterFavoriteButton = React.lazy(async () => ({
-  default: (await import("./converter-favorite-button")).ConverterFavoriteButton,
-}));
-
 function DeferredCurrencyPicker({
   focusSearchRequest,
   onPickerOpen,
   ...props
 }: DeferredCurrencyPickerProps) {
   const pickerRef = React.useRef<CurrencyPickerHandle>(null);
-  const [shouldRenderPicker, setShouldRenderPicker] = React.useState(false);
-  const [shouldFocusSearch, setShouldFocusSearch] = React.useState(false);
-
-  function loadAndFocusPicker() {
-    setShouldRenderPicker(true);
-    setShouldFocusSearch(true);
-  }
-
-  React.useEffect(() => {
-    if (!shouldFocusSearch) {
-      return;
-    }
-
-    let isCancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    function focusWhenReady() {
-      if (isCancelled) {
-        return;
-      }
-
-      if (pickerRef.current) {
-        pickerRef.current.focusSearch();
-        setShouldFocusSearch(false);
-        return;
-      }
-
-      timeoutId = setTimeout(focusWhenReady, 16);
-    }
-
-    focusWhenReady();
-
-    return () => {
-      isCancelled = true;
-
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [shouldFocusSearch]);
 
   React.useEffect(() => {
     if (focusSearchRequest === 0) {
       return;
     }
 
-    const timeoutId = setTimeout(loadAndFocusPicker, 0);
+    const animationFrameId = requestAnimationFrame(() => {
+      pickerRef.current?.focusSearch();
+    });
 
     return () => {
-      clearTimeout(timeoutId);
+      cancelAnimationFrame(animationFrameId);
     };
   }, [focusSearchRequest]);
 
-  const fallback = (
-    <CurrencyButton
-      aria-expanded={false}
-      aria-haspopup="dialog"
-      aria-label={props["aria-label"]}
-      countryCode={props.countryCode}
-      currencyCode={props.currencyCode}
-      onClick={() => {
-        onPickerOpen?.();
-        loadAndFocusPicker();
-      }}
-      onKeyDown={(event) => {
-        if (
-          event.key !== "ArrowDown" &&
-          event.key !== "Enter" &&
-          event.key !== " " &&
-          event.key !== "Spacebar"
-        ) {
-          return;
-        }
-
-        event.preventDefault();
-        onPickerOpen?.();
-        loadAndFocusPicker();
-      }}
-    />
-  );
-
-  if (!shouldRenderPicker) {
-    return fallback;
-  }
-
-  return (
-    <React.Suspense fallback={fallback}>
-      <LazyCurrencyPicker {...props} ref={pickerRef} onPickerOpen={onPickerOpen} />
-    </React.Suspense>
-  );
+  return <CurrencyPicker {...props} ref={pickerRef} onPickerOpen={onPickerOpen} />;
 }
 
 function isPositiveAmount(amount: string) {
@@ -483,45 +405,36 @@ function ConverterAmountControls({
           {exchangeRateLabel}
         </p>
         <ConverterActionGroup>
-          <React.Suspense
-            fallback={
-              <>
-                <FavoriteButtonFallback />
-                <LogConversionButton disabled />
-              </>
+          <ConverterFavoriteButton
+            favoritesPromise={favoritesPromise}
+            pair={{
+              fromCurrency: sendCurrency.currencyCode,
+              toCurrency: receiveCurrency.currencyCode,
+            }}
+          />
+          <LogConversionButton
+            aria-disabled={isLogAcknowledged ? true : undefined}
+            aria-label={
+              isLogAcknowledged
+                ? `Logged ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
+                : `Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
             }
-          >
-            <LazyConverterFavoriteButton
-              favoritesPromise={favoritesPromise}
-              pair={{
-                fromCurrency: sendCurrency.currencyCode,
-                toCurrency: receiveCurrency.currencyCode,
-              }}
-            />
-            <LogConversionButton
-              aria-disabled={isLogAcknowledged ? true : undefined}
-              aria-label={
-                isLogAcknowledged
-                  ? `Logged ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
-                  : `Log ${sendAmount} ${sendCurrency.currencyCode} to ${receiveAmount} ${receiveCurrency.currencyCode}`
+            onClick={() => {
+              if (isLogAcknowledged || !canLogConversion) {
+                return;
               }
-              onClick={() => {
-                if (isLogAcknowledged || !canLogConversion) {
-                  return;
-                }
 
-                acknowledgeLoggedConversion();
-                onConversionLogCreate?.({
-                  fromCurrency: sendCurrency.currencyCode,
-                  receiveAmount,
-                  sendAmount,
-                  toCurrency: receiveCurrency.currencyCode,
-                });
-              }}
-              disabled={!canLogConversion}
-              pressed={isLogAcknowledged}
-            />
-          </React.Suspense>
+              acknowledgeLoggedConversion();
+              onConversionLogCreate?.({
+                fromCurrency: sendCurrency.currencyCode,
+                receiveAmount,
+                sendAmount,
+                toCurrency: receiveCurrency.currencyCode,
+              });
+            }}
+            disabled={!canLogConversion}
+            pressed={isLogAcknowledged}
+          />
         </ConverterActionGroup>
       </div>
     </>

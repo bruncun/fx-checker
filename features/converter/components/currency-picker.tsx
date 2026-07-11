@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 
 import { cn } from "@/lib/utils";
 import { CurrencyButton } from "@/components/ui/currency-button";
@@ -22,6 +23,7 @@ type CurrencyPickerGroup = {
 
 const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
 const panelViewportGutter = 16;
+const mobileTriggerIdealTop = 52;
 
 function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup[] {
   const popularCurrencies = currencies.filter((currency) =>
@@ -113,6 +115,7 @@ function CurrencyPicker({
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeCurrencyCode, setActiveCurrencyCode] = React.useState(currencyCode);
   const panelId = React.useId();
+  const resultsId = React.useId();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -149,6 +152,30 @@ function CurrencyPicker({
     visibleCurrencies.find((currency) => currency.code === activeCurrencyCode) ??
     visibleCurrencies[0];
 
+  function scrollTriggerIntoMobilePosition() {
+    const trigger = triggerRef.current;
+    const root = rootRef.current;
+
+    if (!trigger || !root || !window.matchMedia?.("(pointer: coarse)").matches) {
+      return;
+    }
+
+    const visualViewport = window.visualViewport;
+    const viewportTop = visualViewport?.offsetTop ?? 0;
+    const triggerRect = trigger.getBoundingClientRect();
+    const currentDocumentTop = triggerRect.top + window.scrollY;
+    const nextScrollY = Math.max(0, currentDocumentTop - viewportTop - mobileTriggerIdealTop);
+
+    if (Math.abs(nextScrollY - window.scrollY) > 1) {
+      window.scrollTo({ top: nextScrollY, behavior: "auto" });
+    }
+  }
+
+  function focusSearchInput() {
+    searchRef.current?.focus({ preventScroll: true });
+    searchRef.current?.select();
+  }
+
   function openPicker() {
     const initialCurrency = selectedCurrency ?? currencyGroups[0]?.currencies[0];
 
@@ -158,6 +185,12 @@ function CurrencyPicker({
     onPickerOpen?.();
   }
 
+  function openPickerFromTrigger() {
+    scrollTriggerIntoMobilePosition();
+    flushSync(openPicker);
+    focusSearchInput();
+  }
+
   function focusSearch() {
     if (!isOpen) {
       openPicker();
@@ -165,8 +198,7 @@ function CurrencyPicker({
     }
 
     requestAnimationFrame(() => {
-      searchRef.current?.focus();
-      searchRef.current?.select();
+      focusSearchInput();
     });
   }
 
@@ -187,8 +219,7 @@ function CurrencyPicker({
       return;
     }
 
-    searchRef.current?.focus();
-    searchRef.current?.select();
+    focusSearchInput();
 
     const panel = panelRef.current;
 
@@ -367,13 +398,13 @@ function CurrencyPicker({
           if (isOpen) {
             setIsOpen(false);
           } else {
-            openPicker();
+            openPickerFromTrigger();
           }
         }}
         onKeyDown={(event) => {
           if (!isOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
             event.preventDefault();
-            openPicker();
+            openPickerFromTrigger();
           }
         }}
       />
@@ -393,7 +424,10 @@ function CurrencyPicker({
         >
           <SearchInput
             ref={searchRef}
+            aria-controls={resultsId}
+            aria-expanded={isOpen}
             className="mx-100 mb-125 shrink-0"
+            inputClassName="origin-left scale-75 text-[16px] leading-[1.2]"
             onChange={(event) => {
               setSearchQuery(event.currentTarget.value);
             }}
@@ -404,7 +438,9 @@ function CurrencyPicker({
 
           <div
             className="flex min-h-0 flex-col gap-025 overflow-y-auto overscroll-contain"
+            aria-label="Currency results"
             data-test-id="currency-results"
+            id={resultsId}
           >
             {filteredCurrencyGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
