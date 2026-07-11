@@ -106,9 +106,6 @@ function KeyboardShortcutsDialog({ formatShortcut, onClose }: KeyboardShortcutsD
 
         <section className="mt-300">
           <h3 className="text-preset-5-medium text-neutral-100 uppercase">History</h3>
-          <p className="mt-075 text-preset-6 text-neutral-200">
-            Available while viewing the History tab.
-          </p>
           <dl className="mt-150 grid grid-cols-[auto_1fr] items-center gap-x-200 gap-y-125">
             <ShortcutKey>{formatShortcut({ key: "ArrowLeft" })}</ShortcutKey>
             <dd className="text-preset-5 text-neutral-100">Previous range</dd>
