@@ -37,7 +37,9 @@ describe("HomePageContent", () => {
       />
     );
 
+    expect(screen.getByRole("banner")).toBeTruthy();
     expect(screen.getByRole("img", { name: "FX Checker" })).toBeTruthy();
+    expect(screen.getByRole("main")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Go to main content" }).getAttribute("href")).toBe(
       "#converter"
     );

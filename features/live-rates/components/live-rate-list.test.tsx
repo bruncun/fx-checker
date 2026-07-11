@@ -17,6 +17,7 @@ describe("LiveRateList", () => {
     const badge = screen.getByText("Live markets").parentElement;
     const scroller = screen.getByRole("region", { name: "Live exchange rates" });
 
+    expect(screen.getByRole("complementary", { name: "Live markets" })).toBeTruthy();
     expect(badge?.nextElementSibling).toBe(scroller);
     expect(badge?.classList.contains("shrink-0")).toBe(true);
     expect(badge?.classList.contains("bg-lime-500")).toBe(true);

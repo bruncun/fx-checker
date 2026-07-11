@@ -70,7 +70,10 @@ function HeaderStatsFallback() {
 
 function LiveRatesFallback() {
   return (
-    <section className="relative flex w-full bg-neutral-700">
+    <aside
+      aria-labelledby="live-markets-fallback-heading"
+      className="relative flex w-full bg-neutral-700"
+    >
       <div
         className={cn(
           "flex shrink-0 items-center gap-100 bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
@@ -78,7 +81,7 @@ function LiveRatesFallback() {
         )}
       >
         <span className="size-[6px] rounded-full bg-neutral-900" aria-hidden="true" />
-        <span>Live markets</span>
+        <span id="live-markets-fallback-heading">Live markets</span>
       </div>
       <div
         className="min-w-0 flex-1 overflow-x-auto"
@@ -97,7 +100,7 @@ function LiveRatesFallback() {
           ))}
         </ul>
       </div>
-    </section>
+    </aside>
   );
 }
 

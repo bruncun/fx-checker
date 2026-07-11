@@ -7,7 +7,7 @@ type LiveRateListProps = {
 
 export function LiveRateList({ rates }: LiveRateListProps) {
   return (
-    <section className="relative flex w-full bg-neutral-700">
+    <aside aria-labelledby="live-markets-heading" className="relative flex w-full bg-neutral-700">
       <div
         className={cn(
           "flex shrink-0 items-center gap-100 bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
@@ -15,7 +15,7 @@ export function LiveRateList({ rates }: LiveRateListProps) {
         )}
       >
         <span className="size-[6px] rounded-full bg-neutral-900" aria-hidden="true" />
-        <span>Live markets</span>
+        <span id="live-markets-heading">Live markets</span>
       </div>
       <div
         aria-label="Live exchange rates"
@@ -30,6 +30,6 @@ export function LiveRateList({ rates }: LiveRateListProps) {
           ))}
         </ul>
       </div>
-    </section>
+    </aside>
   );
 }
