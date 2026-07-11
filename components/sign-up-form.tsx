@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AuthActionState = {
   error: string | null;
@@ -17,8 +17,28 @@ type AuthActionState = {
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const resetFormState = useCallback(() => {
+    setEmail("");
+    setPassword("");
+    setRepeatPassword("");
+    setError(null);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("pageshow", resetFormState);
+
+    return () => {
+      window.removeEventListener("pageshow", resetFormState);
+      resetFormState();
+    };
+  }, [resetFormState]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,15 +69,37 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             <div className="flex flex-col gap-250">
               <div className="flex flex-col gap-100">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="m@example.com"
+                  required
+                />
               </div>
               <div className="flex flex-col gap-100">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                />
               </div>
               <div className="flex flex-col gap-100">
                 <Label htmlFor="repeat-password">Repeat Password</Label>
-                <Input id="repeat-password" name="repeatPassword" type="password" required />
+                <Input
+                  id="repeat-password"
+                  name="repeatPassword"
+                  type="password"
+                  value={repeatPassword}
+                  onChange={(event) => setRepeatPassword(event.target.value)}
+                  required
+                />
               </div>
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
               <Button type="submit" disabled={isLoading}>

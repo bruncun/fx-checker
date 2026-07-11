@@ -30,7 +30,7 @@ describe("login form redirects", () => {
     expect(getSafeRedirectPath("//example.test/app")).toBe("/app");
   });
 
-  it("keeps the loading state after successful sign-in navigation starts", async () => {
+  it("keeps the pending state during sign-in navigation and resets when shown again", async () => {
     fetchMock.mockResolvedValue({
       json: async () => ({ error: null, redirectTo: "/app" }),
     });
@@ -46,7 +46,15 @@ describe("login form redirects", () => {
       expect(routerPush).toHaveBeenCalledWith("/app");
     });
 
+    expect(screen.getByLabelText("Email")).toHaveProperty("value", "user@example.test");
+    expect(screen.getByLabelText("Password")).toHaveProperty("value", "password");
     expect(screen.getByRole("button", { name: "Logging in..." })).toHaveProperty("disabled", true);
+
+    fireEvent(window, new Event("pageshow"));
+
+    expect(screen.getByLabelText("Email")).toHaveProperty("value", "");
+    expect(screen.getByLabelText("Password")).toHaveProperty("value", "");
+    expect(screen.getByRole("button", { name: "Login" })).toHaveProperty("disabled", false);
   });
 
   it("resets the loading state when sign-in fails", async () => {

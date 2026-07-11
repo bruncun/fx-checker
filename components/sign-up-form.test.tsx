@@ -29,7 +29,7 @@ describe("SignUpForm", () => {
     expect(screen.getByRole("link", { name: "Try as guest" }).getAttribute("href")).toBe("/guest");
   });
 
-  it("keeps the loading state after successful sign-up navigation starts", async () => {
+  it("keeps the pending state during sign-up navigation and resets when shown again", async () => {
     fetchMock.mockResolvedValue({
       json: async () => ({ error: null, redirectTo: "/auth/sign-up-success" }),
     });
@@ -48,10 +48,20 @@ describe("SignUpForm", () => {
       expect(routerPush).toHaveBeenCalledWith("/auth/sign-up-success");
     });
 
+    expect(screen.getByLabelText("Email")).toHaveProperty("value", "user@example.test");
+    expect(screen.getByLabelText("Password")).toHaveProperty("value", "password");
+    expect(screen.getByLabelText("Repeat Password")).toHaveProperty("value", "password");
     expect(screen.getByRole("button", { name: "Creating an account..." })).toHaveProperty(
       "disabled",
       true
     );
+
+    fireEvent(window, new Event("pageshow"));
+
+    expect(screen.getByLabelText("Email")).toHaveProperty("value", "");
+    expect(screen.getByLabelText("Password")).toHaveProperty("value", "");
+    expect(screen.getByLabelText("Repeat Password")).toHaveProperty("value", "");
+    expect(screen.getByRole("button", { name: "Sign up" })).toHaveProperty("disabled", false);
   });
 
   it("resets the loading state when sign-up fails", async () => {

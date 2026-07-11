@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AuthActionState = {
   error: string | null;
@@ -25,10 +25,28 @@ export function getSafeRedirectPath(redirectTo: string | null) {
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const redirectPath = getSafeRedirectPath(searchParams.get("redirectTo"));
+
+  const resetFormState = useCallback(() => {
+    setEmail("");
+    setPassword("");
+    setError(null);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("pageshow", resetFormState);
+
+    return () => {
+      window.removeEventListener("pageshow", resetFormState);
+      resetFormState();
+    };
+  }, [resetFormState]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,7 +78,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             <div className="flex flex-col gap-250">
               <div className="flex flex-col gap-100">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="m@example.com"
+                  required
+                />
               </div>
               <div className="flex flex-col gap-100">
                 <div className="flex items-center justify-between pe-100">
@@ -72,7 +98,14 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     Forgot your password?
                   </Link>
                 </div>
-                <Input id="password" name="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                />
               </div>
               {error && <p className="text-preset-5-medium text-red-500">{error}</p>}
               <Button type="submit" disabled={isLoading}>

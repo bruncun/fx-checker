@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AuthActionState = {
   error: string | null;
@@ -14,9 +14,26 @@ type AuthActionState = {
 };
 
 export function ForgotPasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const resetFormState = useCallback(() => {
+    setEmail("");
+    setError(null);
+    setSuccess(false);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("pageshow", resetFormState);
+
+    return () => {
+      window.removeEventListener("pageshow", resetFormState);
+      resetFormState();
+    };
+  }, [resetFormState]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,6 +45,10 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
       method: "POST",
     });
     const state = (await response.json()) as AuthActionState;
+
+    if (state.success) {
+      setEmail("");
+    }
 
     setError(state.error);
     setSuccess(Boolean(state.success));
@@ -57,6 +78,8 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
                       id="email"
                       name="email"
                       type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
                       placeholder="m@example.com"
                       required
                     />

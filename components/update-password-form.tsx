@@ -6,7 +6,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AuthActionState = {
   error: string | null;
@@ -15,8 +15,24 @@ type AuthActionState = {
 
 export function UpdatePasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const resetFormState = useCallback(() => {
+    setPassword("");
+    setError(null);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("pageshow", resetFormState);
+
+    return () => {
+      window.removeEventListener("pageshow", resetFormState);
+      resetFormState();
+    };
+  }, [resetFormState]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,6 +67,8 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
                   id="password"
                   name="password"
                   type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="New password"
                   required
                 />
