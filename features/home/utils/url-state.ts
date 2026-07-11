@@ -66,6 +66,12 @@ function getRateHistoryUrlStateFromParams(input: SearchParamsInput) {
   };
 }
 
+function getCurrencyPairLabelFromParams(input: SearchParamsInput) {
+  const { receiveCurrencyCode, sendCurrencyCode } = getCurrencyCodePairFromParams(input);
+
+  return `${sendCurrencyCode}/${receiveCurrencyCode}`;
+}
+
 function getCurrencyByCode(currencies: AvailableCurrency[], code: string): SelectedCurrency | null {
   const currency = currencies.find((availableCurrency) => availableCurrency.code === code);
 
@@ -176,6 +182,7 @@ export {
   createUrlSearchParams,
   getConverterAmountFromParams,
   getCurrencyCodePairFromParams,
+  getCurrencyPairLabelFromParams,
   getCurrencyByCode,
   getCurrencyPairUrl,
   getDefaultCurrencyPair,

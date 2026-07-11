@@ -4,6 +4,7 @@ import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import {
   createUrlSearchParams,
   getCurrencyCodePairFromParams,
+  getCurrencyPairLabelFromParams,
   getRateHistoryUrlStateFromParams,
   getSelectedCurrencyPairFromParams,
 } from "./url-state";
@@ -56,6 +57,14 @@ describe("url state", () => {
 
   it("falls back to the one-month range for unknown rate-history ranges", () => {
     expect(getRateHistoryUrlStateFromParams({ range: "10Y" }).selectedRange).toBe("1M");
+  });
+
+  it("formats the selected currency pair for route labels", () => {
+    expect(getCurrencyPairLabelFromParams({ from: "cad", to: "jpy" })).toBe("CAD/JPY");
+  });
+
+  it("formats the default currency pair for invalid route label params", () => {
+    expect(getCurrencyPairLabelFromParams({ from: "dollars", to: "yenx" })).toBe("USD/EUR");
   });
 
   it("keeps converter currency selection constrained to available currencies", () => {

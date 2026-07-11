@@ -3,11 +3,13 @@ import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { getCurrencyReferenceData, getLatestRatesData } from "@/features/exchange-rates/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
+  getCurrencyPairLabelFromParams,
   getConverterAmountFromParams,
   getSelectedCurrencyPairFromParams,
 } from "@/features/home/utils/url-state";
 import { getServerFavorites } from "@/features/favorites/api/server";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
 type CompareRatesPageProps = {
@@ -18,6 +20,16 @@ type CompareRatesPageProps = {
     to?: string;
   }>;
 };
+
+export async function generateMetadata({
+  searchParams,
+}: CompareRatesPageProps): Promise<Metadata> {
+  const selectedPair = getCurrencyPairLabelFromParams(new URLSearchParams(await searchParams));
+
+  return {
+    title: `Compare ${selectedPair}`,
+  };
+}
 
 async function CompareRatesContent({
   availableCurrencies,

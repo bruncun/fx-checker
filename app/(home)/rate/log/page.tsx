@@ -5,7 +5,12 @@ import { getCurrencyReferenceData } from "@/features/exchange-rates/api/server";
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { cookies } from "next/headers";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Conversion Log",
+};
 
 async function ConversionLogContent() {
   const currencyReferenceData = await getCurrencyReferenceData();

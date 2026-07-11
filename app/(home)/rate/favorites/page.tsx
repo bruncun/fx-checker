@@ -9,7 +9,12 @@ import { getServerFavorites } from "@/features/favorites/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { deriveLiveRateForPair } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Favorite Rates",
+};
 
 async function FavoriteRatesContent() {
   const [currencyReferenceData, latestRatesData, liveRatesData] = await Promise.all([

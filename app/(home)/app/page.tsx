@@ -1,12 +1,14 @@
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   createUrlSearchParams,
+  getCurrencyPairLabelFromParams,
   getRateHistoryUrlStateFromParams,
 } from "@/features/home/utils/url-state";
 import { RateHistory, deriveRateHistoryData } from "@/features/rate-history";
 import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/model/rate-history-chart-model";
 import { getHistoryPageData } from "@/features/rate-history/api/server";
 import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
 type HomeProps = {
@@ -16,6 +18,14 @@ type HomeProps = {
     to?: string;
   }>;
 };
+
+export async function generateMetadata({ searchParams }: HomeProps): Promise<Metadata> {
+  const selectedPair = getCurrencyPairLabelFromParams(createUrlSearchParams(await searchParams));
+
+  return {
+    title: `${selectedPair} History`,
+  };
+}
 
 async function HomeContent({ searchParams }: HomeProps) {
   const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
