@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
+import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import { cn } from "@/lib/utils";
 import { ShortcutTooltip } from "./shortcut-tooltip";
 

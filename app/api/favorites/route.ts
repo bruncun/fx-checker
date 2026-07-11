@@ -1,5 +1,5 @@
-import { createFavorite, deleteFavorite } from "@/features/favorites/actions";
-import { InvalidFavoritePairError, parseFavoritePair } from "@/features/favorites/favorites";
+import { createFavorite, deleteFavorite } from "@/features/favorites/api/actions";
+import { InvalidFavoritePairError, parseFavoritePair } from "@/features/favorites/model/favorites";
 import { NextResponse, type NextRequest } from "next/server";
 
 async function readFavoritePair(request: NextRequest) {

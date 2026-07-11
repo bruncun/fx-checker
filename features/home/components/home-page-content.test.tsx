@@ -3,7 +3,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/guest-session";
+import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/model/guest-session";
 import { DismissibleGuestModeAlert } from "./guest-mode-alert-client";
 import { HomePageContent } from "./home-page-content";
 import { StaleExchangeRatesAlert } from "./stale-exchange-rates-alert";

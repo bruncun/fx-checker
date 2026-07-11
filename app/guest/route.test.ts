@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
   GUEST_MODE_COOKIE,
-} from "@/features/guest-session/guest-session";
+} from "@/features/guest-session/model/guest-session";
 
 import { GET } from "./route";
 

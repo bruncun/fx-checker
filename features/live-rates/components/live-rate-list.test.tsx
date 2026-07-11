@@ -3,7 +3,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { mockLiveRates } from "../mock-live-rates";
+import { mockLiveRates } from "../testing/mock-live-rates";
 import { LiveRateList } from "./live-rate-list";
 
 afterEach(() => {

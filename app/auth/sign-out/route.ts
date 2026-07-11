@@ -3,7 +3,7 @@ import {
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
-} from "@/features/guest-session/guest-session";
+} from "@/features/guest-session/model/guest-session";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 import { NextResponse, type NextRequest } from "next/server";

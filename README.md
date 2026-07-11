@@ -14,6 +14,7 @@ This is a solution to the [FX Checker challenge on Frontend Mentor](https://www.
   - [Continued Development](#continued-development)
   - [AI Collaboration](#ai-collaboration)
 - [Development](#development)
+  - [Project Structure](#project-structure)
   - [Environment](#environment)
   - [Quality Gates](#quality-gates)
 - [Decisions](#decisions)
@@ -86,6 +87,35 @@ AI assistance was used as a pair-programming and documentation partner: brainsto
 The useful pattern was to let AI help make implicit decisions explicit while keeping final choices grounded in the project constraints. The main risk is over-documenting a small project, so the docs intentionally stay lightweight.
 
 ## Development
+
+### Project Structure
+
+The app uses Next.js App Router at the repository root and keeps product code outside `app/` unless the file is part of routing.
+
+```text
+app/         Route segments, route handlers, layouts, and route-level fallbacks.
+components/  Shared, product-agnostic UI primitives and auth shell components.
+features/    Product modules organized by domain.
+hooks/       Shared React hooks used across multiple features or UI primitives.
+lib/         Cross-cutting infrastructure, external integrations, and generic utilities.
+public/      Static assets served by Next.js.
+stories/     Storybook stories for reusable UI components.
+docs/adr/    Architecture decision records.
+```
+
+Feature folders should expose their public route-facing API through `features/<feature>/index.ts` when practical. Inside a feature, files are grouped by role:
+
+```text
+features/<feature>/
+  api/         Client/server calls, server actions, route-facing data access, and mutations.
+  components/  Feature-owned React components.
+  hooks/       Hooks that are only meaningful for that feature.
+  model/       Pure domain logic, types, parsing, formatting, and derived view models.
+  stores/      Client-side or cookie-backed state stores and optimistic state helpers.
+  testing/     Feature-specific test data or helpers.
+```
+
+Not every feature needs every folder. Small features can stay flat until there is more than one meaningful module type. Shared hooks belong in `hooks/`, not `components/ui/`, unless they are truly private implementation details of a single UI primitive.
 
 Install dependencies:
 

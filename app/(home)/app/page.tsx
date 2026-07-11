@@ -1,8 +1,11 @@
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
-import { createUrlSearchParams, getRateHistoryUrlStateFromParams } from "@/features/home/url-state";
+import {
+  createUrlSearchParams,
+  getRateHistoryUrlStateFromParams,
+} from "@/features/home/utils/url-state";
 import { RateHistory, deriveRateHistoryData } from "@/features/rate-history";
-import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/rate-history-chart-model";
-import { getHistoryPageData } from "@/features/rate-history/server";
+import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/model/rate-history-chart-model";
+import { getHistoryPageData } from "@/features/rate-history/api/server";
 import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
 

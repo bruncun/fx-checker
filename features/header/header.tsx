@@ -1,6 +1,6 @@
 import { Logo } from "@/components/logo";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
-import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
+import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 import { cookies } from "next/headers";

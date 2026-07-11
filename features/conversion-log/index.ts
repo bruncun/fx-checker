@@ -6,5 +6,5 @@ export {
   type Conversion,
   type ConversionCurrencyPair,
   type CreateConversionInput,
-} from "./conversion-log";
+} from "./model/conversion-log";
 export { ConversionLog, ConversionLogFallback } from "./components/conversion-log";

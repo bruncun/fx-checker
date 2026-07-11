@@ -4,7 +4,7 @@ const { warmFrankfurterCache } = vi.hoisted(() => ({
   warmFrankfurterCache: vi.fn(),
 }));
 
-vi.mock("@/features/home/cache-warmup", () => ({
+vi.mock("@/features/home/api/cache-warmup", () => ({
   warmFrankfurterCache,
 }));
 

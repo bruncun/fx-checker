@@ -6,7 +6,7 @@ const { createFavorite, deleteFavorite } = vi.hoisted(() => ({
   deleteFavorite: vi.fn(),
 }));
 
-vi.mock("@/features/favorites/actions", () => ({
+vi.mock("@/features/favorites/api/actions", () => ({
   createFavorite,
   deleteFavorite,
 }));

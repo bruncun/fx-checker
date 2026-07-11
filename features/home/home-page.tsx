@@ -1,12 +1,12 @@
-import { getServerConversions } from "@/features/conversion-log/server";
-import { getServerFavorites } from "@/features/favorites/server";
+import { getServerConversions } from "@/features/conversion-log/api/server";
+import { getServerFavorites } from "@/features/favorites/api/server";
 import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
 import {
   getCurrencyReferenceData,
   getLatestRatesData,
   getLiveRatesData,
-} from "@/features/exchange-rates/server";
+} from "@/features/exchange-rates/api/server";
 import { Suspense, type ReactNode } from "react";
 import { Converter } from "@/features/converter";
 import { LiveRateList } from "@/features/live-rates";

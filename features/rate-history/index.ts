@@ -13,4 +13,4 @@ export {
   type RateHistoryRangeModel,
   type RateHistoryStat,
   type RateHistoryViewModel,
-} from "./rate-history";
+} from "./model/rate-history";

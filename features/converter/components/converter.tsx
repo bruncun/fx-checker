@@ -5,17 +5,17 @@ import * as React from "react";
 import type { FlagCountryCode } from "@/components/ui/flag";
 import type { Conversion, CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
-import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
+import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import {
   getConverterAmountFromParams,
   getCurrencyPairUrl,
   getSelectedCurrencyPairFromParams,
   getSelectedCurrencyPairKey,
-} from "@/features/home/url-state";
+} from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { AvailableCurrency } from "../currencies";
-import { getExchangeRate, formatExchangeRate } from "../exchange";
+import type { AvailableCurrency } from "../model/currencies";
+import { getExchangeRate, formatExchangeRate } from "../model/exchange";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
 export type SelectedCurrency = {
@@ -93,9 +93,9 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
         { createConversion },
         { addOptimisticConversion, removeOptimisticConversion, replaceOptimisticConversion },
       ] = await Promise.all([
-        import("@/features/conversion-log/conversion-log"),
-        import("@/features/conversion-log/client"),
-        import("@/features/conversion-log/optimistic-conversions"),
+        import("@/features/conversion-log/model/conversion-log"),
+        import("@/features/conversion-log/api/client"),
+        import("@/features/conversion-log/stores/optimistic-conversions"),
       ]);
       const normalizedInput = normalizeConversionInput(input);
 

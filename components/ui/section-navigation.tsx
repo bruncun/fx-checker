@@ -5,8 +5,8 @@ import Link from "next/link";
 
 import { TabButton, TabCountBadge } from "@/components/ui/tab-button";
 import { Icon } from "@/components/ui/icon";
-import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
+import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
+import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import { cn } from "@/lib/utils";
 
 export type SectionNavigationItem = {

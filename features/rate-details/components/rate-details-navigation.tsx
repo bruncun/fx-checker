@@ -1,8 +1,8 @@
 "use client";
 
 import { SectionNavigation, type SectionNavigationItem } from "@/components/ui/section-navigation";
-import { useOptimisticConversionCount } from "@/features/conversion-log/optimistic-conversions";
-import { useOptimisticFavoriteCount } from "@/features/favorites/optimistic-favorites";
+import { useOptimisticConversionCount } from "@/features/conversion-log/stores/optimistic-conversions";
+import { useOptimisticFavoriteCount } from "@/features/favorites/stores/optimistic-favorites";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   appendSearchParams,

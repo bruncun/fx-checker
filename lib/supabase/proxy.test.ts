@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { GUEST_MODE_COOKIE } from "@/features/guest-session/guest-session";
+import { GUEST_MODE_COOKIE } from "@/features/guest-session/model/guest-session";
 
 const { createServerClient, getClaims } = vi.hoisted(() => ({
   createServerClient: vi.fn(),

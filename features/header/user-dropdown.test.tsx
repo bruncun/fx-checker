@@ -17,7 +17,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => vi.fn(),
 }));
 

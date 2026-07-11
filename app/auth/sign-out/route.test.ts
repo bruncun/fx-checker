@@ -6,7 +6,7 @@ import {
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
-} from "@/features/guest-session/guest-session";
+} from "@/features/guest-session/model/guest-session";
 
 import { POST } from "./route";
 

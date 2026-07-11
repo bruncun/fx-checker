@@ -1,4 +1,4 @@
-import { deleteConversionAction } from "@/features/conversion-log/actions";
+import { deleteConversionAction } from "@/features/conversion-log/api/actions";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function DELETE(

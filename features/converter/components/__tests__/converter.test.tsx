@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Converter, type SelectedCurrency } from "../converter";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
-import type { AvailableCurrency } from "../../currencies";
+import type { AvailableCurrency } from "../../model/currencies";
 import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
@@ -35,16 +35,16 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/client", () => ({
+vi.mock("@/features/favorites/api/client", () => ({
   createFavorite,
   deleteFavorite: vi.fn(),
 }));
 
-vi.mock("@/features/conversion-log/client", () => ({
+vi.mock("@/features/conversion-log/api/client", () => ({
   createConversion,
 }));
 
-vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => showDataUnavailableError,
 }));
 

@@ -4,8 +4,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RateHistory } from "./rate-history";
-import type { RateHistoryData } from "../rate-history";
-import { deriveRateHistoryViewModel } from "../rate-history-chart-model";
+import type { RateHistoryData } from "../model/rate-history";
+import { deriveRateHistoryViewModel } from "../model/rate-history-chart-model";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",

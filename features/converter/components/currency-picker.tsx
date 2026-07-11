@@ -8,9 +8,9 @@ import { Flag, type FlagCountryCode } from "@/components/ui/flag";
 import { Icon } from "@/components/ui/icon";
 import { SearchInput } from "@/components/ui/search-input";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
-import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
-import type { AvailableCurrency } from "../currencies";
+import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
+import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
+import type { AvailableCurrency } from "../model/currencies";
 
 export type CurrencyPickerItem = AvailableCurrency;
 

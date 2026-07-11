@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
-import type { AvailableCurrency } from "@/features/converter/currencies";
+import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import {
   convertAmount,
   formatExchangeRate,
   getExchangeRate,
   MoneyDecimal,
-} from "@/features/converter/exchange";
+} from "@/features/converter/model/exchange";
 import type { SelectedCurrency } from "@/features/converter";
 import {
   findFavorite,
@@ -27,15 +27,15 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites";
-import { createFavorite, deleteFavorite } from "@/features/favorites/client";
+import { createFavorite, deleteFavorite } from "@/features/favorites/api/client";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,
   replaceOptimisticFavorite,
   useOptimisticFavorites,
-} from "@/features/favorites/optimistic-favorites";
-import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
-import { getCurrencyPairUrl } from "@/features/home/url-state";
+} from "@/features/favorites/stores/optimistic-favorites";
+import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
+import { getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";

@@ -12,18 +12,18 @@ import {
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { TabPendingState } from "@/components/ui/tab-pending-state";
-import { useTransitioningList } from "@/components/ui/use-transitioning-list";
+import { useTransitioningList } from "@/hooks/use-transitioning-list";
 import type { SelectedCurrency } from "@/features/converter";
-import type { AvailableCurrency } from "@/features/converter/currencies";
+import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
-import { deleteFavorite } from "@/features/favorites/client";
+import { deleteFavorite } from "@/features/favorites/api/client";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,
   useOptimisticFavorites,
-} from "@/features/favorites/optimistic-favorites";
-import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
-import { getCurrencyPairUrl } from "@/features/home/url-state";
+} from "@/features/favorites/stores/optimistic-favorites";
+import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
+import { getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import { deriveLiveRateForPair, type LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";

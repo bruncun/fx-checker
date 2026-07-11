@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { act, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { addOptimisticFavorite } from "@/features/favorites/optimistic-favorites";
+import { addOptimisticFavorite } from "@/features/favorites/stores/optimistic-favorites";
 import { FavoriteRates } from "./favorite-rates";
 
 const { deleteFavorite, routerRefresh, routerReplace, showDataUnavailableError, testSearchParams } =
@@ -25,11 +25,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/client", () => ({
+vi.mock("@/features/favorites/api/client", () => ({
   deleteFavorite,
 }));
 
-vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => showDataUnavailableError,
 }));
 

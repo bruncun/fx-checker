@@ -10,13 +10,13 @@ import type { FlagCountryCode } from "@/components/ui/flag";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
+import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import type { CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import type { FrankfurterRate } from "@/lib/frankfurter";
-import type { AvailableCurrency } from "../currencies";
-import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../exchange";
+import type { AvailableCurrency } from "../model/currencies";
+import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
 import type { SelectedCurrency } from "./converter";
 import type { CurrencyPickerHandle, CurrencyPickerProps } from "./currency-picker";
 

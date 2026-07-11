@@ -1,8 +1,8 @@
 import { ConversionLog, ConversionLogFallback } from "@/features/conversion-log";
-import { getServerConversions } from "@/features/conversion-log/server";
-import type { AvailableCurrency } from "@/features/converter/currencies";
-import { getCurrencyReferenceData } from "@/features/exchange-rates/server";
-import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
+import { getServerConversions } from "@/features/conversion-log/api/server";
+import type { AvailableCurrency } from "@/features/converter/model/currencies";
+import { getCurrencyReferenceData } from "@/features/exchange-rates/api/server";
+import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { cookies } from "next/headers";
 import { Suspense } from "react";

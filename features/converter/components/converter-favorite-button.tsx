@@ -11,14 +11,14 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites";
-import { createFavorite, deleteFavorite } from "@/features/favorites/client";
+import { createFavorite, deleteFavorite } from "@/features/favorites/api/client";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,
   replaceOptimisticFavorite,
   useOptimisticFavorites,
-} from "@/features/favorites/optimistic-favorites";
-import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
+} from "@/features/favorites/stores/optimistic-favorites";
+import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 
 type ConverterFavoriteButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   favoritesPromise: Promise<Favorite[]>;

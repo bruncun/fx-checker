@@ -1,12 +1,12 @@
 import { CompareRates, CompareRatesFallback } from "@/features/compare-rates";
-import type { AvailableCurrency } from "@/features/converter/currencies";
-import { getCurrencyReferenceData, getLatestRatesData } from "@/features/exchange-rates/server";
+import type { AvailableCurrency } from "@/features/converter/model/currencies";
+import { getCurrencyReferenceData, getLatestRatesData } from "@/features/exchange-rates/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   getConverterAmountFromParams,
   getSelectedCurrencyPairFromParams,
-} from "@/features/home/url-state";
-import { getServerFavorites } from "@/features/favorites/server";
+} from "@/features/home/utils/url-state";
+import { getServerFavorites } from "@/features/favorites/api/server";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { Suspense } from "react";
 

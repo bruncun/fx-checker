@@ -6,5 +6,5 @@ export {
   parseFavoritePair,
   type Favorite,
   type FavoriteCurrencyPair,
-} from "./favorites";
+} from "./model/favorites";
 export { FavoriteRates, FavoriteRatesFallback } from "./components/favorite-rates";

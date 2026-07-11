@@ -31,12 +31,12 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/conversion-log/client", () => ({
+vi.mock("@/features/conversion-log/api/client", () => ({
   deleteAllConversions,
   deleteConversion,
 }));
 
-vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => showDataUnavailableError,
 }));
 

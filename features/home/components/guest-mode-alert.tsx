@@ -2,7 +2,7 @@ import {
   GUEST_ALERT_DISMISSED_COOKIE,
   isGuestCookieValue,
   isGuestModeFromCookies,
-} from "@/features/guest-session/guest-session";
+} from "@/features/guest-session/model/guest-session";
 import { cookies } from "next/headers";
 import { DismissibleGuestModeAlert } from "./guest-mode-alert-client";
 

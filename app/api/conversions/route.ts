@@ -1,11 +1,11 @@
 import {
   createConversionAction,
   deleteAllConversionsAction,
-} from "@/features/conversion-log/actions";
+} from "@/features/conversion-log/api/actions";
 import {
   InvalidConversionInputError,
   parseCreateConversionInput,
-} from "@/features/conversion-log/conversion-log";
+} from "@/features/conversion-log/model/conversion-log";
 import { NextResponse, type NextRequest } from "next/server";
 
 async function readConversionInput(request: NextRequest) {

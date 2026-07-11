@@ -1,11 +1,11 @@
-import type { AvailableCurrency } from "@/features/converter/currencies";
+import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import {
   getCurrencyReferenceData,
   getLatestRatesData,
   getLiveRatesData,
-} from "@/features/exchange-rates/server";
+} from "@/features/exchange-rates/api/server";
 import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites";
-import { getServerFavorites } from "@/features/favorites/server";
+import { getServerFavorites } from "@/features/favorites/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { deriveLiveRateForPair } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";

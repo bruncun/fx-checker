@@ -6,7 +6,7 @@ const { createConversionAction, deleteAllConversionsAction } = vi.hoisted(() => 
   deleteAllConversionsAction: vi.fn(),
 }));
 
-vi.mock("@/features/conversion-log/actions", () => ({
+vi.mock("@/features/conversion-log/api/actions", () => ({
   createConversionAction,
   deleteAllConversionsAction,
 }));

@@ -1,9 +1,9 @@
 "use client";
 
-import { usePointerDownOutside } from "@/components/ui/use-pointer-down-outside";
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
+import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
+import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
+import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";

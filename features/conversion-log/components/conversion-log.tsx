@@ -12,20 +12,20 @@ import {
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { TabPendingState } from "@/components/ui/tab-pending-state";
-import { useTransitioningList } from "@/components/ui/use-transitioning-list";
-import { useRovingTabIndex } from "@/components/ui/use-roving-tabindex";
+import { useTransitioningList } from "@/hooks/use-transitioning-list";
+import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import type { Conversion } from "@/features/conversion-log";
-import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/client";
+import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/api/client";
 import {
   clearOptimisticConversions,
   removeOptimisticConversion,
   setConversionSnapshot,
   useOptimisticConversions,
-} from "@/features/conversion-log/optimistic-conversions";
-import type { AvailableCurrency } from "@/features/converter/currencies";
-import { MoneyDecimal } from "@/features/converter/exchange";
-import { useDataUnavailableError } from "@/features/home/components/use-data-unavailable-error";
-import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/url-state";
+} from "@/features/conversion-log/stores/optimistic-conversions";
+import type { AvailableCurrency } from "@/features/converter/model/currencies";
+import { MoneyDecimal } from "@/features/converter/model/exchange";
+import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
+import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 

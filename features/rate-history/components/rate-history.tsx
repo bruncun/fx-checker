@@ -1,6 +1,9 @@
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { RateChange } from "@/components/ui/rate-change";
-import type { HistoryRange, RateHistoryViewModel } from "@/features/rate-history/rate-history";
+import type {
+  HistoryRange,
+  RateHistoryViewModel,
+} from "@/features/rate-history/model/rate-history";
 import { RateHistoryChart } from "./rate-history-chart";
 import { RateHistoryRangePicker } from "./rate-history-range-viewer";
 

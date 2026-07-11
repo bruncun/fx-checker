@@ -24,12 +24,12 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/client", () => ({
+vi.mock("@/features/favorites/api/client", () => ({
   createFavorite,
   deleteFavorite: vi.fn(),
 }));
 
-vi.mock("@/features/home/components/use-data-unavailable-error", () => ({
+vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => showDataUnavailableError,
 }));
 

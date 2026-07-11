@@ -1,5 +1,8 @@
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
-import type { HistoryRange, RateHistoryChartModel } from "@/features/rate-history/rate-history";
+import type {
+  HistoryRange,
+  RateHistoryChartModel,
+} from "@/features/rate-history/model/rate-history";
 
 const chartWidth = 267;
 

@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/guest-session";
+import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/model/guest-session";
 import { cn } from "@/lib/utils";
 
 const alertExitAnimationMs = 160;

@@ -1,4 +1,4 @@
-import { warmFrankfurterCache } from "@/features/home/cache-warmup";
+import { warmFrankfurterCache } from "@/features/home/api/cache-warmup";
 
 function getCronSecret() {
   return process.env.CRON_SECRET?.trim();

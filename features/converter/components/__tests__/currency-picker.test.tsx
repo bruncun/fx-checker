@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { AvailableCurrency } from "../../currencies";
+import type { AvailableCurrency } from "../../model/currencies";
 import { CurrencyPicker, getCurrencyGroups } from "../currency-picker";
 
 const currencies: AvailableCurrency[] = [

@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
-import { GUEST_MODE_COOKIE, isGuestCookieValue } from "@/features/guest-session/guest-session";
+import {
+  GUEST_MODE_COOKIE,
+  isGuestCookieValue,
+} from "@/features/guest-session/model/guest-session";
 
 const publicRoutes = new Set(["/guest"]);
 const unauthOnlyRoutes = new Set([
