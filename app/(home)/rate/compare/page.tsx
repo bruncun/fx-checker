@@ -21,9 +21,7 @@ type CompareRatesPageProps = {
   }>;
 };
 
-export async function generateMetadata({
-  searchParams,
-}: CompareRatesPageProps): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: CompareRatesPageProps): Promise<Metadata> {
   const selectedPair = getCurrencyPairLabelFromParams(new URLSearchParams(await searchParams));
 
   return {
