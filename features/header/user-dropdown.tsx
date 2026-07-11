@@ -45,7 +45,17 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
     ? (theme as ThemeValue)
     : "system";
   const initials = getAccountInitials({ email, isGuest });
-  const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
+  const menuFocus = useRovingTabIndex<HTMLButtonElement>({
+    containerRef: panelRef,
+    itemSelector: "[data-user-menu-option]",
+    onCurrentElementChange: (button) => {
+      if (button.dataset.themeValue) {
+        setTheme(button.dataset.themeValue);
+      }
+    },
+    orientation: "vertical",
+  });
+  const themeFocus = useRovingTabIndex<HTMLButtonElement>({
     containerRef: panelRef,
     itemSelector: "[data-theme-option]",
     onCurrentElementChange: (button) => {
@@ -73,15 +83,15 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
       return;
     }
 
-    const themeButtons = rovingFocus.getItems();
+    const menuButtons = menuFocus.getItems();
     const activeThemeButton =
-      themeButtons.find((button) => button.dataset.themeValue === activeTheme) ?? themeButtons[0];
+      menuButtons.find((button) => button.dataset.themeValue === activeTheme) ?? menuButtons[0];
 
-    themeButtons.forEach((button) => {
+    menuButtons.forEach((button) => {
       button.tabIndex = button === activeThemeButton ? 0 : -1;
     });
     activeThemeButton?.focus({ preventScroll: true });
-  }, [activeTheme, isOpen, rovingFocus]);
+  }, [activeTheme, isOpen, menuFocus]);
 
   usePointerDownOutside({
     enabled: isOpen,
@@ -116,7 +126,32 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
       return;
     }
 
-    rovingFocus.handleKeyDown(event);
+    if (event.key === "Tab") {
+      const menuButtons = menuFocus.getItems();
+      const currentIndex = menuButtons.findIndex((button) => button === document.activeElement);
+
+      if (menuButtons.length === 0 || currentIndex === -1) {
+        return;
+      }
+
+      event.preventDefault();
+      const nextIndex = event.shiftKey
+        ? (currentIndex - 1 + menuButtons.length) % menuButtons.length
+        : (currentIndex + 1) % menuButtons.length;
+
+      menuFocus.focusItem(menuButtons[nextIndex]);
+      return;
+    }
+
+    if (
+      document.activeElement instanceof HTMLElement &&
+      document.activeElement.matches("[data-theme-option]") &&
+      themeFocus.handleKeyDown(event)
+    ) {
+      return;
+    }
+
+    menuFocus.handleKeyDown(event);
   }
 
   return (
@@ -129,7 +164,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
         aria-label="Account menu"
         className={cn(
           "fx-transition-surface inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
-          "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
+          "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
         )}
         onClick={() => {
           if (isOpen) {
@@ -174,11 +209,12 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
                   aria-label={option.label}
                   className={cn(
                     "fx-transition-surface inline-flex h-400 cursor-pointer items-center justify-center rounded-8 p-100 text-neutral-200",
-                    "focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
+                    "focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
                     isActive && "bg-neutral-500 text-neutral-50"
                   )}
                   data-theme-option
                   data-theme-value={option.value}
+                  data-user-menu-option
                   onClick={() => {
                     setTheme(option.value);
                   }}
@@ -199,10 +235,12 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
 
           <button
             className="fx-transition-surface flex h-500 w-full items-center justify-between gap-150 rounded-4 px-100 py-125 text-left text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+            data-user-menu-option
             onClick={(event) => {
               closeMenu({ restoreFocus: false });
               shortcuts?.openShortcutsDialog(triggerRef.current ?? event.currentTarget);
             }}
+            tabIndex={-1}
             type="button"
           >
             <span>Keyboard Shortcuts</span>
@@ -216,7 +254,9 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
 
           <button
             className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+            data-user-menu-option
             onClick={signOut}
+            tabIndex={-1}
             type="button"
           >
             Sign out

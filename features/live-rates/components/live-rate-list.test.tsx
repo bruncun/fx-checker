@@ -49,7 +49,10 @@ describe("LiveRateList", () => {
     const scroller = screen.getByRole("region", { name: "Live exchange rates" });
 
     expect(scroller.getAttribute("tabindex")).toBe("0");
-    expect(scroller.className).toContain("focus-visible:after:shadow-");
+    expect(scroller.hasAttribute("data-live-rates-scroll-region")).toBe(true);
+    expect(scroller.className).toContain("focus-visible:[&>ul]:after:shadow-");
+    expect(scroller.className).toContain("focus-visible:[&>ul]:after:z-10");
+    expect(scroller.className).not.toContain("focus-visible:after:");
   });
 
   it("renders rate items as static content", () => {

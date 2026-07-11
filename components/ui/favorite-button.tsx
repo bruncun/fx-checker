@@ -2,7 +2,10 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/ui/icon";
-import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
+import {
+  interactiveSurfaceClassName,
+  interactiveSurfaceFocusOnNeutral700ClassName,
+} from "@/components/ui/interactive-surface";
 
 export interface FavoriteButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   pinned?: boolean;
@@ -31,6 +34,7 @@ function FavoriteButton({
       className={cn(
         interactiveSurfaceClassName,
         isIconVariant ? "p-100" : "px-150 py-100 text-preset-5-medium text-neutral-50 uppercase",
+        !isIconVariant && interactiveSurfaceFocusOnNeutral700ClassName,
         pinned &&
           !isIconVariant &&
           "!bg-lime-500 text-neutral-900 shadow-none hover:!bg-lime-500 hover:opacity-80",

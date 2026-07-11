@@ -99,4 +99,73 @@ describe("UserDropdown", () => {
     expect(document.activeElement).toBe(screen.getByRole("radio", { name: "Dark" }));
     expect(setTheme).toHaveBeenCalledWith("dark");
   });
+
+  it("moves through account menu options with vertical roving focus", () => {
+    render(<UserDropdown email="mika@example.com" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    const systemTheme = screen.getByRole("radio", { name: "System" });
+    const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
+    const signOutButton = screen.getByRole("button", { name: "Sign out" });
+
+    systemTheme.focus();
+    fireEvent.keyDown(systemTheme, { key: "ArrowDown" });
+
+    expect(document.activeElement).toBe(screen.getByRole("radio", { name: "Dark" }));
+
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
+
+    expect(document.activeElement).toBe(shortcutsButton);
+    expect(shortcutsButton.tabIndex).toBe(0);
+    expect(systemTheme.tabIndex).toBe(-1);
+
+    fireEvent.keyDown(shortcutsButton, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(signOutButton);
+
+    fireEvent.keyDown(signOutButton, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(systemTheme);
+  });
+
+  it("traps tab focus inside the account dialog until dismissed", async () => {
+    render(<UserDropdown email="mika@example.com" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    const systemTheme = screen.getByRole("radio", { name: "System" });
+    const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
+    const signOutButton = screen.getByRole("button", { name: "Sign out" });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(systemTheme);
+    });
+
+    fireEvent.keyDown(systemTheme, { key: "Tab" });
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Tab" });
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Tab" });
+
+    expect(document.activeElement).toBe(shortcutsButton);
+
+    fireEvent.keyDown(shortcutsButton, { key: "Tab" });
+    expect(document.activeElement).toBe(signOutButton);
+
+    fireEvent.keyDown(signOutButton, { key: "Tab" });
+    expect(document.activeElement).toBe(systemTheme);
+
+    fireEvent.keyDown(systemTheme, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(signOutButton);
+  });
+
+  it("closes the account dialog with Escape and restores trigger focus", async () => {
+    render(<UserDropdown email="mika@example.com" />);
+
+    const trigger = screen.getByRole("button", { name: "Account menu" });
+
+    fireEvent.click(trigger);
+    fireEvent.keyDown(screen.getByRole("radio", { name: "System" }), { key: "Escape" });
+
+    expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
+    await waitFor(() => {
+      expect(document.activeElement).toBe(trigger);
+    });
+  });
 });

@@ -26,4 +26,14 @@ describe("ClearButton", () => {
     expect(button.className).toContain("bg-neutral-500");
     expect(button.className).toContain("hover:bg-neutral-400");
   });
+
+  it("uses the neutral 700 focus gap for rate details headers", () => {
+    render(<ClearButton />);
+
+    const button = screen.getByRole("button", { name: "Clear all" });
+
+    expect(button.className).toContain(
+      "focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))]"
+    );
+  });
 });

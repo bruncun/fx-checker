@@ -41,6 +41,16 @@ describe("FavoriteButton", () => {
     expect(button.querySelector("span")?.className).toContain("fx-favorite-default-pinned");
   });
 
+  it("uses the neutral 700 focus gap for the default converter action", () => {
+    render(<FavoriteButton />);
+
+    const button = screen.getByRole("button", { name: "Favorite" });
+
+    expect(button.className).toContain(
+      "focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))]"
+    );
+  });
+
   it("keeps the pinned icon variant structurally outlined with a primary star", () => {
     render(<FavoriteButton pinned variant="icon" />);
 
@@ -51,6 +61,16 @@ describe("FavoriteButton", () => {
     expect(button.className).not.toContain("text-neutral-900");
     expect(button.querySelector("span")?.className).toContain("fx-favorite-icon-pinned");
     expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
+  });
+
+  it("keeps the neutral 600 focus gap for icon row actions", () => {
+    render(<FavoriteButton variant="icon" />);
+
+    const button = screen.getByRole("button", { name: "Favorite" });
+
+    expect(button.className).toContain(
+      "focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))]"
+    );
   });
 
   it("keeps the original disabled styling for the default variant", () => {

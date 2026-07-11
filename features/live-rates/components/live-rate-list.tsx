@@ -19,7 +19,8 @@ export function LiveRateList({ rates }: LiveRateListProps) {
       </div>
       <div
         aria-label="Live exchange rates"
-        className="relative min-w-0 flex-1 overflow-x-auto focus-visible:outline-none focus-visible:after:pointer-events-none focus-visible:after:absolute focus-visible:after:inset-0 focus-visible:after:z-10 focus-visible:after:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus-visible:after:content-['']"
+        className="min-w-0 flex-1 overflow-x-auto focus-visible:outline-none focus-visible:[&>ul]:relative focus-visible:[&>ul]:after:pointer-events-none focus-visible:[&>ul]:after:absolute focus-visible:[&>ul]:after:inset-0 focus-visible:[&>ul]:after:z-10 focus-visible:[&>ul]:after:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus-visible:[&>ul]:after:content-['']"
+        data-live-rates-scroll-region
         role="region"
         tabIndex={0}
       >

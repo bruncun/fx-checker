@@ -7,7 +7,10 @@ import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { CurrencyButton } from "@/components/ui/currency-button";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import type { FlagCountryCode } from "@/components/ui/flag";
-import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
+import {
+  interactiveSurfaceClassName,
+  interactiveSurfaceFocusOnNeutral700ClassName,
+} from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
@@ -15,6 +18,7 @@ import type { CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import { cn } from "@/lib/utils";
 import type { AvailableCurrency } from "../model/currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
 import type { SelectedCurrency } from "./converter";
@@ -325,7 +329,11 @@ function FavoriteButtonFallback() {
   return (
     <button
       aria-label="Loading favorite state"
-      className={`${interactiveSurfaceClassName} px-150 py-100`}
+      className={cn(
+        interactiveSurfaceClassName,
+        interactiveSurfaceFocusOnNeutral700ClassName,
+        "px-150 py-100"
+      )}
       data-converter-action
       disabled
       tabIndex={-1}

@@ -47,6 +47,12 @@ function isWithinRangePicker(element: EventTarget | null) {
   return element instanceof HTMLElement && Boolean(element.closest("[data-range-picker]"));
 }
 
+function isWithinLiveRatesScroller(element: EventTarget | null) {
+  return (
+    element instanceof HTMLElement && Boolean(element.closest("[data-live-rates-scroll-region]"))
+  );
+}
+
 function isMacPlatform() {
   return typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 }
@@ -150,7 +156,11 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
       }
 
       if (event.key === "ArrowLeft" && historyRangeNavigationRef.current) {
-        if (isEditableElement(event.target) || isWithinRangePicker(event.target)) {
+        if (
+          isEditableElement(event.target) ||
+          isWithinRangePicker(event.target) ||
+          isWithinLiveRatesScroller(event.target)
+        ) {
           return;
         }
 
@@ -160,7 +170,11 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
       }
 
       if (event.key === "ArrowRight" && historyRangeNavigationRef.current) {
-        if (isEditableElement(event.target) || isWithinRangePicker(event.target)) {
+        if (
+          isEditableElement(event.target) ||
+          isWithinRangePicker(event.target) ||
+          isWithinLiveRatesScroller(event.target)
+        ) {
           return;
         }
 

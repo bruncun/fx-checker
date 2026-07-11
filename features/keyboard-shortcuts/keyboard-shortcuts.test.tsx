@@ -24,6 +24,27 @@ function RegisteredActions({
   return <input aria-label="Editable field" />;
 }
 
+function RegisteredHistoryRangeActions({
+  onNextRange,
+  onPreviousRange,
+}: {
+  onNextRange: () => void;
+  onPreviousRange: () => void;
+}) {
+  const shortcuts = useKeyboardShortcuts();
+
+  shortcuts.registerHistoryRangeNavigation({
+    nextRange: onNextRange,
+    previousRange: onPreviousRange,
+  });
+
+  return (
+    <div aria-label="Live exchange rates" data-live-rates-scroll-region role="region" tabIndex={0}>
+      Live rates
+    </div>
+  );
+}
+
 afterEach(() => {
   document.body.style.overflow = "";
   document.documentElement.style.overflow = "";
@@ -59,6 +80,31 @@ describe("KeyboardShortcutsProvider", () => {
     fireEvent.keyDown(screen.getByRole("textbox", { name: "Editable field" }), { key: "x" });
 
     expect(onSwap).toHaveBeenCalledOnce();
+  });
+
+  it("lets focused live markets handle arrow-key scrolling while history shortcuts are registered", () => {
+    const onNextRange = vi.fn();
+    const onPreviousRange = vi.fn();
+
+    render(
+      <KeyboardShortcutsProvider>
+        <RegisteredHistoryRangeActions
+          onNextRange={onNextRange}
+          onPreviousRange={onPreviousRange}
+        />
+      </KeyboardShortcutsProvider>
+    );
+
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    expect(onNextRange).toHaveBeenCalledOnce();
+
+    const liveMarkets = screen.getByRole("region", { name: "Live exchange rates" });
+
+    liveMarkets.focus();
+    const wasNotCanceled = fireEvent.keyDown(liveMarkets, { key: "ArrowLeft" });
+
+    expect(wasNotCanceled).toBe(true);
+    expect(onPreviousRange).not.toHaveBeenCalled();
   });
 
   it("opens the keyboard shortcuts dialog as a modal and closes with the close button", async () => {
