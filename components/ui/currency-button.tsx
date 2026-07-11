@@ -6,6 +6,8 @@ import { Icon } from "@/components/ui/icon";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 
 export interface CurrencyButtonProps extends React.ComponentProps<"button"> {
+  flagFetchPriority?: React.ComponentProps<typeof Flag>["fetchPriority"];
+  flagLoading?: React.ComponentProps<typeof Flag>["loading"];
   countryCode: FlagCountryCode;
   currencyCode: string;
 }
@@ -13,6 +15,8 @@ export interface CurrencyButtonProps extends React.ComponentProps<"button"> {
 function CurrencyButton({
   "aria-label": ariaLabel = "Select currency",
   className,
+  flagFetchPriority,
+  flagLoading,
   countryCode,
   currencyCode,
   type = "button",
@@ -29,7 +33,13 @@ function CurrencyButton({
       type={type}
       {...props}
     >
-      <Flag className="size-250" countryCode={countryCode} alt="" />
+      <Flag
+        className="size-250"
+        countryCode={countryCode}
+        alt=""
+        fetchPriority={flagFetchPriority}
+        loading={flagLoading}
+      />
       <span>{currencyCode}</span>
       <Icon decorative iconName="chevron-down" />
     </button>

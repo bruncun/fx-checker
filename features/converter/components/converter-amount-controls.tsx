@@ -276,6 +276,8 @@ function ConverterAmountPanel({
           countryCode={countryCode}
           currencies={currencies}
           currencyCode={currencyCode}
+          flagFetchPriority="high"
+          flagLoading="eager"
           focusSearchRequest={focusSearchRequest}
           onPickerOpen={() => {
             onInteraction(amountSide);

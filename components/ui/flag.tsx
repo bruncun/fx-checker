@@ -76,13 +76,14 @@ export interface FlagProps extends Omit<
   countryCode: FlagCountryCode;
 }
 
-function Flag({ alt, className, countryCode, ...props }: FlagProps) {
+function Flag({ alt, className, countryCode, loading = "lazy", ...props }: FlagProps) {
   return (
     <Image
       alt={alt ?? flagCountryNames[countryCode]}
       className={cn("size-6 rounded-full object-cover", className)}
       decoding="async"
       height={24}
+      loading={loading}
       src={`/images/flags/${countryCode}.webp`}
       width={24}
       {...props}

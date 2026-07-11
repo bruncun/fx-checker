@@ -47,6 +47,8 @@ export interface CurrencyPickerProps {
   countryCode: FlagCountryCode;
   currencies: AvailableCurrency[];
   currencyCode: string;
+  flagFetchPriority?: React.ComponentProps<typeof CurrencyButton>["flagFetchPriority"];
+  flagLoading?: React.ComponentProps<typeof CurrencyButton>["flagLoading"];
   ref?: React.Ref<CurrencyPickerHandle>;
   onPickerOpen?: () => void;
   onCurrencySelect?: (currency: CurrencyPickerItem) => void;
@@ -99,6 +101,8 @@ function CurrencyPicker({
   countryCode,
   currencies,
   currencyCode,
+  flagFetchPriority,
+  flagLoading,
   ref,
   onPickerOpen,
   onCurrencySelect,
@@ -357,6 +361,8 @@ function CurrencyPicker({
         aria-label={ariaLabel}
         countryCode={selectedCurrency?.countryCode ?? countryCode}
         currencyCode={selectedCurrency?.code ?? currencyCode}
+        flagFetchPriority={flagFetchPriority}
+        flagLoading={flagLoading}
         onClick={() => {
           if (isOpen) {
             setIsOpen(false);
