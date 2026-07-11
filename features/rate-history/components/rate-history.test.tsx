@@ -26,6 +26,14 @@ const history: RateHistoryData = {
   ],
 };
 
+const denseHistory: RateHistoryData = {
+  pair: "USD/EUR",
+  points: Array.from({ length: 13 }, (_, index) => ({
+    date: `2026-06-${String(index + 7).padStart(2, "0")}`,
+    rate: 0.8 + index / 100,
+  })),
+};
+
 afterEach(() => {
   cleanup();
 });
@@ -102,6 +110,59 @@ describe("RateHistory", () => {
 
     expect(details.textContent).toContain("0.8600");
     expect(details.textContent).toContain("Jun 19 16:00 CET");
+  });
+
+  it("supports keyboard exploration of chart points", () => {
+    render(
+      <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
+    );
+
+    const chart = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
+    const details = screen.getByRole("list", { name: "Chart details" });
+
+    expect(chart.getAttribute("tabindex")).toBe("0");
+    expect(chart.getAttribute("aria-describedby")).toContain("rate-history-chart-keyboard-help-1m");
+
+    chart.focus();
+    expect(document.activeElement).toBe(chart);
+
+    fireEvent.keyDown(chart, { key: "ArrowLeft" });
+    expect(details.textContent).toContain("0.8550");
+    expect(details.textContent).toContain("Jun 18, 2026 16:00 CET");
+    expect(chart.querySelector(".rounded-full")).toBeTruthy();
+
+    fireEvent.keyDown(chart, { key: "ArrowLeft" });
+    expect(details.textContent).toContain("0.8520");
+    expect(details.textContent).toContain("Jun 12, 2026 16:00 CET");
+
+    fireEvent.keyDown(chart, { key: "Home" });
+    expect(details.textContent).toContain("0.8500");
+    expect(details.textContent).toContain("May 19, 2026 16:00 CET");
+
+    fireEvent.keyDown(chart, { key: "End" });
+    expect(details.textContent).toContain("0.8600");
+    expect(details.textContent).toContain("Jun 19, 2026 16:00 CET");
+  });
+
+  it("uses PageUp and PageDown for larger chart-point jumps", () => {
+    render(
+      <RateHistory
+        model={deriveRateHistoryViewModel(denseHistory)}
+        pair="USD/EUR"
+        selectedRange="1M"
+      />
+    );
+
+    const chart = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
+    const details = screen.getByRole("list", { name: "Chart details" });
+
+    fireEvent.keyDown(chart, { key: "PageUp" });
+    expect(details.textContent).toContain("0.9000");
+    expect(details.textContent).toContain("Jun 17, 2026 16:00 CET");
+
+    fireEvent.keyDown(chart, { key: "PageDown" });
+    expect(details.textContent).toContain("0.9200");
+    expect(details.textContent).toContain("Jun 19, 2026 16:00 CET");
   });
 
   it("renders the tab empty state with the selected pair when history data is missing", () => {

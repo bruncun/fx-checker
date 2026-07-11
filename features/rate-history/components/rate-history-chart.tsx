@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type PointerEvent } from "react";
+import { useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import type {
@@ -22,27 +22,39 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getNearestPoint(points: RateHistoryChartPoint[], x: number) {
-  return points.reduce<RateHistoryChartPoint | null>((nearestPoint, point) => {
-    if (!nearestPoint) {
-      return point;
+function getNearestPointIndex(points: RateHistoryChartPoint[], x: number) {
+  return points.reduce<number | null>((nearestPointIndex, point, index) => {
+    if (nearestPointIndex === null) {
+      return index;
     }
 
-    return Math.abs(point.x - x) < Math.abs(nearestPoint.x - x) ? point : nearestPoint;
+    return Math.abs(point.x - x) < Math.abs(points[nearestPointIndex]!.x - x)
+      ? index
+      : nearestPointIndex;
   }, null);
+}
+
+function getKeyboardPageStep(pointCount: number) {
+  return Math.max(1, Math.ceil(pointCount / 10));
 }
 
 function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
   const chartId = `rate-history-chart-${range.toLowerCase()}`;
   const gradientId = `rate-history-area-${range.toLowerCase()}`;
+  const keyboardHelpId = `rate-history-chart-keyboard-help-${range.toLowerCase()}`;
   const summaryId = `rate-history-chart-summary-${range.toLowerCase()}`;
-  const [hoverPoint, setHoverPoint] = useState<RateHistoryChartPoint | null>(null);
+  const [hoverPointIndex, setHoverPointIndex] = useState<number | null>(null);
+  const [keyboardPointIndex, setKeyboardPointIndex] = useState<number | null>(null);
+  const hoverPoint = hoverPointIndex === null ? null : (chart.points[hoverPointIndex] ?? null);
+  const keyboardPoint =
+    keyboardPointIndex === null ? null : (chart.points[keyboardPointIndex] ?? null);
+  const activePoint = hoverPoint ?? keyboardPoint;
   const chartDetails = useMemo(
     () =>
-      hoverPoint
-        ? [hoverPoint.rateLabel, `${hoverPoint.dateLabel} 16:00 CET`]
+      activePoint
+        ? [activePoint.rateLabel, `${activePoint.dateLabel} 16:00 CET`]
         : [chart.lastRate, `${chart.lastDateLabel} 16:00 CET`],
-    [chart.lastDateLabel, chart.lastRate, hoverPoint]
+    [activePoint, chart.lastDateLabel, chart.lastRate]
   );
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
@@ -58,7 +70,40 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
       chartWidth
     );
 
-    setHoverPoint(getNearestPoint(chart.points, pointerX));
+    setHoverPointIndex(getNearestPointIndex(chart.points, pointerX));
+  }
+
+  function moveKeyboardPoint(nextIndex: number) {
+    setKeyboardPointIndex(clamp(nextIndex, 0, chart.points.length - 1));
+  }
+
+  function handleChartKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (chart.points.length === 0) {
+      return;
+    }
+
+    const currentIndex = keyboardPointIndex ?? chart.points.length - 1;
+    const pageStep = getKeyboardPageStep(chart.points.length);
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      event.preventDefault();
+      moveKeyboardPoint(currentIndex - 1);
+    } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      event.preventDefault();
+      moveKeyboardPoint(currentIndex + 1);
+    } else if (event.key === "PageUp") {
+      event.preventDefault();
+      moveKeyboardPoint(currentIndex - pageStep);
+    } else if (event.key === "PageDown") {
+      event.preventDefault();
+      moveKeyboardPoint(currentIndex + pageStep);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      moveKeyboardPoint(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      moveKeyboardPoint(chart.points.length - 1);
+    }
   }
 
   return (
@@ -80,10 +125,12 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
         />
       </div>
       <div
-        aria-describedby={summaryId}
+        aria-describedby={`${summaryId} ${keyboardHelpId}`}
         aria-label={`${range} ${pair} rate history chart`}
+        onKeyDown={handleChartKeyDown}
         role="img"
-        className="mt-250 grid grid-cols-[36px_1fr] gap-x-200"
+        tabIndex={0}
+        className="mt-250 grid grid-cols-[36px_1fr] gap-x-200 rounded-8 outline-none focus-visible:shadow-[0_0_0_2px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))]"
       >
         <div className="relative h-[272px] text-preset-6 text-neutral-200">
           {chart.yAxisLabels.map((axisLabel, index) => (
@@ -106,7 +153,7 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
         </div>
         <div
           className="relative h-[272px] w-full cursor-crosshair overflow-hidden"
-          onPointerLeave={() => setHoverPoint(null)}
+          onPointerLeave={() => setHoverPointIndex(null)}
           onPointerMove={handlePointerMove}
         >
           <svg
@@ -154,11 +201,11 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
               fill="none"
               vectorEffect="non-scaling-stroke"
             />
-            {hoverPoint ? (
+            {activePoint ? (
               <g className="pointer-events-none">
                 <line
-                  x1={hoverPoint.x}
-                  x2={hoverPoint.x}
+                  x1={activePoint.x}
+                  x2={activePoint.x}
                   y1="0"
                   y2={chartHeight}
                   stroke="hsl(var(--neutral-200))"
@@ -168,8 +215,8 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
                 <line
                   x1="0"
                   x2={chartWidth}
-                  y1={hoverPoint.y}
-                  y2={hoverPoint.y}
+                  y1={activePoint.y}
+                  y2={activePoint.y}
                   stroke="hsl(var(--neutral-200))"
                   strokeDasharray="4 4"
                   vectorEffect="non-scaling-stroke"
@@ -177,13 +224,13 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
               </g>
             ) : null}
           </svg>
-          {hoverPoint ? (
+          {activePoint ? (
             <div
               aria-hidden="true"
               className="pointer-events-none absolute z-10 size-125 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-lime-500 bg-neutral-700 sm:size-150"
               style={{
-                left: `${(hoverPoint.x / chartWidth) * 100}%`,
-                top: `${(hoverPoint.y / chartHeight) * 100}%`,
+                left: `${(activePoint.x / chartWidth) * 100}%`,
+                top: `${(activePoint.y / chartHeight) * 100}%`,
               }}
             />
           ) : null}
@@ -204,6 +251,10 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
         {range} {pair} moved from {chart.firstRate} on {chart.firstDateLabel} to {chart.lastRate} on{" "}
         {chart.lastDateLabel}. The highest displayed rate is {chart.yAxisLabels[0]?.label}, and the
         lowest displayed rate is {chart.yAxisLabels[2]?.label}.
+      </p>
+      <p id={keyboardHelpId} className="sr-only">
+        Use the arrow keys to move through chart points. Use Page Up and Page Down to move by larger
+        steps. Use Home and End to jump to the first or last point.
       </p>
     </section>
   );
