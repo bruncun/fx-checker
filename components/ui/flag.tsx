@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export const flagCountryNames = {
   ae: "United Arab Emirates",
@@ -77,8 +78,7 @@ export interface FlagProps extends Omit<
 
 function Flag({ alt, className, countryCode, ...props }: FlagProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- Flags are fixed-size local WebPs; Next image optimization adds overhead here without resizing benefit.
-    <img
+    <Image
       alt={alt ?? flagCountryNames[countryCode]}
       className={cn("size-6 rounded-full object-cover", className)}
       decoding="async"
