@@ -1,14 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import {
-  GUEST_CONVERSIONS_COOKIE,
-  isGuestModeFromCookies,
-  readGuestConversionsCookie,
-} from "@/features/guest-session/guest-session";
+import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
 import { hasEnvVars } from "@/lib/utils";
 import { cookies } from "next/headers";
-import { mapConversion, type Conversion } from "./conversion-log";
+import type { Conversion } from "./conversion-log";
+import {
+  createGuestConversionStore,
+  createSupabaseConversionStore,
+  type ConversionStore,
+} from "./store";
 
-export async function getServerConversions(): Promise<Conversion[]> {
+async function getConversionReadStore(): Promise<ConversionStore> {
   const cookieStore = await cookies();
 
   if (
@@ -16,18 +17,15 @@ export async function getServerConversions(): Promise<Conversion[]> {
     !hasEnvVars ||
     process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1"
   ) {
-    return readGuestConversionsCookie(cookieStore.get(GUEST_CONVERSIONS_COOKIE)?.value);
+    return createGuestConversionStore(cookieStore);
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("conversions")
-    .select("id, from_currency, to_currency, send_amount, receive_amount, created_at")
-    .order("created_at", { ascending: false });
+  return createSupabaseConversionStore({ supabase });
+}
 
-  if (error) {
-    throw error;
-  }
+export async function getServerConversions(): Promise<Conversion[]> {
+  const store = await getConversionReadStore();
 
-  return (data ?? []).map(mapConversion);
+  return store.list();
 }

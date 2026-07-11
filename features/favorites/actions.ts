@@ -1,25 +1,16 @@
 "use server";
 
+import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
 import { createClient } from "@/lib/supabase/server";
-import {
-  addGuestFavorite,
-  GUEST_FAVORITES_COOKIE,
-  isGuestModeFromCookies,
-  readGuestFavoritesCookie,
-  removeGuestFavorite,
-  serializeGuestFavoritesCookie,
-} from "@/features/guest-session/guest-session";
 import { cookies } from "next/headers";
+import type { Favorite, FavoriteCurrencyPair } from "./favorites";
 import {
-  mapFavorite,
-  normalizeFavoritePair,
-  type Favorite,
-  type FavoriteCurrencyPair,
-} from "./favorites";
+  createGuestFavoriteStore,
+  createSupabaseFavoriteStore,
+  type FavoriteStore,
+} from "./store";
 
-const FAVORITES_SELECT = "id, from_currency, to_currency, created_at";
-
-async function getAuthenticatedUserContext() {
+async function getAuthenticatedFavoriteStore(): Promise<FavoriteStore> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,74 +25,25 @@ async function getAuthenticatedUserContext() {
     throw new Error("You must be signed in to update favorites.");
   }
 
-  return { supabase, userId: user.id };
+  return createSupabaseFavoriteStore({ supabase, userId: user.id });
+}
+
+async function getFavoriteStore(): Promise<FavoriteStore> {
+  const cookieStore = await cookies();
+
+  return isGuestModeFromCookies(cookieStore)
+    ? createGuestFavoriteStore(cookieStore)
+    : getAuthenticatedFavoriteStore();
 }
 
 export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
-  const cookieStore = await cookies();
+  const store = await getFavoriteStore();
 
-  if (isGuestModeFromCookies(cookieStore)) {
-    const favorites = readGuestFavoritesCookie(cookieStore.get(GUEST_FAVORITES_COOKIE)?.value);
-    const favorite = addGuestFavorite(favorites, pair);
-    const nextFavorites = favorites.some((currentFavorite) => currentFavorite.id === favorite.id)
-      ? favorites
-      : [...favorites, favorite];
-
-    cookieStore.set(GUEST_FAVORITES_COOKIE, serializeGuestFavoritesCookie(nextFavorites), {
-      path: "/",
-      sameSite: "lax",
-    });
-
-    return favorite;
-  }
-
-  const { supabase, userId } = await getAuthenticatedUserContext();
-  const normalizedPair = normalizeFavoritePair(pair);
-  const { data, error } = await supabase
-    .from("favorites")
-    .insert({
-      from_currency: normalizedPair.fromCurrency,
-      to_currency: normalizedPair.toCurrency,
-      user_id: userId,
-    })
-    .select(FAVORITES_SELECT)
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return mapFavorite(data);
+  return store.create(pair);
 }
 
 export async function deleteFavorite(pair: FavoriteCurrencyPair): Promise<void> {
-  const cookieStore = await cookies();
+  const store = await getFavoriteStore();
 
-  if (isGuestModeFromCookies(cookieStore)) {
-    const favorites = readGuestFavoritesCookie(cookieStore.get(GUEST_FAVORITES_COOKIE)?.value);
-
-    cookieStore.set(
-      GUEST_FAVORITES_COOKIE,
-      serializeGuestFavoritesCookie(removeGuestFavorite(favorites, pair)),
-      {
-        path: "/",
-        sameSite: "lax",
-      }
-    );
-
-    return;
-  }
-
-  const { supabase, userId } = await getAuthenticatedUserContext();
-  const normalizedPair = normalizeFavoritePair(pair);
-  const { error } = await supabase
-    .from("favorites")
-    .delete()
-    .eq("user_id", userId)
-    .eq("from_currency", normalizedPair.fromCurrency)
-    .eq("to_currency", normalizedPair.toCurrency);
-
-  if (error) {
-    throw error;
-  }
+  await store.delete(pair);
 }

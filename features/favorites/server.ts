@@ -1,14 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import {
-  GUEST_FAVORITES_COOKIE,
-  isGuestModeFromCookies,
-  readGuestFavoritesCookie,
-} from "@/features/guest-session/guest-session";
+import { isGuestModeFromCookies } from "@/features/guest-session/guest-session";
 import { hasEnvVars } from "@/lib/utils";
 import { cookies } from "next/headers";
-import { mapFavorite, type Favorite } from "./favorites";
+import type { Favorite } from "./favorites";
+import {
+  createGuestFavoriteStore,
+  createSupabaseFavoriteStore,
+  type FavoriteStore,
+} from "./store";
 
-export async function getServerFavorites(): Promise<Favorite[]> {
+async function getFavoriteReadStore(): Promise<FavoriteStore> {
   const cookieStore = await cookies();
 
   if (
@@ -16,18 +17,15 @@ export async function getServerFavorites(): Promise<Favorite[]> {
     !hasEnvVars ||
     process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1"
   ) {
-    return readGuestFavoritesCookie(cookieStore.get(GUEST_FAVORITES_COOKIE)?.value);
+    return createGuestFavoriteStore(cookieStore);
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("favorites")
-    .select("id, from_currency, to_currency, created_at")
-    .order("created_at", { ascending: true });
+  return createSupabaseFavoriteStore({ supabase });
+}
 
-  if (error) {
-    throw error;
-  }
+export async function getServerFavorites(): Promise<Favorite[]> {
+  const store = await getFavoriteReadStore();
 
-  return (data ?? []).map(mapFavorite);
+  return store.list();
 }
