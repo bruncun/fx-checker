@@ -3,7 +3,6 @@ import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { getCurrencyReferenceData, getLatestRatesData } from "@/features/exchange-rates/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
-  getCurrencyPairLabelFromParams,
   getConverterAmountFromParams,
   getSelectedCurrencyPairFromParams,
 } from "@/features/home/utils/url-state";
@@ -21,13 +20,9 @@ type CompareRatesPageProps = {
   }>;
 };
 
-export async function generateMetadata({ searchParams }: CompareRatesPageProps): Promise<Metadata> {
-  const selectedPair = getCurrencyPairLabelFromParams(new URLSearchParams(await searchParams));
-
-  return {
-    title: `Compare ${selectedPair}`,
-  };
-}
+export const metadata: Metadata = {
+  title: "Dashboard - Compare Rates",
+};
 
 async function CompareRatesContent({
   availableCurrencies,

@@ -1,7 +1,6 @@
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   createUrlSearchParams,
-  getCurrencyPairLabelFromParams,
   getRateHistoryUrlStateFromParams,
 } from "@/features/home/utils/url-state";
 import { RateHistory, deriveRateHistoryData } from "@/features/rate-history";
@@ -19,13 +18,9 @@ type HomeProps = {
   }>;
 };
 
-export async function generateMetadata({ searchParams }: HomeProps): Promise<Metadata> {
-  const selectedPair = getCurrencyPairLabelFromParams(createUrlSearchParams(await searchParams));
-
-  return {
-    title: `${selectedPair} History`,
-  };
-}
+export const metadata: Metadata = {
+  title: "Dashboard - Rate History",
+};
 
 async function HomeContent({ searchParams }: HomeProps) {
   const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
