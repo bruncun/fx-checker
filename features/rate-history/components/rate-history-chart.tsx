@@ -108,25 +108,25 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
 
   return (
     <section
-      aria-labelledby={chartId}
+      aria-label="Chart"
       className="rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:p-250"
     >
       <div className="flex h-[19px] items-center justify-between gap-150 uppercase">
         <h2 id={chartId} className="text-preset-3-medium text-neutral-50">
           {pair}
         </h2>
-        <InlineMetaList
-          aria-atomic="true"
-          aria-label="Chart details"
-          aria-live="polite"
-          className="justify-end text-right text-preset-5 text-neutral-100"
-          separatorClassName="text-neutral-200"
-          items={chartDetails}
-        />
+        <div aria-label="Chart details">
+          <InlineMetaList
+            aria-atomic="true"
+            aria-live="polite"
+            className="justify-end text-right text-preset-5 text-neutral-100"
+            separatorClassName="text-neutral-200"
+            items={chartDetails}
+          />
+        </div>
       </div>
       <div
         aria-describedby={`${summaryId} ${keyboardHelpId}`}
-        aria-label={`${range} ${pair} rate history chart`}
         onKeyDown={handleChartKeyDown}
         role="img"
         tabIndex={0}
@@ -247,15 +247,11 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
           ))}
         </div>
       </div>
-      <p id={summaryId} className="sr-only" aria-live="polite" aria-atomic="true">
-        {range} {pair} moved from {chart.firstRate} on {chart.firstDateLabel} to {chart.lastRate} on{" "}
-        {chart.lastDateLabel}. The highest displayed rate is {chart.yAxisLabels[0]?.label}, and the
-        lowest displayed rate is {chart.yAxisLabels[2]?.label}.
-      </p>
-      <p id={keyboardHelpId} className="sr-only">
-        Use the arrow keys to move through chart points. Use Page Up and Page Down to move by larger
-        steps. Use Home and End to jump to the first or last point.
-      </p>
+      <figcaption id={summaryId} className="sr-only" aria-live="polite" aria-atomic="true">
+        Over {range}, {pair} moved from {chart.firstRate} on {chart.firstDateLabel} to{" "}
+        {chart.lastRate} on {chart.lastDateLabel}, with a high of {chart.yAxisLabels[0]?.label}, and
+        a low of {chart.yAxisLabels[2]?.label}.
+      </figcaption>
     </section>
   );
 }

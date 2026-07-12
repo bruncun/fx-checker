@@ -89,7 +89,7 @@ function FavoriteRateItem({
       action={(actionProps) => (
         <FavoriteButton
           {...actionProps}
-          aria-label={`Remove ${favorite.fromCurrency}/${favorite.toCurrency} from favorites`}
+          aria-label="Remove"
           onClick={(event) => {
             event.stopPropagation();
             onFavoriteToggle(pair);
@@ -105,14 +105,14 @@ function FavoriteRateItem({
       rowId={rate.pair}
       tabIndex={tabIndex}
     >
-      <td className="block min-w-0" role="gridcell">
+      <td className="block min-w-0" role="cell">
         <span className="inline-flex min-w-0 items-center gap-100 text-preset-4 text-neutral-50 uppercase">
           <span>{fromCurrency.code}</span>
           <Icon decorative iconName="arrow-right" />
           <span>{toCurrency.code}</span>
         </span>
       </td>
-      <td className="block min-w-[9ch] text-right leading-0" role="gridcell">
+      <td className="block min-w-[9ch] text-right leading-0" role="cell">
         <span className="block text-preset-3 text-neutral-50">{rate.rate}</span>
         <RateChange
           className="mt-075 justify-end text-preset-6"

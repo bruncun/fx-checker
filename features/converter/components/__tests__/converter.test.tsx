@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -104,6 +104,12 @@ function renderConverter({
   );
 }
 
+function getAmountInput(groupName: "Receive" | "Send") {
+  return within(screen.getByRole("group", { name: groupName })).getByRole("textbox", {
+    name: "Amount",
+  });
+}
+
 afterEach(() => {
   createConversion.mockReset();
   createFavorite.mockReset();
@@ -120,8 +126,8 @@ describe("Converter", () => {
   it("converts from the send amount as it is edited", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
-    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+    const sendAmount = getAmountInput("Send");
+    const receiveAmount = getAmountInput("Receive");
 
     fireEvent.change(sendAmount, { target: { value: "2500" } });
 
@@ -132,8 +138,8 @@ describe("Converter", () => {
   it("converts back from the receive amount as it is edited", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
-    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+    const sendAmount = getAmountInput("Send");
+    const receiveAmount = getAmountInput("Receive");
 
     fireEvent.change(receiveAmount, { target: { value: "2100.50" } });
 
@@ -149,14 +155,11 @@ describe("Converter", () => {
       },
     });
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "1" },
     });
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "0.005457"
-    );
+    expect(getAmountInput("Receive")).toHaveProperty("value", "0.005457");
   });
 
   it("caps calculated amount precision at eight decimal places", () => {
@@ -175,14 +178,11 @@ describe("Converter", () => {
       },
     });
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "1" },
     });
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "0.00000009"
-    );
+    expect(getAmountInput("Receive")).toHaveProperty("value", "0.00000009");
   });
 
   it("keeps large calculated amounts editable without changing their magnitude", () => {
@@ -198,30 +198,24 @@ describe("Converter", () => {
       },
     });
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "999999999999" },
     });
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "25,619,128,949,590,093.94"
-    );
+    expect(getAmountInput("Receive")).toHaveProperty("value", "25,619,128,949,590,093.94");
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
+    fireEvent.change(getAmountInput("Receive"), {
       target: { value: "25,619,128,949,590,093.94" },
     });
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "25,619,128,949,590,093.94"
-    );
+    expect(getAmountInput("Receive")).toHaveProperty("value", "25,619,128,949,590,093.94");
   });
 
   it("keeps both amounts empty while an amount is cleared", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
-    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+    const sendAmount = getAmountInput("Send");
+    const receiveAmount = getAmountInput("Receive");
 
     fireEvent.change(sendAmount, { target: { value: "100" } });
     fireEvent.change(sendAmount, { target: { value: "" } });
@@ -233,7 +227,7 @@ describe("Converter", () => {
   it("normalizes a trailing decimal point when an amount loses focus", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
+    const sendAmount = getAmountInput("Send");
 
     fireEvent.change(sendAmount, { target: { value: "12." } });
     expect(sendAmount).toHaveProperty("value", "12.");
@@ -250,12 +244,8 @@ describe("Converter", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
 
-    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
-      "EUR"
-    );
-    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
-      "USD"
-    );
+    expect(screen.getByRole("button", { name: "EUR" }).textContent).toContain("EUR");
+    expect(screen.getByRole("button", { name: "USD" }).textContent).toContain("USD");
     expect(screen.getByText("1 EUR = 1.1710 USD")).toBeTruthy();
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=EUR&to=USD");
     expect(routerRefresh).toHaveBeenCalled();
@@ -275,15 +265,13 @@ describe("Converter", () => {
       );
     });
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
-      "USD"
-    );
+    expect(screen.getByRole("button", { name: "USD" }).textContent).toContain("USD");
   });
 
   it("opens receive currency search after the receive amount was edited most recently", async () => {
     renderConverter();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
+    fireEvent.change(getAmountInput("Receive"), {
       target: { value: "25" },
     });
     fireEvent.keyDown(window, {
@@ -296,19 +284,17 @@ describe("Converter", () => {
         screen.getByRole("searchbox", { name: "Search currencies" })
       );
     });
-    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
-      "EUR"
-    );
+    expect(screen.getByRole("button", { name: "EUR" }).textContent).toContain("EUR");
     expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
   });
 
   it("opens the last opened currency picker side after an amount edit", async () => {
     renderConverter();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "100" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Select receive currency" }));
+    fireEvent.click(screen.getByRole("button", { name: "EUR" }));
     fireEvent.keyDown(screen.getByRole("dialog", { name: "Currency picker" }), { key: "Escape" });
     fireEvent.keyDown(window, {
       key: "k",
@@ -320,9 +306,7 @@ describe("Converter", () => {
         screen.getByRole("searchbox", { name: "Search currencies" })
       );
     });
-    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
-      "EUR"
-    );
+    expect(screen.getByRole("button", { name: "EUR" }).textContent).toContain("EUR");
   });
 
   it("swaps currencies with X unless a text field is active", () => {
@@ -332,16 +316,12 @@ describe("Converter", () => {
 
     fireEvent.keyDown(window, { key: "x" });
 
-    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
-      "EUR"
-    );
-    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
-      "USD"
-    );
+    expect(screen.getByRole("button", { name: "EUR" }).textContent).toContain("EUR");
+    expect(screen.getByRole("button", { name: "USD" }).textContent).toContain("USD");
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=EUR&to=USD");
 
-    screen.getByRole("textbox", { name: "Send amount" }).focus();
-    fireEvent.keyDown(screen.getByRole("textbox", { name: "Send amount" }), { key: "x" });
+    getAmountInput("Send").focus();
+    fireEvent.keyDown(getAmountInput("Send"), { key: "x" });
 
     expect(replaceState).toHaveBeenCalledTimes(1);
   });
@@ -349,8 +329,8 @@ describe("Converter", () => {
   it("keeps the send amount in place when currencies are swapped", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
-    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+    const sendAmount = getAmountInput("Send");
+    const receiveAmount = getAmountInput("Receive");
 
     fireEvent.change(sendAmount, { target: { value: "100" } });
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
@@ -362,8 +342,8 @@ describe("Converter", () => {
   it("does not change the amount source when currencies are swapped", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
-    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+    const sendAmount = getAmountInput("Send");
+    const receiveAmount = getAmountInput("Receive");
 
     fireEvent.change(sendAmount, { target: { value: "2500" } });
     fireEvent.blur(receiveAmount);
@@ -376,8 +356,8 @@ describe("Converter", () => {
   it("keeps the receive amount in place when currencies are swapped", () => {
     renderConverter();
 
-    const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
-    const receiveAmount = screen.getByRole("textbox", { name: "Receive amount" });
+    const sendAmount = getAmountInput("Send");
+    const receiveAmount = getAmountInput("Receive");
 
     fireEvent.change(receiveAmount, { target: { value: "100" } });
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
@@ -391,7 +371,7 @@ describe("Converter", () => {
 
     renderConverter();
 
-    fireEvent.click(screen.getByRole("button", { name: "Select receive currency" }));
+    fireEvent.click(screen.getByRole("button", { name: "EUR" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
 
     expect(screen.getByText("1 USD = 156.4816 JPY")).toBeTruthy();
@@ -402,16 +382,13 @@ describe("Converter", () => {
   it("recalculates the receive amount when a receive currency is selected", () => {
     renderConverter();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "100" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Select receive currency" }));
+    fireEvent.click(screen.getByRole("button", { name: "EUR" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty(
-      "value",
-      "15,648.16"
-    );
+    expect(getAmountInput("Receive")).toHaveProperty("value", "15,648.16");
   });
 
   it("keeps the most recently edited amount as the source when a send currency is selected", () => {
@@ -419,14 +396,14 @@ describe("Converter", () => {
 
     renderConverter();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
+    fireEvent.change(getAmountInput("Receive"), {
       target: { value: "100" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Select send currency" }));
+    fireEvent.click(screen.getByRole("button", { name: "USD" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
 
-    expect(screen.getByRole("textbox", { name: "Send amount" })).toHaveProperty("value", "18,324");
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty("value", "100");
+    expect(getAmountInput("Send")).toHaveProperty("value", "18,324");
+    expect(getAmountInput("Receive")).toHaveProperty("value", "100");
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=JPY&to=EUR");
   });
 
@@ -441,7 +418,7 @@ describe("Converter", () => {
       converterRates: [...rates, { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }],
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Select send currency" }));
+    fireEvent.click(screen.getByRole("button", { name: "USD" }));
     fireEvent.click(screen.getByRole("button", { name: "VND, Vietnamese Dong" }));
 
     expect(screen.getByText("1 VND = 0.00003333 EUR")).toBeTruthy();
@@ -458,10 +435,10 @@ describe("Converter", () => {
 
     renderConverter();
 
-    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/EUR" }));
+    fireEvent.click(screen.getByRole("button", { name: "Favorite" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Remove" })).toBeTruthy();
     });
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
   });
@@ -469,7 +446,7 @@ describe("Converter", () => {
   it("renders converter actions as independent buttons without a toolbar", () => {
     renderConverter();
 
-    const favoriteButton = screen.getByRole("button", { name: "Favorite USD/EUR" });
+    const favoriteButton = screen.getByRole("button", { name: "Favorite" });
     const logButton = screen.getByRole("button", { name: /Log .* USD to .* EUR/ });
 
     expect(screen.queryByRole("toolbar")).toBeNull();
@@ -480,11 +457,11 @@ describe("Converter", () => {
   it("does not move focus between converter actions with arrow keys", () => {
     renderConverter();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "100" },
     });
 
-    const favoriteButton = screen.getByRole("button", { name: "Favorite USD/EUR" });
+    const favoriteButton = screen.getByRole("button", { name: "Favorite" });
     const logButton = screen.getByRole("button", { name: /Log .* USD to .* EUR/ });
 
     expect(favoriteButton.tabIndex).toBe(0);
@@ -570,7 +547,7 @@ describe("Converter", () => {
     renderConverter({ searchParams: "from=USD&to=EUR&amount=100&amountSource=send" });
 
     fireEvent.click(screen.getByRole("button", { name: /Log 100 USD to 85.4 EUR/ }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "200" },
     });
 
@@ -588,7 +565,7 @@ describe("Converter", () => {
     routerReplace.mockClear();
     replaceState.mockClear();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "100" },
     });
 
@@ -606,7 +583,7 @@ describe("Converter", () => {
 
     renderConverter({ searchParams: "from=USD&to=EUR&amount=100&amountSource=send" });
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
+    fireEvent.change(getAmountInput("Send"), {
       target: { value: "1,00" },
     });
 

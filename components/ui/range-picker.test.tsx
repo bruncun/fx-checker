@@ -15,18 +15,18 @@ afterEach(() => {
 });
 
 describe("RangePicker", () => {
-  it("groups ranges as a tablist for switching history views", () => {
+  it("groups ranges as a radiogroup for selecting the history range", () => {
     render(<RangePicker aria-label="History range" options={options} value="1M" />);
 
-    const group = screen.getByRole("tablist", { name: "History range" });
-    const ranges = screen.getAllByRole("tab");
+    const group = screen.getByRole("radiogroup", { name: "History range" });
+    const ranges = screen.getAllByRole("radio");
 
     expect(group).toBeTruthy();
     expect(ranges).toHaveLength(4);
-    expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
-    expect(screen.getByRole("tab", { name: "1M" }).getAttribute("tabindex")).toBe("0");
-    expect(screen.getByRole("tab", { name: "1D" }).getAttribute("aria-selected")).toBe("false");
-    expect(screen.getByRole("tab", { name: "1D" }).getAttribute("tabindex")).toBe("-1");
+    expect(screen.getByRole("radio", { name: "1M" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "1M" }).getAttribute("tabindex")).toBe("0");
+    expect(screen.getByRole("radio", { name: "1D" }).getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByRole("radio", { name: "1D" }).getAttribute("tabindex")).toBe("-1");
   });
 
   it("emits the selected range value", () => {
@@ -41,7 +41,7 @@ describe("RangePicker", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "3M" }));
+    fireEvent.click(screen.getByRole("radio", { name: "3M" }));
 
     expect(onValueChange).toHaveBeenCalledWith("3M");
   });
@@ -58,13 +58,13 @@ describe("RangePicker", () => {
       />
     );
 
-    const selectedRange = screen.getByRole("tab", { name: "1M" });
+    const selectedRange = screen.getByRole("radio", { name: "1M" });
 
     selectedRange.focus();
     fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
 
     expect(onValueChange).toHaveBeenCalledWith("3M");
-    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "3M" }));
+    expect(document.activeElement).toBe(screen.getByRole("radio", { name: "3M" }));
   });
 
   it("wraps roving focus at the range picker edges", () => {
@@ -79,8 +79,8 @@ describe("RangePicker", () => {
       />
     );
 
-    const firstRange = screen.getByRole("tab", { name: "1D" });
-    const lastRange = screen.getByRole("tab", { name: "3M" });
+    const firstRange = screen.getByRole("radio", { name: "1D" });
+    const lastRange = screen.getByRole("radio", { name: "3M" });
 
     lastRange.focus();
     fireEvent.keyDown(lastRange, { key: "ArrowRight" });
@@ -115,7 +115,7 @@ describe("RangePicker", () => {
       />
     );
 
-    const nextRange = screen.getByRole("tab", { name: "3M" });
+    const nextRange = screen.getByRole("radio", { name: "3M" });
 
     nextRange.focus();
     fireEvent.keyDown(nextRange, { key: "Enter" });
@@ -126,7 +126,7 @@ describe("RangePicker", () => {
   it("keeps enabled ranges focusable and applies the lime focus ring style", () => {
     render(<RangePicker aria-label="History range" options={options} value="1M" />);
 
-    const selectedRange = screen.getByRole("tab", { name: "1M" });
+    const selectedRange = screen.getByRole("radio", { name: "1M" });
 
     expect(selectedRange).toHaveProperty("disabled", false);
     expect(selectedRange.classList.contains("disabled:opacity-50")).toBe(true);
@@ -140,6 +140,8 @@ describe("RangePicker", () => {
   it("disables every range option when the picker is disabled", () => {
     render(<RangePicker aria-label="History range" disabled options={options} value="1M" />);
 
-    expect(screen.getAllByRole("tab").every((range) => range.hasAttribute("disabled"))).toBe(true);
+    expect(screen.getAllByRole("radio").every((range) => range.hasAttribute("disabled"))).toBe(
+      true
+    );
   });
 });

@@ -174,7 +174,7 @@ function ConversionLogToolbar({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={toolbarRef}
-      aria-label="Conversion log actions"
+      aria-label="Actions"
       className="flex items-center gap-100"
       onKeyDown={rovingFocus.handleKeyDown}
       role="toolbar"
@@ -212,7 +212,6 @@ function ConversionLogItem({
       action={(actionProps) => (
         <DeleteButton
           {...actionProps}
-          aria-label={`Delete ${pair} conversion`}
           onClick={(event) => {
             event.stopPropagation();
             onConversionDelete(conversion.id);
@@ -220,22 +219,22 @@ function ConversionLogItem({
           data-conversion-delete-button
         />
       )}
-      actionClassName="col-start-3 row-span-2 row-start-1 justify-self-end sm:col-start-4 sm:row-span-1 sm:row-start-auto"
+      actionClassName="col-start-3 row-span-2 row-start-1 justify-self-end sm:col-start-5 sm:row-span-1 sm:row-start-auto"
       className={cn(isEntering && "fx-list-row-in", isExiting && "fx-list-row-out")}
-      gridClassName="grid-cols-[minmax(0,1fr)_minmax(9ch,auto)_auto] grid-rows-[auto_auto] sm:grid-rows-none sm:grid-cols-[64px_minmax(0,1fr)_auto_auto] sm:gap-x-200 sm:py-200 sm:[--fx-list-row-padding-y:var(--spacing-200)]"
+      gridClassName="grid-cols-[minmax(0,1fr)_minmax(9ch,auto)_auto] grid-rows-[auto_auto] sm:grid-rows-none sm:grid-cols-[64px_minmax(0,1fr)_auto_auto_auto] sm:gap-x-200 sm:py-200 sm:[--fx-list-row-padding-y:var(--spacing-200)]"
       onSelect={() => onConversionSelect(conversion)}
       rowId={conversion.id}
       tabIndex={tabIndex}
     >
       <td
         className="col-start-1 row-start-1 block min-w-0 text-preset-4 text-neutral-200 drop-shadow-[0_4px_4px_rgb(0_0_0_/_0.25)] sm:col-start-1 sm:row-start-auto sm:w-[64px]"
-        role="gridcell"
+        role="cell"
       >
         {formatRelativeTime(conversion.createdAt)}
       </td>
       <td
         className="col-start-1 row-start-2 block min-w-0 leading-0 sm:col-start-2 sm:row-start-auto"
-        role="gridcell"
+        role="cell"
       >
         <span className="inline-flex min-w-0 items-center gap-100 text-preset-4 text-neutral-50 uppercase">
           <span>{conversion.fromCurrency}</span>
@@ -244,15 +243,17 @@ function ConversionLogItem({
         </span>
       </td>
       <td
-        className="col-start-2 row-span-2 row-start-1 flex min-w-0 flex-col gap-[2px] self-center text-right text-preset-3 sm:col-start-3 sm:row-span-1 sm:row-start-auto sm:flex-row sm:gap-[20px] sm:self-auto"
-        role="gridcell"
+        className="col-start-2 row-start-1 block min-w-0 self-end text-right text-preset-3 sm:col-start-3 sm:row-start-auto sm:self-auto"
+        role="cell"
       >
         <span className="block truncate text-neutral-100">{sendAmount}</span>
-        <span aria-hidden className="block truncate text-lime-500 sm:inline">
-          {receiveAmount}
-        </span>
       </td>
-      <td className="hidden" role="gridcell" />
+      <td
+        className="col-start-2 row-start-2 block min-w-0 self-start text-right text-preset-3 text-lime-500 sm:col-start-4 sm:row-start-auto sm:self-auto"
+        role="cell"
+      >
+        <span className="block truncate">{receiveAmount}</span>
+      </td>
     </RateDetailsTreeGridRow>
   );
 }
@@ -422,7 +423,7 @@ function ConversionLog({
           <p className="text-preset-5 text-neutral-50 opacity-70">{conversions.length} Logged</p>
           <ConversionLogToolbar>
             <ClearButton
-              aria-label="Export conversions as CSV"
+              aria-label="Export"
               data-conversion-log-toolbar-button
               disabled={conversions.length === 0}
               onClick={exportConversions}
@@ -431,7 +432,7 @@ function ConversionLog({
               Export
             </ClearButton>
             <ClearButton
-              aria-label="Clear all conversions"
+              aria-label="Clear all"
               data-conversion-log-toolbar-button
               disabled={conversions.length === 0}
               onClick={clearConversions}

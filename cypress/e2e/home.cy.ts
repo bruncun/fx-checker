@@ -5,8 +5,8 @@ type CurrenciesFixture = Array<{
 
 const defaultAppUrl = "/app?amount=1000&amountSource=send";
 
-function openSendCurrencyPickerWithKeyboard() {
-  cy.findByRole("button", { name: "Select send currency" })
+function openSendCurrencyPickerWithKeyboard(currencyCode = "USD") {
+  cy.findByRole("button", { name: currencyCode })
     .should("be.visible")
     .focus()
     .should("be.focused")
@@ -113,12 +113,12 @@ describe("home page", () => {
   it("keeps range picker focus while range data refreshes", () => {
     cy.visit(defaultAppUrl);
 
-    cy.findByRole("tab", { name: "1M" }).focus().should("be.focused");
+    cy.findByRole("radio", { name: "1M" }).focus().should("be.focused");
     cy.press(Cypress.Keyboard.Keys.RIGHT);
 
-    cy.findByRole("tab", { name: "3M" })
+    cy.findByRole("radio", { name: "3M" })
       .should("be.focused")
-      .and("have.attr", "aria-selected", "true");
+      .and("have.attr", "aria-checked", "true");
     cy.location("search").should("include", "range=3M");
   });
 
@@ -129,11 +129,9 @@ describe("home page", () => {
     cy.findByRole("searchbox", { name: "Search currencies" }).type("jpy{enter}");
 
     cy.findByRole("dialog", { name: "Currency picker" }).should("not.exist");
-    cy.findByRole("button", { name: "Select send currency" })
-      .should("be.focused")
-      .and("contain.text", "JPY");
+    cy.findByRole("button", { name: "JPY" }).should("be.focused").and("contain.text", "JPY");
 
-    openSendCurrencyPickerWithKeyboard();
+    openSendCurrencyPickerWithKeyboard("JPY");
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("button", { name: "JPY, Japanese Yen" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.TAB);
@@ -145,19 +143,22 @@ describe("home page", () => {
     });
 
     cy.press(Cypress.Keyboard.Keys.ESC);
-    cy.findByRole("button", { name: "Select send currency" }).click();
-    cy.findByRole("textbox", { name: "Send amount" }).click().should("be.focused");
+    cy.findByRole("button", { name: "JPY" }).click();
+    cy.findByRole("group", { name: "Send" })
+      .findByRole("textbox", { name: "Amount" })
+      .click()
+      .should("be.focused");
     cy.findByRole("dialog", { name: "Currency picker" }).should("not.exist");
   });
 
   it("supports keyboard navigation after focus enters the picker with a mouse", () => {
     cy.visit(defaultAppUrl);
 
-    cy.findByRole("button", { name: "Select send currency" }).click();
-    cy.findByRole("heading", { name: "Send" }).click();
-    cy.findByRole("heading", { name: "Send" }).click();
+    cy.findByRole("button", { name: "USD" }).click();
+    cy.findByRole("group", { name: "Send" }).click();
+    cy.findByRole("group", { name: "Send" }).click();
 
-    cy.findByRole("button", { name: "Select send currency" }).click();
+    cy.findByRole("button", { name: "USD" }).click();
     cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.findByRole("button", { name: "USD, United States Dollar" })
@@ -174,7 +175,7 @@ describe("home page", () => {
     cy.viewport(375, 667);
     cy.visit(defaultAppUrl);
 
-    cy.findByRole("button", { name: "Select send currency", timeout: 10000 }).then(($trigger) => {
+    cy.findByRole("button", { name: "USD", timeout: 10000 }).then(($trigger) => {
       cy.wrap($trigger).click({ scrollBehavior: false });
       cy.findByRole("dialog", { name: "Currency picker" }).should(($dialog) => {
         const triggerBottom = $trigger[0]!.getBoundingClientRect().bottom;
@@ -185,7 +186,7 @@ describe("home page", () => {
         expect(dialogRect.bottom).to.be.at.most(viewportHeight - 16);
         expect(dialogRect.height).to.be.lessThan(458);
       });
-      cy.findByRole("button", { name: "Select receive currency" }).then(($receiveTrigger) => {
+      cy.findByRole("button", { name: "EUR" }).then(($receiveTrigger) => {
         cy.findByRole("dialog", { name: "Currency picker" }).should(($dialog) => {
           const receiveRect = $receiveTrigger[0]!.getBoundingClientRect();
           const topmostElement = $dialog[0]!.ownerDocument.elementFromPoint(

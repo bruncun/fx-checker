@@ -44,7 +44,6 @@ function isPrintableSearchKey(event: React.KeyboardEvent) {
 }
 
 export interface CurrencyPickerProps {
-  "aria-label"?: string;
   className?: string;
   countryCode: FlagCountryCode;
   currencies: AvailableCurrency[];
@@ -98,7 +97,6 @@ function CurrencyItem({ currency, isActive, isSelected, onSelect }: CurrencyItem
 }
 
 function CurrencyPicker({
-  "aria-label": ariaLabel = "Select currency",
   className,
   countryCode,
   currencies,
@@ -389,7 +387,7 @@ function CurrencyPicker({
         aria-controls={isOpen ? panelId : undefined}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        aria-label={ariaLabel}
+        aria-label={selectedCurrency?.code ?? currencyCode}
         countryCode={selectedCurrency?.countryCode ?? countryCode}
         currencyCode={selectedCurrency?.code ?? currencyCode}
         flagFetchPriority={flagFetchPriority}

@@ -4,7 +4,7 @@ import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { UserDropdown, getAccountInitials, getAccountMenuLabel } from "./user-dropdown";
+import { UserDropdown, getAccountInitials } from "./user-dropdown";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 
 const setTheme = vi.fn();
@@ -42,7 +42,7 @@ describe("UserDropdown", () => {
   it("renders guest initials in a fixed circular account trigger", () => {
     render(<UserDropdown isGuest />);
 
-    const trigger = screen.getByRole("button", { name: "Guest account menu" });
+    const trigger = screen.getByRole("button", { name: "Account menu" });
 
     expect(trigger.textContent).toBe("G");
     expect(trigger.className).toContain("size-400");
@@ -57,17 +57,10 @@ describe("UserDropdown", () => {
     expect(getAccountInitials({ email: "mika@example.com" })).toBe("M");
   });
 
-  it("labels the account trigger with the active account identity", () => {
-    expect(getAccountMenuLabel({ email: " mika@example.com " })).toBe(
-      "Account menu for mika@example.com"
-    );
-    expect(getAccountMenuLabel({ isGuest: true })).toBe("Guest account menu");
-  });
-
   it("opens an account dialog with a theme toggle and sign out button", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
 
     expect(screen.getByRole("dialog", { name: "Account menu" })).toBeTruthy();
     expect(screen.getByRole("radiogroup", { name: "Theme" })).toBeTruthy();
@@ -82,7 +75,7 @@ describe("UserDropdown", () => {
       </KeyboardShortcutsProvider>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Keyboard Shortcuts" }));
 
     expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
@@ -93,16 +86,14 @@ describe("UserDropdown", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close keyboard shortcuts" }));
 
     await waitFor(() => {
-      expect(document.activeElement).toBe(
-        screen.getByRole("button", { name: "Account menu for mika@example.com" })
-      );
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Account menu" }));
     });
   });
 
   it("closes the account dialog when signing out", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
@@ -112,7 +103,7 @@ describe("UserDropdown", () => {
     vi.mocked(fetch).mockReturnValue(new Promise(() => {}));
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     const trigger = screen.getByRole("button", { name: "Signing out" });
@@ -131,7 +122,7 @@ describe("UserDropdown", () => {
   it("keeps the pending state during sign-out navigation and resets when shown again", async () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     await waitFor(() => {
@@ -142,9 +133,7 @@ describe("UserDropdown", () => {
 
     fireEvent(window, new Event("pageshow"));
 
-    expect(
-      screen.getByRole("button", { name: "Account menu for mika@example.com" })
-    ).toHaveProperty("disabled", false);
+    expect(screen.getByRole("button", { name: "Account menu" })).toHaveProperty("disabled", false);
   });
 
   it("restores the account trigger when sign out fails", async () => {
@@ -153,13 +142,14 @@ describe("UserDropdown", () => {
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 500 }));
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: "Account menu for mika@example.com" })
-      ).toHaveProperty("disabled", false);
+      expect(screen.getByRole("button", { name: "Account menu" })).toHaveProperty(
+        "disabled",
+        false
+      );
     });
 
     expect(routerPush).not.toHaveBeenCalled();
@@ -169,7 +159,7 @@ describe("UserDropdown", () => {
   it("moves through theme options with roving focus and switches theme on focus", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
 
     systemTheme.focus();
@@ -182,7 +172,7 @@ describe("UserDropdown", () => {
   it("moves through account menu options with vertical roving focus", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
     const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
     const signOutButton = screen.getByRole("button", { name: "Sign out" });
@@ -209,7 +199,7 @@ describe("UserDropdown", () => {
   it("traps tab focus inside the account dialog until dismissed", async () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
     const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
     const signOutButton = screen.getByRole("button", { name: "Sign out" });
@@ -237,7 +227,7 @@ describe("UserDropdown", () => {
   it("closes the account dialog with Escape and restores trigger focus", async () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    const trigger = screen.getByRole("button", { name: "Account menu for mika@example.com" });
+    const trigger = screen.getByRole("button", { name: "Account menu" });
 
     fireEvent.click(trigger);
     fireEvent.keyDown(screen.getByRole("radio", { name: "System" }), { key: "Escape" });

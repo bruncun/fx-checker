@@ -195,11 +195,7 @@ function CompareFavoriteButton({
   return (
     <FavoriteButton
       {...actionProps}
-      aria-label={
-        isFavorite
-          ? `Remove ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency} from favorites`
-          : `Favorite ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency}`
-      }
+      aria-label={isFavorite ? "Remove" : "Favorite"}
       onClick={toggleFavorite}
       pinned={isFavorite}
       variant="icon"
@@ -251,16 +247,16 @@ function CompareRateItem({
       rowId={currency.code}
       tabIndex={tabIndex}
     >
-      <td className="block" role="gridcell">
-        <Flag className="size-300" countryCode={currency.countryCode} />
+      <td aria-hidden="true" className="block" role="presentation">
+        <Flag alt="" className="size-300" countryCode={currency.countryCode} />
       </td>
-      <td className="block max-w-[16ch] min-w-0 sm:max-w-none" role="gridcell">
+      <td className="block max-w-[16ch] min-w-0 sm:max-w-none" role="cell">
         <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
         <span className="mt-075 block truncate text-preset-5 text-neutral-200">
           {currency.name}
         </span>
       </td>
-      <td className="block max-w-[16ch] min-w-0 text-right sm:max-w-none" role="gridcell">
+      <td className="block max-w-[16ch] min-w-0 text-right sm:max-w-none" role="cell">
         <span className="block truncate text-preset-3 text-neutral-50">{amount}</span>
         <span className="mt-075 block text-preset-6 text-neutral-200">@ {rate}</span>
       </td>
@@ -360,7 +356,6 @@ function CompareRatesPanel({
 
   return (
     <RateDetailsList
-      aria-label="Compare"
       countClassName="mt-125 sm:mt-0"
       countSlot={
         <p className="text-preset-5 text-neutral-50 opacity-70">{compareRates.length} Pairs</p>
@@ -382,18 +377,18 @@ function CompareRatesPanel({
     >
       <RateDetailsTreeGrid
         actionSelector="[data-compare-favorite-button]"
-        labelledBy="compare-heading"
+        aria-label="Rates table"
         onCurrentRowIdChange={onCurrentRowIdChange ?? (() => {})}
         columns={
           <>
-            <th role="columnheader" scope="col">
+            <th aria-hidden="true" scope="col">
               Flag
             </th>
             <th role="columnheader" scope="col">
               Currency
             </th>
             <th role="columnheader" scope="col">
-              Converted amount
+              Conversion
             </th>
             <th role="columnheader" scope="col">
               Favorite
@@ -497,7 +492,6 @@ function CompareRates({
 function CompareRatesFallback() {
   return (
     <RateDetailsList
-      aria-label="Compare"
       className="min-h-[369px]"
       countClassName="mt-125 sm:mt-0"
       countSlot={<p className="text-preset-5 text-neutral-50 opacity-70">8 Pairs</p>}

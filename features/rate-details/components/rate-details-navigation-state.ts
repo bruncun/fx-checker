@@ -25,4 +25,18 @@ function appendSearchParams(href: string, searchParams: string) {
   return searchParams ? `${href}?${searchParams}` : href;
 }
 
-export { appendSearchParams, getRateDetailsSectionFromPathname, rateDetailsSectionDefinitions };
+function getRateDetailsPanelId(section: RateDetailsSection) {
+  return `rate-details-${section}-panel`;
+}
+
+function getRateDetailsTabId(section: RateDetailsSection) {
+  return `rate-details-${section}-tab`;
+}
+
+export {
+  appendSearchParams,
+  getRateDetailsPanelId,
+  getRateDetailsSectionFromPathname,
+  getRateDetailsTabId,
+  rateDetailsSectionDefinitions,
+};

@@ -95,21 +95,50 @@ function renderFavoriteRates({
   );
 }
 
+function getFavoriteRow(rowId: string) {
+  const row = document.querySelector<HTMLElement>(`[data-rate-details-row-id="${rowId}"]`);
+
+  if (!row) {
+    throw new Error(`Expected favorite row ${rowId} to be rendered`);
+  }
+
+  return row;
+}
+
+function getFavoriteCell(rowId: string, cellIndex: number) {
+  const cell = getFavoriteRow(rowId).querySelectorAll<HTMLElement>("[data-rate-details-cell]")[
+    cellIndex
+  ];
+
+  if (!cell) {
+    throw new Error(`Expected favorite row ${rowId} cell ${cellIndex} to be rendered`);
+  }
+
+  return cell;
+}
+
+function getFavoriteAction(rowId: string) {
+  const action = getFavoriteRow(rowId).querySelector<HTMLButtonElement>(
+    "[data-rate-details-action]"
+  );
+
+  if (!action) {
+    throw new Error(`Expected favorite row ${rowId} action to be rendered`);
+  }
+
+  return action;
+}
+
 describe("FavoriteRates", () => {
   it("renders favorite pairs with rates and the real favorites count", () => {
     renderFavoriteRates();
 
-    expect(screen.getByRole("region", { name: "Favorites" })).toBeTruthy();
-    expect(screen.getByRole("treegrid", { name: "Pinned Pairs" })).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Pinned Pairs" })).toBeTruthy();
     expect(screen.getByText("2 Favorites")).toBeTruthy();
-    expect(
-      screen.getByRole("row", {
-        name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
-      })
-    ).toBeTruthy();
+    expect(getFavoriteRow("USD/EUR").textContent).toContain("0.8000");
     expect(screen.getByText("0.8000")).toBeTruthy();
     expect(screen.getByText("-0.80%")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Remove USD/EUR from favorites" })).toBeTruthy();
+    expect(getFavoriteAction("USD/EUR").getAttribute("aria-label")).toBe("Remove");
     expect(document.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
   });
 
@@ -119,9 +148,7 @@ describe("FavoriteRates", () => {
 
     renderFavoriteRates();
 
-    const row = screen.getByRole("row", {
-      name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
-    });
+    const row = getFavoriteRow("USD/EUR");
 
     fireEvent.click(row);
 
@@ -129,7 +156,7 @@ describe("FavoriteRates", () => {
       scroll: false,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
+    fireEvent.click(getFavoriteAction("USD/EUR"));
 
     expect(row.className).toContain("fx-list-row-out");
     expect(deleteFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "EUR" });
@@ -138,11 +165,7 @@ describe("FavoriteRates", () => {
       vi.advanceTimersByTime(160);
     });
 
-    expect(
-      screen.queryByRole("row", {
-        name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
-      })
-    ).toBeNull();
+    expect(document.querySelector('[data-rate-details-row-id="USD/EUR"]')).toBeNull();
   });
 
   it("shows the data unavailable error when removing a favorite fails", async () => {
@@ -150,7 +173,7 @@ describe("FavoriteRates", () => {
 
     renderFavoriteRates();
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
+    fireEvent.click(getFavoriteAction("USD/EUR"));
 
     await waitFor(() => {
       expect(showDataUnavailableError).toHaveBeenCalled();
@@ -163,7 +186,7 @@ describe("FavoriteRates", () => {
 
     renderFavoriteRates({ favorites: [favorites[0]] });
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove USD/EUR from favorites" }));
+    fireEvent.click(getFavoriteAction("USD/EUR"));
 
     act(() => {
       vi.advanceTimersByTime(160);
@@ -181,7 +204,7 @@ describe("FavoriteRates", () => {
     expect(screen.getByText(/Pin a pair to track its rate here. Tap the star/)).toBeTruthy();
     expect(screen.getByText(/icon on any conversion or comparison row/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Favorites" })).toBeNull();
-    expect(screen.queryByRole("treegrid", { name: "Pinned Pairs" })).toBeNull();
+    expect(screen.queryByRole("table", { name: "Pinned Pairs" })).toBeNull();
   });
 
   it("animates the first favorite row when favorites transition from empty to populated", () => {
@@ -203,12 +226,10 @@ describe("FavoriteRates", () => {
       />
     );
 
-    const region = screen.getByRole("region", { name: "Favorites" });
-    const row = screen.getByRole("row", {
-      name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
-    });
+    const tableContainer = screen.getByRole("table", { name: "Pinned Pairs" }).parentElement;
+    const row = getFavoriteRow("USD/EUR");
 
-    expect(region.className).toContain("fx-state-in");
+    expect(tableContainer?.className).toContain("fx-state-in");
     expect(row.className).toContain("fx-list-row-in");
 
     act(() => {
@@ -231,30 +252,27 @@ describe("FavoriteRates", () => {
     });
 
     expect(screen.getByText("1 Favorites")).toBeTruthy();
-    expect(
-      screen.getByRole("row", {
-        name: "Use USD/GBP in converter, rate 0.7360, up +0.29%",
-      })
-    ).toBeTruthy();
+    expect(getFavoriteRow("USD/GBP").textContent).toContain("0.7360");
   });
 
   it("moves from a focused favorite row to the star action and back", () => {
     renderFavoriteRates();
 
-    const row = screen.getByRole("row", {
-      name: "Use USD/EUR in converter, rate 0.8000, down -0.80%",
-    });
-    const favoriteButton = screen.getByRole("button", {
-      name: "Remove USD/EUR from favorites",
-    });
+    const pairCell = getFavoriteCell("USD/EUR", 0);
+    const rateCell = getFavoriteCell("USD/EUR", 1);
+    const favoriteButton = getFavoriteAction("USD/EUR");
 
-    row.focus();
-    fireEvent.keyDown(row, { key: "ArrowRight" });
+    expect(rateCell.tabIndex).toBe(-1);
+    expect(favoriteButton.tabIndex).toBe(0);
+
+    pairCell.focus();
+    fireEvent.keyDown(pairCell, { key: "ArrowRight" });
 
     expect(document.activeElement).toBe(favoriteButton);
+    expect(favoriteButton.tabIndex).toBe(0);
 
     fireEvent.keyDown(favoriteButton, { key: "Escape" });
 
-    expect(document.activeElement).toBe(row);
+    expect(document.activeElement).toBe(pairCell);
   });
 });

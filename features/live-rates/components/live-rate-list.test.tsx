@@ -31,8 +31,8 @@ describe("LiveRateList", () => {
     const items = within(list).getAllByRole("listitem");
 
     expect(items).toHaveLength(7);
-    expect(items[0]?.textContent).toBe("EUR/USD1.1723▼\u00a0-0.14%");
-    expect(items[6]?.textContent).toBe("USD/CAD1.3815▲\u00a0+0.04%");
+    expect(items[0]?.textContent).toBe("EUR/USD, 1.1723, ▼\u00a0-0.14%");
+    expect(items[6]?.textContent).toBe("USD/CAD, 1.3815, ▲\u00a0+0.04%");
   });
 
   it("renders a single static rate group", () => {
@@ -103,7 +103,7 @@ describe("LiveRateList", () => {
     const list = within(scroller).getByRole("list");
     const item = within(list).getByRole("listitem");
 
-    expect(item.textContent).toBe("EUR/USD1.17100.00%");
+    expect(item.textContent).toBe("EUR/USD, 1.1710, 0.00%");
     expect(
       within(list).getByText("0.00%").parentElement?.classList.contains("text-neutral-200")
     ).toBe(true);

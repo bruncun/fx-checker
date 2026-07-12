@@ -101,7 +101,7 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
 
   return (
     <RangePicker
-      aria-label="History range"
+      aria-label="Timeframe"
       className="mt-250 lg:mt-0 lg:shrink-0"
       onValueChange={selectRange}
       options={ranges}

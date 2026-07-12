@@ -33,10 +33,10 @@ function RangePicker({
   shortcutLabels,
   value,
 }: RangePickerProps) {
-  const tabListRef = React.useRef<HTMLDivElement>(null);
+  const radioGroupRef = React.useRef<HTMLDivElement>(null);
   const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
-    containerRef: tabListRef,
-    itemSelector: "[data-range-picker-tab]",
+    containerRef: radioGroupRef,
+    itemSelector: "[data-range-picker-option]",
     onCurrentElementChange: (element: HTMLButtonElement) => {
       const nextValue = element.dataset.rangeValue;
 
@@ -51,7 +51,7 @@ function RangePicker({
 
   return (
     <div
-      ref={tabListRef}
+      ref={radioGroupRef}
       aria-label={ariaLabel}
       className={cn("flex h-[42px] w-fit rounded-8 bg-neutral-700 p-025", className)}
       data-range-picker
@@ -64,7 +64,7 @@ function RangePicker({
               }
             }
       }
-      role="tablist"
+      role="radiogroup"
     >
       {options.map((option) => {
         const isActive = option.value === value;
@@ -78,10 +78,10 @@ function RangePicker({
               : null;
 
         const sharedProps = {
-          "aria-selected": isActive,
-          "data-range-picker-tab": true,
+          "aria-checked": isActive,
+          "data-range-picker-option": true,
           "data-range-value": option.value,
-          role: "tab",
+          role: "radio",
           tabIndex: isActive ? 0 : -1,
         } as const;
         const className = cn(

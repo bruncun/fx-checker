@@ -81,11 +81,7 @@ function ConverterFavoriteButton({
   return (
     <FavoriteButton
       {...props}
-      aria-label={
-        isFavorite
-          ? `Remove ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency} from favorites`
-          : `Favorite ${normalizedPair.fromCurrency}/${normalizedPair.toCurrency}`
-      }
+      aria-label={isFavorite ? "Remove" : "Favorite"}
       pinned={isFavorite}
       onClick={toggleFavorite}
     />

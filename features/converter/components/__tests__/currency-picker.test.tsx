@@ -25,7 +25,6 @@ afterEach(() => {
 function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") {
   render(
     <CurrencyPicker
-      aria-label="Select send currency"
       countryCode="us"
       currencies={currencies}
       currencyCode={currencyCode}
@@ -35,7 +34,7 @@ function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") 
 
   return {
     onCurrencySelect,
-    trigger: screen.getByRole("button", { name: "Select send currency" }),
+    trigger: screen.getByRole("button", { name: currencyCode }),
   };
 }
 
@@ -46,6 +45,13 @@ describe("CurrencyPicker", () => {
 
     expect(otherCurrencies?.currencies).toHaveLength(4);
     expect(otherCurrencies?.count).toBe(otherCurrencies?.currencies.length);
+  });
+
+  it("announces the selected currency code from the trigger", () => {
+    const { trigger } = renderCurrencyPicker(vi.fn(), "EUR");
+
+    expect(trigger.getAttribute("aria-label")).toBe("EUR");
+    expect(screen.queryByRole("button", { name: "Select send currency" })).toBeNull();
   });
 
   it("opens the picker and moves focus to currency search", async () => {

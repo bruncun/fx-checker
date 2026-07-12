@@ -26,14 +26,14 @@ export function HomePageContent({
           Go to main content
         </a>
         <Header statsSlot={headerStatsSlot} />
+        {liveRatesSlot}
         <main>
-          {liveRatesSlot}
           <div className="mx-auto max-w-[1100px] px-200 py-400 sm:px-300 sm:py-600 lg:px-400">
             <Suspense fallback={null}>
               <GuestModeAlert />
             </Suspense>
             <section
-              aria-labelledby="converter-heading"
+              aria-label="Converter"
               className="relative z-[30] scroll-mt-200 focus:outline-none"
               id="converter"
               tabIndex={-1}

@@ -30,7 +30,7 @@ describe("HomePageContent", () => {
   it("renders the immediate shell and slots", () => {
     render(
       <HomePageContent
-        converterSlot={<section aria-label="Converter" />}
+        converterSlot={<div data-testid="converter-slot" />}
         headerStatsSlot={<span>56 Currencies</span>}
         liveRatesSlot={<section aria-label="Market snapshot exchange rates" />}
         rateDetailsSlot={<section aria-label="Rate details" />}
@@ -45,6 +45,7 @@ describe("HomePageContent", () => {
     );
     expect(screen.getByText("56 Currencies")).toBeTruthy();
     expect(screen.getByRole("region", { name: "Converter" })).toBeTruthy();
+    expect(screen.getByTestId("converter-slot")).toBeTruthy();
     expect(screen.getByRole("region", { name: "Market snapshot exchange rates" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Rate details" })).toBeTruthy();
   });

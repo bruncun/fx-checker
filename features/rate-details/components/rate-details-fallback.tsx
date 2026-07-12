@@ -2,7 +2,11 @@ import { Icon } from "@/components/ui/icon";
 import { TabButton } from "@/components/ui/tab-button";
 import { cn } from "@/lib/utils";
 import type { CSSProperties } from "react";
-import { rateDetailsSectionDefinitions } from "./rate-details-navigation-state";
+import {
+  getRateDetailsPanelId,
+  getRateDetailsTabId,
+  rateDetailsSectionDefinitions,
+} from "./rate-details-navigation-state";
 
 const fallbackHistoryRanges = ["1D", "1W", "1M", "3M", "1Y", "5Y"];
 const fallbackHistoryStats = [
@@ -40,7 +44,10 @@ function RateHistoryFallback() {
 
 function ChartFallback() {
   return (
-    <section className="mt-200 min-h-[369px] rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:mt-250 sm:p-250">
+    <section
+      aria-label="Chart"
+      className="mt-200 min-h-[369px] rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:mt-250 sm:p-250"
+    >
       <div className="flex h-[19px] items-center justify-between gap-150">
         <SkeletonBlock className="h-[19px] w-[74px] rounded-4" />
         <div className="flex items-center gap-075">
@@ -117,24 +124,24 @@ function ChartFallback() {
 function RangePickerFallback() {
   return (
     <div
-      aria-label="History range"
+      aria-label="Timeframe"
       aria-busy="true"
       className="relative mt-250 flex h-[42px] w-fit overflow-hidden rounded-8 bg-neutral-700 p-025 lg:mt-0 lg:shrink-0"
-      role="tablist"
+      role="radiogroup"
     >
       <span aria-hidden="true" className="fx-skeleton absolute inset-025 rounded-8 opacity-30" />
       {fallbackHistoryRanges.map((range) => (
         <button
-          aria-selected={false}
+          aria-checked={range === "1M"}
           className={cn(
             "fx-transition-surface relative block cursor-default rounded-8 px-200 py-150 text-preset-5 text-neutral-200",
             "disabled:opacity-100"
           )}
-          data-range-picker-tab
+          data-range-picker-option
           data-range-value={range}
           disabled
           key={range}
-          role="tab"
+          role="radio"
           tabIndex={-1}
           type="button"
         >
@@ -147,8 +154,9 @@ function RangePickerFallback() {
 
 function RateDetailsNavigationFallback() {
   return (
-    <nav aria-label="Rate details sections" className="relative w-full">
+    <div className="relative w-full">
       <button
+        aria-label="Sections: History"
         aria-hidden={true}
         className={cn(
           "flex h-500 w-full items-center justify-between gap-200 rounded-8 bg-neutral-700 px-150 py-125 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:hidden",
@@ -164,15 +172,17 @@ function RateDetailsNavigationFallback() {
       </button>
       <div
         className="hidden w-full items-start gap-250 shadow-[inset_0_-1px_0_0_hsl(var(--neutral-600))] sm:flex sm:gap-100"
-        aria-label="Rate details sections"
+        aria-label="Sections"
         role="tablist"
       >
         {rateDetailsSectionDefinitions.map((item) => (
           <TabButton
             key={item.value}
             active={item.value === "history"}
+            aria-controls={getRateDetailsPanelId(item.value)}
             aria-label={item.label}
             href={item.href}
+            id={getRateDetailsTabId(item.value)}
             label={item.label}
             reserveCount={item.value === "favorites" || item.value === "log"}
             scroll={false}
@@ -180,7 +190,7 @@ function RateDetailsNavigationFallback() {
           />
         ))}
       </div>
-    </nav>
+    </div>
   );
 }
 

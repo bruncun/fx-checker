@@ -95,6 +95,38 @@ function fulfilledPromise<T>(value: T) {
   });
 }
 
+function getRateRow(rowId: string) {
+  const row = document.querySelector<HTMLElement>(`[data-rate-details-row-id="${rowId}"]`);
+
+  if (!row) {
+    throw new Error(`Expected rate row ${rowId} to be rendered`);
+  }
+
+  return row;
+}
+
+function getRateCell(rowId: string, cellIndex: number) {
+  const cell = getRateRow(rowId).querySelectorAll<HTMLElement>("[data-rate-details-cell]")[
+    cellIndex
+  ];
+
+  if (!cell) {
+    throw new Error(`Expected rate row ${rowId} cell ${cellIndex} to be rendered`);
+  }
+
+  return cell;
+}
+
+function getRateAction(rowId: string) {
+  const action = getRateRow(rowId).querySelector<HTMLButtonElement>("[data-rate-details-action]");
+
+  if (!action) {
+    throw new Error(`Expected rate row ${rowId} action to be rendered`);
+  }
+
+  return action;
+}
+
 describe("CompareRates", () => {
   it("renders the preset compare currencies from the active send amount", () => {
     renderCompareRates({
@@ -108,8 +140,7 @@ describe("CompareRates", () => {
       ],
     });
 
-    expect(screen.getByRole("region", { name: "Compare" })).toBeTruthy();
-    expect(screen.getByRole("treegrid", { name: /Multi-Currency/ })).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Rates table" })).toBeTruthy();
     expect(screen.getByText("Multi-Currency")).toBeTruthy();
     expect(screen.getByText("1,000")).toBeTruthy();
     expect(screen.getByText("From USD")).toBeTruthy();
@@ -118,17 +149,16 @@ describe("CompareRates", () => {
     expect(screen.getByText("British Pound")).toBeTruthy();
     expect(screen.getByText("736")).toBeTruthy();
     expect(screen.getByText("@ 0.7360")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Remove USD/GBP from favorites" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Favorite USD/CHF" })).toBeTruthy();
+    expect(screen.queryByRole("img", { name: "United Kingdom" })).toBeNull();
+    expect(getRateAction("GBP").getAttribute("aria-label")).toBe("Remove");
+    expect(getRateAction("CHF").getAttribute("aria-label")).toBe("Favorite");
   });
 
   it("uses live URL amount params without waiting for server props to change", () => {
     const { rerender } = renderCompareRates({ amount: "1000" });
 
     expect(screen.getByText("1,000")).toBeTruthy();
-    expect(
-      screen.getByRole("row", { name: "Use USD/GBP in converter, 736 GBP at 0.7360" })
-    ).toBeTruthy();
+    expect(getRateRow("GBP").textContent).toContain("736");
 
     testSearchParams.current = "from=USD&to=EUR&amount=250&amountSource=send";
 
@@ -145,9 +175,7 @@ describe("CompareRates", () => {
     );
 
     expect(screen.getByText("250")).toBeTruthy();
-    expect(
-      screen.getByRole("row", { name: "Use USD/GBP in converter, 184 GBP at 0.7360" })
-    ).toBeTruthy();
+    expect(getRateRow("GBP").textContent).toContain("184");
     expect(routerRefresh).not.toHaveBeenCalled();
   });
 
@@ -161,7 +189,7 @@ describe("CompareRates", () => {
 
     renderCompareRates();
 
-    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
+    fireEvent.click(getRateAction("GBP"));
 
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
   });
@@ -171,7 +199,7 @@ describe("CompareRates", () => {
 
     renderCompareRates();
 
-    fireEvent.click(screen.getByRole("button", { name: "Favorite USD/GBP" }));
+    fireEvent.click(getRateAction("GBP"));
 
     await waitFor(() => {
       expect(showDataUnavailableError).toHaveBeenCalled();
@@ -185,15 +213,13 @@ describe("CompareRates", () => {
     expect(screen.getByText(/Enter an amount in SEND above to see what your money/)).toBeTruthy();
     expect(screen.getByText(/is worth in other currencies/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Compare" })).toBeNull();
-    expect(screen.queryByRole("treegrid", { name: /Multi-Currency/ })).toBeNull();
+    expect(screen.queryByRole("table", { name: "Rates table" })).toBeNull();
   });
 
   it("selects compare rows to load the receive currency into the converter", () => {
     renderCompareRates();
 
-    const gbpRow = screen.getByRole("row", {
-      name: "Use USD/GBP in converter, 736 GBP at 0.7360",
-    });
+    const gbpRow = getRateRow("GBP");
 
     fireEvent.click(gbpRow);
 
@@ -202,27 +228,23 @@ describe("CompareRates", () => {
     });
   });
 
-  it("supports row-first treegrid keyboard navigation and selection", () => {
+  it("supports row-first table keyboard navigation and selection", () => {
     renderCompareRates();
 
-    const gbpRow = screen.getByRole("row", {
-      name: "Use USD/GBP in converter, 736 GBP at 0.7360",
-    });
-    const jpyRow = screen.getByRole("row", {
-      name: "Use USD/JPY in converter, 157,910 JPY at 157.9100",
-    });
+    const gbpCurrencyCell = getRateCell("GBP", 0);
+    const jpyCurrencyCell = getRateCell("JPY", 0);
 
-    expect(gbpRow.tabIndex).toBe(0);
-    expect(jpyRow.tabIndex).toBe(-1);
+    expect(gbpCurrencyCell.tabIndex).toBe(0);
+    expect(jpyCurrencyCell.tabIndex).toBe(-1);
 
-    gbpRow.focus();
-    fireEvent.keyDown(gbpRow, { key: "ArrowDown" });
+    gbpCurrencyCell.focus();
+    fireEvent.keyDown(gbpCurrencyCell, { key: "ArrowDown" });
 
-    expect(document.activeElement).toBe(jpyRow);
-    expect(gbpRow.tabIndex).toBe(-1);
-    expect(jpyRow.tabIndex).toBe(0);
+    expect(document.activeElement).toBe(jpyCurrencyCell);
+    expect(gbpCurrencyCell.tabIndex).toBe(-1);
+    expect(jpyCurrencyCell.tabIndex).toBe(0);
 
-    fireEvent.keyDown(jpyRow, { key: "Enter" });
+    fireEvent.keyDown(jpyCurrencyCell, { key: "Enter" });
 
     expect(routerReplace).toHaveBeenCalledWith("/rate/compare?from=USD&to=JPY", {
       scroll: false,
@@ -239,18 +261,15 @@ describe("CompareRates", () => {
 
     renderCompareRates();
 
-    const gbpRow = screen.getByRole("row", {
-      name: "Use USD/GBP in converter, 736 GBP at 0.7360",
-    });
-    const favoriteButton = screen.getByRole("button", { name: "Favorite USD/GBP" });
+    const currencyCell = getRateCell("GBP", 0);
+    const favoriteButton = getRateAction("GBP");
 
-    gbpRow.focus();
-    fireEvent.keyDown(gbpRow, { key: "ArrowRight" });
+    currencyCell.focus();
+    fireEvent.keyDown(currencyCell, { key: "ArrowRight" });
 
     expect(document.activeElement).toBe(favoriteButton);
-    expect(favoriteButton.tabIndex).toBe(-1);
+    expect(favoriteButton.tabIndex).toBe(0);
 
-    fireEvent.keyDown(favoriteButton, { key: "Enter" });
     fireEvent.click(favoriteButton);
 
     expect(createFavorite).toHaveBeenCalledWith({ fromCurrency: "USD", toCurrency: "GBP" });
@@ -258,25 +277,27 @@ describe("CompareRates", () => {
 
     fireEvent.keyDown(favoriteButton, { key: "Escape" });
 
-    expect(document.activeElement).toBe(gbpRow);
+    expect(document.activeElement).toBe(currencyCell);
   });
 
-  it("tabs from a focused row into the favorite action and shifts tab back to the row", () => {
+  it("tabs from the row entry point to the action without stopping on data cells", () => {
     renderCompareRates();
 
-    const gbpRow = screen.getByRole("row", {
-      name: "Use USD/GBP in converter, 736 GBP at 0.7360",
-    });
-    const favoriteButton = screen.getByRole("button", { name: "Favorite USD/GBP" });
+    const currencyCell = getRateCell("GBP", 0);
+    const conversionCell = getRateCell("GBP", 1);
+    const favoriteButton = getRateAction("GBP");
 
-    gbpRow.focus();
-    fireEvent.keyDown(gbpRow, { key: "Tab" });
+    expect(conversionCell.tabIndex).toBe(-1);
+    expect(favoriteButton.tabIndex).toBe(0);
+
+    currencyCell.focus();
+    fireEvent.keyDown(currencyCell, { key: "Tab" });
 
     expect(document.activeElement).toBe(favoriteButton);
 
     fireEvent.keyDown(favoriteButton, { key: "Tab", shiftKey: true });
 
-    expect(document.activeElement).toBe(gbpRow);
+    expect(document.activeElement).toBe(currencyCell);
   });
 
   it("prefers preset currencies and skips the send currency", () => {

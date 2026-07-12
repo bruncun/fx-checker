@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: {
     default: "FX Checker",
-    template: "%s | FX Checker",
+    template: "%s - FX Checker",
   },
   description:
     "Check daily foreign exchange rates, compare currencies, and track favorite conversions with FX Checker.",

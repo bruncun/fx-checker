@@ -44,33 +44,51 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function getChart() {
+  const chart = document.querySelector<HTMLElement>('[role="img"][tabindex="0"]');
+
+  if (!chart) {
+    throw new Error("Expected rate history chart to be rendered");
+  }
+
+  return chart;
+}
+
+function getChartDetails() {
+  const details = document.querySelector<HTMLElement>('ul[aria-live="polite"]');
+
+  if (!details) {
+    throw new Error("Expected chart details to be rendered");
+  }
+
+  return details;
+}
+
 describe("RateHistory", () => {
   it("renders stats and chart details for the selected range", () => {
     render(
       <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
     );
 
-    expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("radio", { name: "1M" }).getAttribute("aria-checked")).toBe("true");
     expect(screen.getAllByText("0.8500").length).toBeGreaterThan(0);
     expect(screen.getAllByText("0.8600").length).toBeGreaterThan(0);
-    expect(screen.getByRole("img", { name: "1M USD/EUR rate history chart" })).toBeTruthy();
-    expect(screen.getByText("Open").closest("div")?.getAttribute("aria-live")).toBe("polite");
-    expect(screen.getByRole("list", { name: "Chart details" }).getAttribute("aria-live")).toBe(
-      "polite"
-    );
+    expect(getChart()).toBeTruthy();
+    expect(screen.getByText("Open").closest("dl")?.getAttribute("aria-live")).toBe("polite");
+    expect(getChartDetails().getAttribute("aria-live")).toBe("polite");
     expect(
       document.querySelector("#rate-history-chart-summary-1m")?.getAttribute("aria-live")
     ).toBe("polite");
 
-    expect(screen.getAllByRole("img", { name: /USD\/EUR rate history chart/ })).toHaveLength(1);
+    expect(screen.getAllByRole("img")).toHaveLength(1);
 
     const replaceState = vi.spyOn(window.history, "replaceState");
 
-    fireEvent.click(screen.getByRole("tab", { name: "3M" }));
-    expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
+    fireEvent.click(screen.getByRole("radio", { name: "3M" }));
+    expect(screen.getByRole("radio", { name: "3M" }).getAttribute("aria-checked")).toBe("true");
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
     expect(refresh).toHaveBeenCalled();
-    expect(screen.getByRole("img", { name: "1M USD/EUR rate history chart" })).toBeTruthy();
+    expect(getChart()).toBeTruthy();
   });
 
   it("keeps the chart area gradient pinned to the full chart height", () => {
@@ -90,9 +108,9 @@ describe("RateHistory", () => {
       <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
     );
 
-    const chart = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
+    const chart = getChart();
     const hoverSurface = chart.querySelector(".cursor-crosshair");
-    const details = screen.getByRole("list", { name: "Chart details" });
+    const details = getChartDetails();
 
     expect(hoverSurface).toBeInstanceOf(HTMLElement);
     expect(details.textContent).toContain("0.8600");
@@ -127,8 +145,8 @@ describe("RateHistory", () => {
       <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
     );
 
-    const chart = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
-    const details = screen.getByRole("list", { name: "Chart details" });
+    const chart = getChart();
+    const details = getChartDetails();
 
     expect(chart.getAttribute("tabindex")).toBe("0");
     expect(chart.getAttribute("aria-describedby")).toContain("rate-history-chart-keyboard-help-1m");
@@ -163,8 +181,8 @@ describe("RateHistory", () => {
       />
     );
 
-    const chart = screen.getByRole("img", { name: "1M USD/EUR rate history chart" });
-    const details = screen.getByRole("list", { name: "Chart details" });
+    const chart = getChart();
+    const details = getChartDetails();
 
     fireEvent.keyDown(chart, { key: "PageUp" });
     expect(details.textContent).toContain("0.9000");

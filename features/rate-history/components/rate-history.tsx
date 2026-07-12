@@ -34,32 +34,39 @@ function RateHistory({ model, pair, selectedRange = "1M" }: RateHistoryProps) {
   }
 
   return (
-    <section aria-label="Rate history" className="uppercase">
-      <div className="lg:flex lg:items-center lg:justify-between lg:gap-400">
-        <div
+    <div className="uppercase">
+      <div
+        className="lg:flex lg:items-center lg:justify-between lg:gap-400"
+        role="group"
+        aria-label="Header"
+      >
+        <dl
           className="grid grid-cols-2 gap-125 sm:inline-grid sm:grid-cols-4 sm:gap-200"
+          aria-label="Stats"
           aria-live="polite"
           aria-atomic="true"
         >
           {selectedPanel.stats.map((stat) => (
-            <article
-              className="rounded-16 bg-neutral-700 px-250 py-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:min-w-[140px]"
+            <div
               key={stat.label}
+              className="rounded-16 bg-neutral-700 px-250 py-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:min-w-[140px]"
             >
-              <p className="text-preset-4 text-neutral-50/70">{stat.label}</p>
+              <dt className="text-preset-4 text-neutral-50/70">{stat.label}</dt>
               {stat.direction ? (
-                <RateChange
-                  className="mt-200 text-preset-2 sm:mt-200"
-                  direction={stat.direction}
-                  showIndicator={stat.showIndicator ?? false}
-                  value={stat.value}
-                />
+                <dd>
+                  <RateChange
+                    className="mt-200 text-preset-2 sm:mt-200"
+                    direction={stat.direction}
+                    showIndicator={stat.showIndicator ?? false}
+                    value={stat.value}
+                  />
+                </dd>
               ) : (
-                <p className="mt-200 text-preset-2 text-neutral-50">{stat.value}</p>
+                <dd className="mt-200 text-preset-2 text-neutral-50">{stat.value}</dd>
               )}
-            </article>
+            </div>
           ))}
-        </div>
+        </dl>
         <RateHistoryRangePicker selectedRange={selectedPanel.range} />
       </div>
       <div className="mt-200 sm:mt-250">
@@ -69,7 +76,7 @@ function RateHistory({ model, pair, selectedRange = "1M" }: RateHistoryProps) {
           range={selectedPanel.range}
         />
       </div>
-    </section>
+    </div>
   );
 }
 

@@ -26,7 +26,7 @@ type RateHistoryContentProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Dashboard - Rate History",
+  title: "Dashboard",
 };
 
 async function RateHistoryContent({

@@ -92,12 +92,45 @@ function renderConversionLog({
   );
 }
 
+function getConversionRow(rowId: string) {
+  const row = document.querySelector<HTMLElement>(`[data-rate-details-row-id="${rowId}"]`);
+
+  if (!row) {
+    throw new Error(`Expected conversion row ${rowId} to be rendered`);
+  }
+
+  return row;
+}
+
+function getConversionCell(rowId: string, cellIndex: number) {
+  const cell = getConversionRow(rowId).querySelectorAll<HTMLElement>("[data-rate-details-cell]")[
+    cellIndex
+  ];
+
+  if (!cell) {
+    throw new Error(`Expected conversion row ${rowId} cell ${cellIndex} to be rendered`);
+  }
+
+  return cell;
+}
+
+function getConversionAction(rowId: string) {
+  const action = getConversionRow(rowId).querySelector<HTMLButtonElement>(
+    "[data-rate-details-action]"
+  );
+
+  if (!action) {
+    throw new Error(`Expected conversion row ${rowId} action to be rendered`);
+  }
+
+  return action;
+}
+
 describe("ConversionLog", () => {
   it("renders logged conversions with count and formatted amounts", () => {
     renderConversionLog();
 
-    expect(screen.getByRole("region", { name: "Conversion log" })).toBeTruthy();
-    expect(screen.getByRole("treegrid", { name: "Conversion Log" })).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Conversion Log" })).toBeTruthy();
     expect(screen.getByText("2 Logged")).toBeTruthy();
     expect(screen.getByText("1,000")).toBeTruthy();
     expect(screen.getByText("853.02")).toBeTruthy();
@@ -107,16 +140,53 @@ describe("ConversionLog", () => {
   it("loads a conversion into the converter when its row is selected", () => {
     renderConversionLog();
 
-    fireEvent.click(
-      screen.getByRole("row", {
-        name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-      })
-    );
+    fireEvent.click(getConversionRow("conversion-usd-eur"));
 
     expect(routerReplace).toHaveBeenCalledWith(
       "/rate/log?from=USD&to=EUR&amount=1000.00&amountSource=send",
       { scroll: false }
     );
+  });
+
+  it("supports row-first keyboard navigation while skipping data cells in the tab path", () => {
+    renderConversionLog();
+
+    const createdCell = getConversionCell("conversion-usd-eur", 0);
+    const pairCell = getConversionCell("conversion-usd-eur", 1);
+    const sendCell = getConversionCell("conversion-usd-eur", 2);
+    const receiveCell = getConversionCell("conversion-usd-eur", 3);
+    const deleteButton = getConversionAction("conversion-usd-eur");
+    const nextCreatedCell = getConversionCell("conversion-eur-jpy", 0);
+
+    expect(
+      getConversionRow("conversion-usd-eur").querySelectorAll("[data-rate-details-cell]")
+    ).toHaveLength(4);
+    expect(createdCell.tabIndex).toBe(0);
+    expect(pairCell.tabIndex).toBe(-1);
+    expect(sendCell.tabIndex).toBe(-1);
+    expect(receiveCell.tabIndex).toBe(-1);
+    expect(deleteButton.tabIndex).toBe(0);
+
+    createdCell.focus();
+    fireEvent.keyDown(createdCell, { key: "ArrowRight" });
+
+    expect(document.activeElement).toBe(deleteButton);
+
+    fireEvent.keyDown(deleteButton, { key: "ArrowDown" });
+
+    expect(document.activeElement).toBe(getConversionAction("conversion-eur-jpy"));
+
+    fireEvent.keyDown(getConversionAction("conversion-eur-jpy"), { key: "ArrowUp" });
+
+    expect(document.activeElement).toBe(deleteButton);
+
+    fireEvent.keyDown(deleteButton, { key: "Escape" });
+
+    expect(document.activeElement).toBe(createdCell);
+
+    fireEvent.keyDown(createdCell, { key: "ArrowDown" });
+
+    expect(document.activeElement).toBe(nextCreatedCell);
   });
 
   it("deletes individual conversions and clears all conversions", () => {
@@ -126,11 +196,9 @@ describe("ConversionLog", () => {
 
     renderConversionLog();
 
-    const row = screen.getByRole("row", {
-      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-    });
+    const row = getConversionRow("conversion-usd-eur");
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
+    fireEvent.click(getConversionAction("conversion-usd-eur"));
 
     expect(row.className).toContain("fx-list-row-out");
 
@@ -138,13 +206,9 @@ describe("ConversionLog", () => {
       vi.advanceTimersByTime(160);
     });
 
-    expect(
-      screen.queryByRole("row", {
-        name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-      })
-    ).toBeNull();
+    expect(document.querySelector('[data-rate-details-row-id="conversion-usd-eur"]')).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Clear all conversions" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
 
     expect(deleteConversion).toHaveBeenCalledWith("conversion-usd-eur");
     expect(deleteAllConversions).toHaveBeenCalled();
@@ -181,7 +245,7 @@ describe("ConversionLog", () => {
         return originalCreateElement(tagName, options);
       });
 
-    fireEvent.click(screen.getByRole("button", { name: "Export conversions as CSV" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export" }));
 
     const blob = createObjectURL.mock.calls[0][0];
 
@@ -203,9 +267,9 @@ describe("ConversionLog", () => {
   it("treats the conversion log actions as a roving focus toolbar", () => {
     renderConversionLog();
 
-    const toolbar = screen.getByRole("toolbar", { name: "Conversion log actions" });
-    const exportButton = screen.getByRole("button", { name: "Export conversions as CSV" });
-    const clearButton = screen.getByRole("button", { name: "Clear all conversions" });
+    const toolbar = screen.getByRole("toolbar", { name: "Actions" });
+    const exportButton = screen.getByRole("button", { name: "Export" });
+    const clearButton = screen.getByRole("button", { name: "Clear all" });
 
     expect(exportButton.tabIndex).toBe(0);
     expect(clearButton.tabIndex).toBe(-1);
@@ -223,7 +287,7 @@ describe("ConversionLog", () => {
 
     renderConversionLog();
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
+    fireEvent.click(getConversionAction("conversion-usd-eur"));
 
     await waitFor(() => {
       expect(showDataUnavailableError).toHaveBeenCalled();
@@ -236,7 +300,7 @@ describe("ConversionLog", () => {
 
     renderConversionLog({ conversions: [conversions[0]] });
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete USD/EUR conversion" }));
+    fireEvent.click(getConversionAction("conversion-usd-eur"));
 
     act(() => {
       vi.advanceTimersByTime(160);
@@ -258,7 +322,7 @@ describe("ConversionLog", () => {
     ).toBeTruthy();
     expect(screen.getByText(/Your log is private to your account/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversion log" })).toBeNull();
-    expect(screen.queryByRole("treegrid", { name: "Conversion Log" })).toBeNull();
+    expect(screen.queryByRole("table", { name: "Conversion Log" })).toBeNull();
   });
 
   it("animates the first conversion row when the log transitions from empty to populated", () => {
@@ -274,12 +338,10 @@ describe("ConversionLog", () => {
       <ConversionLog availableCurrencies={availableCurrencies} conversions={[conversions[0]]} />
     );
 
-    const region = screen.getByRole("region", { name: "Conversion log" });
-    const row = screen.getByRole("row", {
-      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-    });
+    const tableContainer = screen.getByRole("table", { name: "Conversion Log" }).parentElement;
+    const row = getConversionRow("conversion-usd-eur");
 
-    expect(region.className).toContain("fx-state-in");
+    expect(tableContainer?.className).toContain("fx-state-in");
     expect(row.className).toContain("fx-list-row-in");
 
     act(() => {
@@ -306,9 +368,10 @@ describe("ConversionLog", () => {
       />
     );
 
-    const rows = screen.getAllByRole("row", {
-      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-    });
+    const rows = [
+      getConversionRow("conversion-usd-eur-duplicate"),
+      getConversionRow("conversion-usd-eur"),
+    ];
 
     expect(rows[0].className).toContain("fx-list-row-in");
     expect(rows[1].className).not.toContain("fx-list-row-in");
@@ -331,9 +394,7 @@ describe("ConversionLog", () => {
       <ConversionLog availableCurrencies={availableCurrencies} conversions={[conversions[0]]} />
     );
 
-    const row = screen.getByRole("row", {
-      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-    });
+    const row = getConversionRow("conversion-usd-eur");
 
     expect(row.className).not.toContain("fx-list-row-in");
   });
@@ -358,9 +419,7 @@ describe("ConversionLog", () => {
       <ConversionLog availableCurrencies={availableCurrencies} conversions={[conversions[0]]} />
     );
 
-    const row = screen.getByRole("row", {
-      name: "Load USD/EUR conversion, sent 1,000, received 853.02",
-    });
+    const row = getConversionRow("conversion-usd-eur");
 
     expect(row.className).toContain("fx-list-row-in");
 

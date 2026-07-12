@@ -13,10 +13,12 @@ export type SectionNavigationItem = {
   count?: number;
   href: string;
   label: string;
+  panelId?: string;
+  tabId?: string;
   value: string;
 };
 
-export interface SectionNavigationProps extends React.ComponentProps<"nav"> {
+export interface SectionNavigationProps extends React.ComponentPropsWithoutRef<"div"> {
   "aria-label"?: string;
   items: SectionNavigationItem[];
   onTabActivate?: (item: SectionNavigationItem) => void;
@@ -41,7 +43,7 @@ function SectionNavigation({
 }: SectionNavigationProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const panelId = React.useId();
-  const rootRef = React.useRef<HTMLElement>(null);
+  const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
   const tabListRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -113,12 +115,7 @@ function SectionNavigation({
   }
 
   return (
-    <nav
-      ref={rootRef}
-      aria-label={ariaLabel}
-      className={cn("relative w-full", className)}
-      {...props}
-    >
+    <div ref={rootRef} className={cn("relative w-full", className)} {...props}>
       <button
         ref={triggerRef}
         aria-controls={isOpen ? panelId : undefined}
@@ -202,11 +199,13 @@ function SectionNavigation({
             <TabButton
               key={item.value}
               active={isCurrent}
+              aria-controls={item.panelId}
               aria-label={getSectionAccessibleName(item)}
               data-section-navigation-tab
               data-section-value={item.value}
               count={item.count}
               href={item.href}
+              id={item.tabId}
               label={item.label}
               onFocus={() => {
                 if (!isCurrent) {
@@ -219,7 +218,7 @@ function SectionNavigation({
           );
         })}
       </div>
-    </nav>
+    </div>
   );
 }
 

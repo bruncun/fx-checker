@@ -163,11 +163,14 @@ function ConverterAmountPanel({
   onInteraction,
 }: ConverterAmountPanelProps) {
   return (
-    <section className="flex flex-col justify-between rounded-16 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] sm:min-w-0 sm:flex-1 sm:p-250">
-      <h2 className="mb-250 text-preset-4 text-neutral-100 uppercase">{label}</h2>
+    <fieldset className="m-0 flex min-w-0 flex-col justify-between rounded-16 border-0 bg-neutral-600 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] [min-inline-size:0] sm:flex-1 sm:p-250">
+      <legend className="sr-only">{label}</legend>
+      <span aria-hidden="true" className="mb-250 text-preset-4 text-neutral-100 uppercase">
+        {label}
+      </span>
       <div className="flex items-end justify-between gap-200">
         <AmountInput
-          aria-label={`${label} amount`}
+          aria-label="Amount"
           onBlur={(event) => {
             const normalizedAmount = getAmountValue(event.currentTarget.value).replace(/\.$/, "");
             const currentAmount = amount.endsWith(".")
@@ -186,7 +189,6 @@ function ConverterAmountPanel({
           className={label === "Receive" ? "text-lime-500" : ""}
         />
         <DeferredCurrencyPicker
-          aria-label={`Select ${label.toLowerCase()} currency`}
           countryCode={countryCode}
           currencies={currencies}
           currencyCode={currencyCode}
@@ -205,7 +207,7 @@ function ConverterAmountPanel({
           left={label === "Send"}
         />
       </div>
-    </section>
+    </fieldset>
   );
 }
 

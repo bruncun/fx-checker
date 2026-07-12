@@ -3,7 +3,11 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
-import { getRateDetailsSectionFromPathname } from "./rate-details-navigation-state";
+import {
+  getRateDetailsPanelId,
+  getRateDetailsSectionFromPathname,
+  getRateDetailsTabId,
+} from "./rate-details-navigation-state";
 
 type RateDetailsPanelTransitionProps = {
   children: ReactNode;
@@ -13,7 +17,13 @@ function RateDetailsPanelTransition({ children }: RateDetailsPanelTransitionProp
   const section = getRateDetailsSectionFromPathname(usePathname());
 
   return (
-    <div key={section} className="fx-tab-panel-in">
+    <div
+      key={section}
+      aria-labelledby={getRateDetailsTabId(section)}
+      className="fx-tab-panel-in"
+      id={getRateDetailsPanelId(section)}
+      role="tabpanel"
+    >
       {children}
     </div>
   );

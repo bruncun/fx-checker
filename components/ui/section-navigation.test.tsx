@@ -27,7 +27,7 @@ describe("SectionNavigation", () => {
     fireEvent.click(trigger);
 
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByRole("navigation", { name: "Rate details sections" })).toBeTruthy();
+    expect(document.getElementById(trigger.getAttribute("aria-controls") ?? "")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Favorites, 10" }).getAttribute("href")).toBe(
       "#favorites"
     );
@@ -94,6 +94,25 @@ describe("SectionNavigation", () => {
     expect(favoritesTab.getAttribute("tabindex")).toBe("0");
     expect(historyTab.getAttribute("aria-selected")).toBe("false");
     expect(historyTab.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("links tablet tabs to their panels when ids are provided", () => {
+    render(
+      <SectionNavigation
+        aria-label="Rate details sections"
+        items={sections.map((section) => ({
+          ...section,
+          panelId: `${section.value}-panel`,
+          tabId: `${section.value}-tab`,
+        }))}
+        value="favorites"
+      />
+    );
+
+    const favoritesTab = screen.getByRole("tab", { name: "Favorites, 10" });
+
+    expect(favoritesTab.getAttribute("id")).toBe("favorites-tab");
+    expect(favoritesTab.getAttribute("aria-controls")).toBe("favorites-panel");
   });
 
   it("moves focus through tablet tabs without programmatic navigation", () => {

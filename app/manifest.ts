@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "FX Checker",
     short_name: "FX Checker",
     description:
-      "Check daily foreign exchange rates, compare currencies, and track favorite conversions with FX Checker.",
+      "Check daily foreign exchange rates, compare currencies, and track favorite conversions.",
     start_url: "/",
     display: "standalone",
     background_color: "#050a2f",

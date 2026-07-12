@@ -32,16 +32,6 @@ function getAccountInitials({ email, isGuest }: UserDropdownProps) {
   return email?.trim().charAt(0).toLocaleUpperCase() || "";
 }
 
-function getAccountMenuLabel({ email, isGuest }: UserDropdownProps) {
-  if (isGuest) {
-    return "Guest account menu";
-  }
-
-  const normalizedEmail = email?.trim();
-
-  return normalizedEmail ? `Account menu for ${normalizedEmail}` : "Account menu";
-}
-
 export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   const shortcuts = useOptionalKeyboardShortcuts();
   const router = useRouter();
@@ -57,7 +47,6 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
     ? (theme as ThemeValue)
     : "system";
   const initials = getAccountInitials({ email, isGuest });
-  const accountMenuLabel = getAccountMenuLabel({ email, isGuest });
   const menuFocus = useRovingTabIndex<HTMLButtonElement>({
     containerRef: panelRef,
     itemSelector: "[data-user-menu-option]",
@@ -195,7 +184,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
         aria-controls={isOpen ? panelId : undefined}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        aria-label={isSigningOut ? "Signing out" : accountMenuLabel}
+        aria-label={isSigningOut ? "Signing out" : "Account menu"}
         className={cn(
           "fx-transition-surface relative inline-flex size-400 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
           "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
@@ -314,4 +303,4 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   );
 }
 
-export { getAccountInitials, getAccountMenuLabel };
+export { getAccountInitials };

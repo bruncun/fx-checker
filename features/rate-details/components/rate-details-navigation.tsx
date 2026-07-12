@@ -6,7 +6,9 @@ import { useOptimisticFavoriteCount } from "@/features/favorites/stores/optimist
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   appendSearchParams,
+  getRateDetailsPanelId,
   getRateDetailsSectionFromPathname,
+  getRateDetailsTabId,
   rateDetailsSectionDefinitions,
 } from "./rate-details-navigation-state";
 
@@ -33,12 +35,13 @@ function RateDetailsNavigation({ conversionCount, favoriteCount }: RateDetailsNa
             ? optimisticConversionCount
             : undefined,
       href: appendSearchParams(section.href, searchParamsString),
+      panelId: getRateDetailsPanelId(section.value),
+      tabId: getRateDetailsTabId(section.value),
     })
   );
 
   return (
     <SectionNavigation
-      aria-label="Rate details sections"
       items={rateDetailsSections}
       onTabActivate={(item) => {
         router.push(item.href, { scroll: false });

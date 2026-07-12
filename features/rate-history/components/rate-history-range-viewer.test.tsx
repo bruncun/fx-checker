@@ -30,12 +30,12 @@ describe("RateHistoryRangePicker", () => {
 
     render(<RateHistoryRangePicker selectedRange="1M" />);
 
-    const nextRange = screen.getByRole("tab", { name: "3M" });
+    const nextRange = screen.getByRole("radio", { name: "3M" });
 
     fireEvent.click(nextRange);
 
-    expect(nextRange.getAttribute("aria-selected")).toBe("true");
-    expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("false");
+    expect(nextRange.getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "1M" }).getAttribute("aria-checked")).toBe("false");
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
     expect(refresh).toHaveBeenCalled();
   });
@@ -47,7 +47,7 @@ describe("RateHistoryRangePicker", () => {
 
     render(<RateHistoryRangePicker selectedRange="1M" />);
 
-    fireEvent.click(screen.getByRole("tab", { name: "1Y" }));
+    fireEvent.click(screen.getByRole("radio", { name: "1Y" }));
 
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=GBP&to=JPY&range=1Y");
   });
@@ -84,15 +84,15 @@ describe("RateHistoryRangePicker", () => {
       </KeyboardShortcutsProvider>
     );
 
-    const selectedRange = screen.getByRole("tab", { name: "1M" });
+    const selectedRange = screen.getByRole("radio", { name: "1M" });
 
     selectedRange.focus();
     fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
 
-    const nextRange = screen.getByRole("tab", { name: "3M" });
+    const nextRange = screen.getByRole("radio", { name: "3M" });
 
     expect(document.activeElement).toBe(nextRange);
-    expect(nextRange.getAttribute("aria-selected")).toBe("true");
+    expect(nextRange.getAttribute("aria-checked")).toBe("true");
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
   });
 
@@ -105,11 +105,11 @@ describe("RateHistoryRangePicker", () => {
       </KeyboardShortcutsProvider>
     );
 
-    const selectedRange = screen.getByRole("tab", { name: "1M" });
+    const selectedRange = screen.getByRole("radio", { name: "1M" });
 
     selectedRange.focus();
     fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
-    fireEvent.keyDown(screen.getByRole("tab", { name: "3M" }), { key: "Enter" });
+    fireEvent.keyDown(screen.getByRole("radio", { name: "3M" }), { key: "Enter" });
 
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
   });
