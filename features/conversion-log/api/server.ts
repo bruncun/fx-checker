@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { hasEnvVars } from "@/lib/utils";
+import { cacheLife, cacheTag } from "next/cache";
 import { cookies } from "next/headers";
 import type { Conversion } from "../model/conversion-log";
 import {
@@ -8,6 +9,8 @@ import {
   createSupabaseConversionStore,
   type ConversionStore,
 } from "../stores/store";
+
+export const CONVERSIONS_CACHE_TAG = "conversions";
 
 async function getConversionReadStore(): Promise<ConversionStore> {
   const cookieStore = await cookies();
@@ -25,6 +28,10 @@ async function getConversionReadStore(): Promise<ConversionStore> {
 }
 
 export async function getServerConversions(): Promise<Conversion[]> {
+  "use cache: private";
+  cacheTag(CONVERSIONS_CACHE_TAG);
+  cacheLife("minutes");
+
   const store = await getConversionReadStore();
 
   return store.list();

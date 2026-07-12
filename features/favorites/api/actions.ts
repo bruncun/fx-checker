@@ -2,8 +2,10 @@
 
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { createClient } from "@/lib/supabase/server";
+import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import type { Favorite, FavoriteCurrencyPair } from "../model/favorites";
+import { FAVORITES_CACHE_TAG } from "./server";
 import {
   createGuestFavoriteStore,
   createSupabaseFavoriteStore,
@@ -38,12 +40,16 @@ async function getFavoriteStore(): Promise<FavoriteStore> {
 
 export async function createFavorite(pair: FavoriteCurrencyPair): Promise<Favorite> {
   const store = await getFavoriteStore();
+  const favorite = await store.create(pair);
 
-  return store.create(pair);
+  revalidateTag(FAVORITES_CACHE_TAG, { expire: 0 });
+
+  return favorite;
 }
 
 export async function deleteFavorite(pair: FavoriteCurrencyPair): Promise<void> {
   const store = await getFavoriteStore();
 
   await store.delete(pair);
+  revalidateTag(FAVORITES_CACHE_TAG, { expire: 0 });
 }

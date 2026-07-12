@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { hasEnvVars } from "@/lib/utils";
+import { cacheLife, cacheTag } from "next/cache";
 import { cookies } from "next/headers";
 import type { Favorite } from "../model/favorites";
 import {
@@ -8,6 +9,8 @@ import {
   createSupabaseFavoriteStore,
   type FavoriteStore,
 } from "../stores/store";
+
+export const FAVORITES_CACHE_TAG = "favorites";
 
 async function getFavoriteReadStore(): Promise<FavoriteStore> {
   const cookieStore = await cookies();
@@ -25,6 +28,10 @@ async function getFavoriteReadStore(): Promise<FavoriteStore> {
 }
 
 export async function getServerFavorites(): Promise<Favorite[]> {
+  "use cache: private";
+  cacheTag(FAVORITES_CACHE_TAG);
+  cacheLife("minutes");
+
   const store = await getFavoriteReadStore();
 
   return store.list();
