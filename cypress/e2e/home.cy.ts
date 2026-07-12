@@ -110,6 +110,18 @@ describe("home page", () => {
     });
   });
 
+  it("keeps range picker focus while range data refreshes", () => {
+    cy.visit(defaultAppUrl);
+
+    cy.findByRole("tab", { name: "1M" }).focus().should("be.focused");
+    cy.press(Cypress.Keyboard.Keys.RIGHT);
+
+    cy.findByRole("tab", { name: "3M" })
+      .should("be.focused")
+      .and("have.attr", "aria-selected", "true");
+    cy.location("search").should("include", "range=3M");
+  });
+
   it("supports the complete currency-picker keyboard flow", () => {
     cy.visit(defaultAppUrl);
 
