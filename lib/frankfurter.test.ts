@@ -77,7 +77,7 @@ describe("parseFrankfurterRates", () => {
           base: "EUR",
           quote: "USD",
           rate: 1.171,
-          providers: [{ key: "ECB", rate: -1 }],
+          providers: [{ key: "TEST", rate: -1 }],
         },
       ])
     ).toThrow("Unexpected Frankfurter rates response");
@@ -229,7 +229,7 @@ describe("getRates", () => {
     vi.stubGlobal("fetch", fetch);
 
     await expect(getRates()).resolves.toEqual(mockRates);
-    expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates?providers=ECB", {
+    expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates", {
       next: {
         revalidate: 86_400,
         tags: ["exchange-rates"],
@@ -237,7 +237,7 @@ describe("getRates", () => {
     });
   });
 
-  it("fetches an unfiltered ECB time series", async () => {
+  it("fetches an unfiltered time series", async () => {
     const fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue(mockRates),
@@ -252,7 +252,7 @@ describe("getRates", () => {
       })
     ).resolves.toEqual(mockRates);
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.frankfurter.dev/v2/rates?from=2026-06-05&to=2026-06-19&providers=ECB",
+      "https://api.frankfurter.dev/v2/rates?from=2026-06-05&to=2026-06-19",
       {
         next: {
           revalidate: 86_400,
@@ -262,7 +262,7 @@ describe("getRates", () => {
     );
   });
 
-  it("supports filtered ECB time series requests", async () => {
+  it("supports filtered time series requests", async () => {
     const fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue(mockRates),
@@ -278,7 +278,7 @@ describe("getRates", () => {
       })
     ).resolves.toEqual(mockRates);
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.frankfurter.dev/v2/rates?from=2026-06-05&to=2026-06-19&quotes=USD%2CJPY%2CGBP&providers=ECB",
+      "https://api.frankfurter.dev/v2/rates?from=2026-06-05&to=2026-06-19&quotes=USD%2CJPY%2CGBP",
       {
         next: {
           revalidate: 86_400,
@@ -302,7 +302,7 @@ describe("getRates", () => {
     expect(consoleError).toHaveBeenCalledWith("Frankfurter request failed", {
       endpoint: "rates",
       status: 503,
-      url: "https://api.frankfurter.dev/v2/rates?providers=ECB",
+      url: "https://api.frankfurter.dev/v2/rates",
       cause: "Frankfurter returned 503",
     });
   });

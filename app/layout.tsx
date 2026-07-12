@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s | FX Checker",
   },
   description:
-    "Check live foreign exchange rates, compare currencies, and track favorite conversions with FX Checker.",
+    "Check daily foreign exchange rates, compare currencies, and track favorite conversions with FX Checker.",
   icons: {
     icon: [
       {

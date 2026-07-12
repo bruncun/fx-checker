@@ -9,7 +9,7 @@ import Link from "next/link";
 
 const features = [
   <>
-    Live ECB <br className="hidden sm:inline" />
+    Latest <br className="hidden sm:inline" />
     reference rates
   </>,
   "Compare and save currency pairs",
@@ -19,7 +19,7 @@ const features = [
   </>,
 ];
 
-const liveRates = [
+const marketSnapshotRates = [
   { change: "▲ 0.18%", direction: "up", pair: "USD/GBP", rate: "0.7319" },
   { change: "▼ 0.11%", direction: "down", pair: "USD/JPY", rate: "146.72" },
   { change: "▲ 0.07%", direction: "up", pair: "EUR/CAD", rate: "1.6074" },
@@ -48,7 +48,7 @@ export default function LandingPage() {
             Check the rate before money moves.
           </h1>
           <p className="mt-300 max-w-[560px] text-preset-3 leading-[1.5] text-neutral-100 sm:mx-auto sm:text-[18px] lg:mx-0">
-            FX Checker keeps live exchange rates, comparisons, favorites, and logged conversions in
+            FX Checker keeps daily exchange rates, comparisons, favorites, and logged conversions in
             one focused workspace.
           </p>
           <div className="mt-400 flex flex-col gap-150 sm:flex-row sm:justify-center lg:justify-start">
@@ -92,20 +92,20 @@ export default function LandingPage() {
                 <nav className="flex items-center justify-between">
                   <Logo alt="" className="h-200 sm:h-200" />
                   <ul className="flex items-center gap-100 text-preset-6 text-neutral-200 uppercase">
-                    <li>29 Currencies</li>
+                    <li>56 Currencies</li>
                     <li className="text-neutral-400">/</li>
-                    <li>ECB</li>
+                    <li>EOD</li>
                   </ul>
                 </nav>
 
                 <section aria-hidden="true" className="-mx-[11px] mt-200 flex bg-neutral-700">
                   <div className="flex shrink-0 items-center gap-075 bg-lime-500 px-100 py-125 text-preset-6 text-neutral-900 uppercase">
                     <span className="size-[6px] rounded-full bg-neutral-900" />
-                    <span>Live markets</span>
+                    <span>Market snapshot</span>
                   </div>
                   <div className="min-w-0 flex-1 overflow-hidden">
                     <ul className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500">
-                      {liveRates.map((rate) => (
+                      {marketSnapshotRates.map((rate) => (
                         <li
                           className="flex shrink-0 items-center gap-100 px-125 py-125 uppercase"
                           key={rate.pair}

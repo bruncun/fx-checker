@@ -65,10 +65,10 @@ function ExchangeRateDataStats({ currencyCount }: ExchangeRateDataStatsProps) {
         <abbr key="eod" title="End of day">
           EOD
         </abbr>,
-        <span key="ecb">
-          <abbr title="European Central Bank">ECB</abbr>{" "}
-          <span className="hidden sm:inline">data</span>
-        </span>,
+        {
+          className: "hidden sm:list-item",
+          content: "Central bank data",
+        },
       ]}
     />
   );

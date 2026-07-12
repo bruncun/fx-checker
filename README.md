@@ -27,7 +27,7 @@ Users should ultimately be able to:
 
 - enter an amount and see it convert in real time
 - choose send and receive currencies from a searchable picker
-- see the live exchange rate for the active currency pair
+- see the latest exchange rate for the active currency pair
 - swap send and receive currencies
 - favorite pairs and log conversions
 - search currencies by code or name

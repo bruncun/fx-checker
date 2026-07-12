@@ -54,10 +54,10 @@ function HeaderStatsFallback() {
         <abbr key="eod" title="End of day">
           EOD
         </abbr>,
-        <span key="ecb">
-          <abbr title="European Central Bank">ECB</abbr>{" "}
-          <span className="hidden sm:inline">data</span>
-        </span>,
+        {
+          className: "hidden sm:list-item",
+          content: "Central bank data",
+        },
         <span
           aria-hidden="true"
           className="fx-skeleton inline-flex size-400 shrink-0 rounded-full shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
@@ -71,7 +71,7 @@ function HeaderStatsFallback() {
 function LiveRatesFallback() {
   return (
     <aside
-      aria-labelledby="live-markets-fallback-heading"
+      aria-labelledby="market-snapshot-fallback-heading"
       className="relative flex w-full bg-neutral-700"
     >
       <div
@@ -81,16 +81,16 @@ function LiveRatesFallback() {
         )}
       >
         <span className="size-[6px] rounded-full bg-neutral-900" aria-hidden="true" />
-        <span id="live-markets-fallback-heading">Live markets</span>
+        <span id="market-snapshot-fallback-heading">Market snapshot</span>
       </div>
       <div
         className="min-w-0 flex-1 overflow-x-auto"
         role="region"
-        aria-label="Live exchange rates"
+        aria-label="Market snapshot exchange rates"
       >
         <ul
           className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
-          aria-label="Live exchange rates"
+          aria-label="Market snapshot exchange rates"
         >
           {Array.from({ length: 6 }, (_, index) => (
             <li

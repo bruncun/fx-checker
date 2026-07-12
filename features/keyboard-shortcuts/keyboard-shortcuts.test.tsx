@@ -39,8 +39,13 @@ function RegisteredHistoryRangeActions({
   });
 
   return (
-    <div aria-label="Live exchange rates" data-live-rates-scroll-region role="region" tabIndex={0}>
-      Live rates
+    <div
+      aria-label="Market snapshot exchange rates"
+      data-live-rates-scroll-region
+      role="region"
+      tabIndex={0}
+    >
+      Market snapshot
     </div>
   );
 }
@@ -82,7 +87,7 @@ describe("KeyboardShortcutsProvider", () => {
     expect(onSwap).toHaveBeenCalledOnce();
   });
 
-  it("lets focused live markets handle arrow-key scrolling while history shortcuts are registered", () => {
+  it("lets focused market snapshot handle arrow-key scrolling while history shortcuts are registered", () => {
     const onNextRange = vi.fn();
     const onPreviousRange = vi.fn();
 
@@ -98,7 +103,9 @@ describe("KeyboardShortcutsProvider", () => {
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(onNextRange).toHaveBeenCalledOnce();
 
-    const liveMarkets = screen.getByRole("region", { name: "Live exchange rates" });
+    const liveMarkets = screen.getByRole("region", {
+      name: "Market snapshot exchange rates",
+    });
 
     liveMarkets.focus();
     const wasNotCanceled = fireEvent.keyDown(liveMarkets, { key: "ArrowLeft" });
@@ -114,6 +121,7 @@ describe("KeyboardShortcutsProvider", () => {
     render(
       <KeyboardShortcutsProvider>
         <RegisteredActions onFocusSearch={onFocusSearch} onSwap={onSwap} />
+        <RegisteredHistoryRangeActions onNextRange={vi.fn()} onPreviousRange={vi.fn()} />
         <button type="button">Invoker</button>
       </KeyboardShortcutsProvider>
     );
@@ -123,7 +131,6 @@ describe("KeyboardShortcutsProvider", () => {
 
     expect(await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
     expect(screen.getByText("Focus currency search")).toBeTruthy();
-    expect(screen.getByText("Available while viewing the History tab.")).toBeTruthy();
     expect(document.activeElement).toBe(
       screen.getByRole("button", { name: "Close keyboard shortcuts" })
     );

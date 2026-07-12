@@ -103,7 +103,8 @@ describe("home page", () => {
       cy.findByRole("list", { name: "Exchange rate data stats" }).within(() => {
         cy.contains(`${currencyCount} Currencies`).should("be.visible");
         cy.contains("EOD").should("be.visible");
-        cy.contains("ECB data").should("be.visible");
+        cy.contains("Central bank data").should("be.visible");
+        cy.findAllByRole("listitem").should("have.length", 3);
       });
       cy.contains("1 USD = 0.8540 EUR").should("be.visible");
     });

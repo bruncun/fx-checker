@@ -4,7 +4,6 @@ const DEFAULT_FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2";
 const EXCHANGE_RATES_REVALIDATE_SECONDS = 60 * 60 * 24;
 const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
-const FRANKFURTER_PROVIDER = "ECB";
 
 type FrankfurterEndpoint = "currencies" | "rates";
 type FrankfurterRatesParams = {
@@ -251,10 +250,7 @@ export async function getCurrencies() {
 }
 
 export async function getRates(params: FrankfurterRatesParams = {}) {
-  const response = await fetchFrankfurterEndpoint("rates", {
-    ...params,
-    providers: params.providers ?? FRANKFURTER_PROVIDER,
-  });
+  const response = await fetchFrankfurterEndpoint("rates", params);
 
   try {
     return parseFrankfurterRates(await response.json());
