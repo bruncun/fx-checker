@@ -125,15 +125,7 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   }
 
   return (
-    <section
-      aria-labelledby="converter-heading"
-      className="relative z-[30] scroll-mt-200 focus:outline-none"
-      id="converter"
-      tabIndex={-1}
-    >
-      <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
-        Check the Rate
-      </h1>
+    <>
       <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <ConverterAmountControls
           currencies={currencies}
@@ -148,7 +140,7 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
           onSelectedCurrenciesChange={updateSelectedCurrencies}
         />
       </div>
-    </section>
+    </>
   );
 }
 

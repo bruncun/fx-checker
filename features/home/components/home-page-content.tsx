@@ -32,7 +32,17 @@ export function HomePageContent({
             <Suspense fallback={null}>
               <GuestModeAlert />
             </Suspense>
-            {converterSlot}
+            <section
+              aria-labelledby="converter-heading"
+              className="relative z-[30] scroll-mt-200 focus:outline-none"
+              id="converter"
+              tabIndex={-1}
+            >
+              <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
+                Check the Rate
+              </h1>
+              {converterSlot}
+            </section>
             <div className="mt-500 lg:mt-400">{rateDetailsSlot}</div>
           </div>
         </main>

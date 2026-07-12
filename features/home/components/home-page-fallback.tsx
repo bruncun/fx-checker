@@ -106,10 +106,7 @@ function LiveRatesFallback() {
 
 function ConverterFallback() {
   return (
-    <section aria-busy="true" aria-labelledby="converter-heading">
-      <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
-        Check the Rate
-      </h1>
+    <div aria-busy="true">
       <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <div className="flex flex-col gap-200 p-200 sm:flex-row sm:items-center sm:gap-300 sm:p-250">
           <ConverterAmountPanelFallback label="Send" />
@@ -140,7 +137,7 @@ function ConverterFallback() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
