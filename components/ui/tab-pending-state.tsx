@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { PendingSpinner } from "./pending-spinner";
 
 type TabPendingStateProps = {
   className?: string;
@@ -13,10 +14,7 @@ function TabPendingState({ className, label }: TabPendingStateProps) {
       className={cn("py-600 text-center", className)}
       role="status"
     >
-      <span
-        aria-hidden="true"
-        className="mx-auto block size-500 rounded-full border border-neutral-600 border-t-neutral-300 motion-safe:animate-spin"
-      />
+      <PendingSpinner aria-hidden="true" className="mx-auto" />
     </div>
   );
 }

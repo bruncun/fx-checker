@@ -2,35 +2,47 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { UserDropdown, getAccountInitials } from "./user-dropdown";
+import { UserDropdown, getAccountInitials, getAccountMenuLabel } from "./user-dropdown";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 
 const setTheme = vi.fn();
+const routerPush = vi.fn();
+const routerRefresh = vi.fn();
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({ setTheme, theme: "system" }),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ push: routerPush, refresh: routerRefresh }),
 }));
 
 vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
   useDataUnavailableError: () => vi.fn(),
 }));
 
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+  );
+});
+
 afterEach(() => {
   cleanup();
   setTheme.mockClear();
+  routerPush.mockClear();
+  routerRefresh.mockClear();
+  vi.unstubAllGlobals();
 });
 
 describe("UserDropdown", () => {
   it("renders guest initials in a fixed circular account trigger", () => {
     render(<UserDropdown isGuest />);
 
-    const trigger = screen.getByRole("button", { name: "Account menu" });
+    const trigger = screen.getByRole("button", { name: "Guest account menu" });
 
     expect(trigger.textContent).toBe("G");
     expect(trigger.className).toContain("size-400");
@@ -45,10 +57,17 @@ describe("UserDropdown", () => {
     expect(getAccountInitials({ email: "mika@example.com" })).toBe("M");
   });
 
+  it("labels the account trigger with the active account identity", () => {
+    expect(getAccountMenuLabel({ email: " mika@example.com " })).toBe(
+      "Account menu for mika@example.com"
+    );
+    expect(getAccountMenuLabel({ isGuest: true })).toBe("Guest account menu");
+  });
+
   it("opens an account dialog with a theme toggle and sign out button", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
 
     expect(screen.getByRole("dialog", { name: "Account menu" })).toBeTruthy();
     expect(screen.getByRole("radiogroup", { name: "Theme" })).toBeTruthy();
@@ -63,7 +82,7 @@ describe("UserDropdown", () => {
       </KeyboardShortcutsProvider>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
     fireEvent.click(screen.getByRole("button", { name: "Keyboard Shortcuts" }));
 
     expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
@@ -74,23 +93,83 @@ describe("UserDropdown", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close keyboard shortcuts" }));
 
     await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Account menu" }));
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "Account menu for mika@example.com" })
+      );
     });
   });
 
   it("closes the account dialog when signing out", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
   });
 
+  it("shows a circular pending spinner in the account trigger while signing out", () => {
+    vi.mocked(fetch).mockReturnValue(new Promise(() => {}));
+    render(<UserDropdown email="mika@example.com" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    const trigger = screen.getByRole("button", { name: "Signing out" });
+    const spinner = trigger.querySelector("[data-pending-spinner]");
+    const spinnerArc = spinner?.querySelector(".motion-safe\\:animate-spin");
+
+    expect(trigger).toHaveProperty("disabled", true);
+    expect(trigger.getAttribute("aria-busy")).toBe("true");
+    expect(trigger.className).toContain("size-400");
+    expect(trigger.className).toContain("bg-transparent");
+    expect(spinner?.className).toContain("size-400");
+    expect(spinner?.className).toContain("inset-0");
+    expect(spinnerArc?.className).toContain("rounded-full");
+  });
+
+  it("keeps the pending state during sign-out navigation and resets when shown again", async () => {
+    render(<UserDropdown email="mika@example.com" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    await waitFor(() => {
+      expect(routerPush).toHaveBeenCalledWith("/auth/login");
+    });
+
+    expect(screen.getByRole("button", { name: "Signing out" })).toHaveProperty("disabled", true);
+
+    fireEvent(window, new Event("pageshow"));
+
+    expect(
+      screen.getByRole("button", { name: "Account menu for mika@example.com" })
+    ).toHaveProperty("disabled", false);
+  });
+
+  it("restores the account trigger when sign out fails", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 500 }));
+    render(<UserDropdown email="mika@example.com" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Account menu for mika@example.com" })
+      ).toHaveProperty("disabled", false);
+    });
+
+    expect(routerPush).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
   it("moves through theme options with roving focus and switches theme on focus", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
 
     systemTheme.focus();
@@ -103,7 +182,7 @@ describe("UserDropdown", () => {
   it("moves through account menu options with vertical roving focus", () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
     const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
     const signOutButton = screen.getByRole("button", { name: "Sign out" });
@@ -130,7 +209,7 @@ describe("UserDropdown", () => {
   it("traps tab focus inside the account dialog until dismissed", async () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Account menu for mika@example.com" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
     const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
     const signOutButton = screen.getByRole("button", { name: "Sign out" });
@@ -158,7 +237,7 @@ describe("UserDropdown", () => {
   it("closes the account dialog with Escape and restores trigger focus", async () => {
     render(<UserDropdown email="mika@example.com" />);
 
-    const trigger = screen.getByRole("button", { name: "Account menu" });
+    const trigger = screen.getByRole("button", { name: "Account menu for mika@example.com" });
 
     fireEvent.click(trigger);
     fireEvent.keyDown(screen.getByRole("radio", { name: "System" }), { key: "Escape" });

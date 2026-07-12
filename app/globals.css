@@ -446,13 +446,14 @@
   }
 
   .fx-transition-surface {
-    transition-property: background-color, color, box-shadow, opacity, filter, border-color;
+    transition-property:
+      background-color, color, box-shadow, opacity, filter, border-color, transform;
     transition-duration: var(--fx-motion-duration-base);
     transition-timing-function: var(--fx-motion-ease-snap);
   }
 
   .fx-transition-icon {
-    transition-property: opacity, filter;
+    transition-property: opacity, filter, transform;
     transition-duration: var(--fx-motion-duration-quick);
     transition-timing-function: var(--fx-motion-ease-snap);
   }

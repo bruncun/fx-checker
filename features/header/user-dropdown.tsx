@@ -3,6 +3,7 @@
 import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { PendingSpinner } from "@/components/ui/pending-spinner";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
@@ -31,11 +32,22 @@ function getAccountInitials({ email, isGuest }: UserDropdownProps) {
   return email?.trim().charAt(0).toLocaleUpperCase() || "";
 }
 
+function getAccountMenuLabel({ email, isGuest }: UserDropdownProps) {
+  if (isGuest) {
+    return "Guest account menu";
+  }
+
+  const normalizedEmail = email?.trim();
+
+  return normalizedEmail ? `Account menu for ${normalizedEmail}` : "Account menu";
+}
+
 export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   const shortcuts = useOptionalKeyboardShortcuts();
   const router = useRouter();
   const { setTheme, theme } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
   const panelId = React.useId();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -45,6 +57,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
     ? (theme as ThemeValue)
     : "system";
   const initials = getAccountInitials({ email, isGuest });
+  const accountMenuLabel = getAccountMenuLabel({ email, isGuest });
   const menuFocus = useRovingTabIndex<HTMLButtonElement>({
     containerRef: panelRef,
     itemSelector: "[data-user-menu-option]",
@@ -63,6 +76,20 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
     },
     orientation: "horizontal",
   });
+
+  const resetDropdownState = React.useCallback(() => {
+    setIsOpen(false);
+    setIsSigningOut(false);
+  }, []);
+
+  React.useEffect(() => {
+    window.addEventListener("pageshow", resetDropdownState);
+
+    return () => {
+      window.removeEventListener("pageshow", resetDropdownState);
+      resetDropdownState();
+    };
+  }, [resetDropdownState]);
 
   function closeMenu(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
@@ -102,6 +129,11 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   });
 
   async function signOut() {
+    if (isSigningOut) {
+      return;
+    }
+
+    setIsSigningOut(true);
     closeMenu({ restoreFocus: false });
 
     try {
@@ -115,6 +147,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
       router.refresh();
     } catch (error) {
       console.error("Failed to sign out", error);
+      setIsSigningOut(false);
       showDataUnavailableError();
     }
   }
@@ -158,14 +191,17 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
     <div ref={rootRef} className="relative z-[90] inline-flex">
       <button
         ref={triggerRef}
+        aria-busy={isSigningOut}
         aria-controls={isOpen ? panelId : undefined}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        aria-label="Account menu"
+        aria-label={isSigningOut ? "Signing out" : accountMenuLabel}
         className={cn(
-          "fx-transition-surface inline-flex size-400 shrink-0 items-center justify-center rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
-          "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
+          "fx-transition-surface relative inline-flex size-400 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
+          "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
+          isSigningOut && "cursor-wait bg-transparent shadow-none hover:bg-transparent"
         )}
+        disabled={isSigningOut}
         onClick={() => {
           if (isOpen) {
             closeMenu({ restoreFocus: false });
@@ -181,7 +217,18 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
         }}
         type="button"
       >
-        {initials}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "fx-transition-icon",
+            isSigningOut ? "scale-75 opacity-0" : "scale-100 opacity-100"
+          )}
+        >
+          {initials}
+        </span>
+        {isSigningOut ? (
+          <PendingSpinner aria-hidden="true" className="absolute inset-0 size-400" />
+        ) : null}
       </button>
 
       {isOpen ? (
@@ -267,4 +314,4 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   );
 }
 
-export { getAccountInitials };
+export { getAccountInitials, getAccountMenuLabel };
