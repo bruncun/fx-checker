@@ -66,11 +66,37 @@ describe("rate history derivation", () => {
     expect(
       history ? getRateHistoryStats(getRateHistoryRangePoints(history.points, "1D"))[2] : null
     ).toEqual({
-      direction: "up",
+      direction: "neutral",
       label: "Change",
       showIndicator: false,
-      value: "+0.0000",
+      value: "0.0000",
     });
+  });
+
+  it("marks unchanged history stats as neutral", () => {
+    expect(
+      getRateHistoryStats([
+        { date: "2026-06-18", rate: 1.25 },
+        { date: "2026-06-19", rate: 1.25 },
+      ])
+    ).toEqual([
+      { label: "Open", value: "1.2500" },
+      { label: "Last", value: "1.2500" },
+      { direction: "neutral", label: "Change", showIndicator: false, value: "0.0000" },
+      { direction: "neutral", label: "% Change", showIndicator: true, value: "0.00%" },
+    ]);
+  });
+
+  it("marks changes that round to zero as neutral", () => {
+    expect(
+      getRateHistoryStats([
+        { date: "2026-06-18", rate: 1.25 },
+        { date: "2026-06-19", rate: 1.2500001 },
+      ]).slice(2)
+    ).toEqual([
+      { direction: "neutral", label: "Change", showIndicator: false, value: "0.0000" },
+      { direction: "neutral", label: "% Change", showIndicator: true, value: "0.00%" },
+    ]);
   });
 
   it("returns null when rates do not share one response base", () => {

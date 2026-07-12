@@ -91,4 +91,21 @@ describe("LiveRateList", () => {
       within(list).getByText("+0.04%").parentElement?.classList.contains("text-green-500")
     ).toBe(true);
   });
+
+  it("uses muted text and no arrow for neutral changes", () => {
+    render(
+      <LiveRateList
+        rates={[{ pair: "EUR/USD", rate: "1.1710", change: "0.00%", direction: "neutral" }]}
+      />
+    );
+
+    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const list = within(scroller).getByRole("list");
+    const item = within(list).getByRole("listitem");
+
+    expect(item.textContent).toBe("EUR/USD1.17100.00%");
+    expect(
+      within(list).getByText("0.00%").parentElement?.classList.contains("text-neutral-200")
+    ).toBe(true);
+  });
 });

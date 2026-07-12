@@ -10,7 +10,7 @@ export type RateHistoryPoint = {
 };
 
 export type RateHistoryStat = {
-  direction?: "up" | "down";
+  direction?: "up" | "down" | "neutral";
   label: string;
   showIndicator?: boolean;
   value: string;
@@ -112,12 +112,24 @@ export function getRateHistoryRangeStartDate(date: string, range: HistoryRange) 
   return formatIsoDate(targetDate);
 }
 
+function getRoundedDirection(value: number, decimalPlaces: number) {
+  const roundedValue = Number(value.toFixed(decimalPlaces));
+
+  return roundedValue === 0 ? "neutral" : roundedValue > 0 ? "up" : "down";
+}
+
 function formatSignedRateChange(value: number) {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(4)}`;
+  const roundedValue = Number(value.toFixed(4));
+  const sign = roundedValue > 0 ? "+" : "";
+
+  return `${sign}${roundedValue.toFixed(4)}`;
 }
 
 function formatSignedPercentChange(value: number) {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+  const roundedValue = Number(value.toFixed(2));
+  const sign = roundedValue > 0 ? "+" : "";
+
+  return `${sign}${roundedValue.toFixed(2)}%`;
 }
 
 export function getRateHistoryStats(points: RateHistoryPoint[]): RateHistoryStat[] {
@@ -130,14 +142,20 @@ export function getRateHistoryStats(points: RateHistoryPoint[]): RateHistoryStat
 
   const change = lastPoint.rate - firstPoint.rate;
   const percentChange = firstPoint.rate === 0 ? 0 : (change / firstPoint.rate) * 100;
-  const direction = change >= 0 ? "up" : "down";
+  const changeDirection = getRoundedDirection(change, 4);
+  const percentChangeDirection = getRoundedDirection(percentChange, 2);
 
   return [
     { label: "Open", value: firstPoint.rate.toFixed(4) },
     { label: "Last", value: lastPoint.rate.toFixed(4) },
-    { direction, label: "Change", showIndicator: false, value: formatSignedRateChange(change) },
     {
-      direction,
+      direction: changeDirection,
+      label: "Change",
+      showIndicator: false,
+      value: formatSignedRateChange(change),
+    },
+    {
+      direction: percentChangeDirection,
       label: "% Change",
       showIndicator: true,
       value: formatSignedPercentChange(percentChange),

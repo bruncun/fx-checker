@@ -115,7 +115,9 @@ export default function LandingPage() {
                           <span
                             className={cn(
                               "text-preset-6",
-                              rate.direction === "up" ? "text-green-500" : "text-red-500"
+                              rate.direction === "up" && "text-green-500",
+                              rate.direction === "down" && "text-red-500",
+                              rate.direction === "neutral" && "text-neutral-200"
                             )}
                           >
                             {rate.change}

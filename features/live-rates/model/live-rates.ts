@@ -68,22 +68,23 @@ function formatLiveRate(rate: Decimal) {
 function formatChangePercent(currentRate: Decimal, previousRate: Decimal) {
   const change = currentRate.minus(previousRate).div(previousRate).mul(100);
   const roundedChange = change.toDecimalPlaces(2);
-  const sign = roundedChange.isNegative() ? "" : "+";
+  const direction = roundedChange.isZero() ? "neutral" : roundedChange.isNegative() ? "down" : "up";
+  const sign = direction === "up" ? "+" : "";
 
   return {
     change: `${sign}${roundedChange.toFixed(2)}%`,
-    direction: roundedChange.isNegative() ? "down" : "up",
+    direction,
   } satisfies Pick<LiveRate, "change" | "direction">;
 }
 
-function getPreviousRatesByDate(latestDate: string, historicalRates: FrankfurterRate[]) {
-  const previousDate = historicalRates
+function getBaselineRatesByDate(latestDate: string, historicalRates: FrankfurterRate[]) {
+  const baselineDate = historicalRates
     .map((rate) => rate.date)
     .filter((date) => date < latestDate)
     .sort()
-    .at(-1);
+    .at(0);
 
-  return previousDate ? historicalRates.filter((rate) => rate.date === previousDate) : [];
+  return baselineDate ? historicalRates.filter((rate) => rate.date === baselineDate) : [];
 }
 
 export function deriveLiveRateForPair({
@@ -99,24 +100,25 @@ export function deriveLiveRateForPair({
 }): LiveRate | null {
   const latestRatesByCurrency = getRateByCurrency(latestRates);
   const latestDate = latestRates[0]?.date;
-  const previousRates = latestDate ? getPreviousRatesByDate(latestDate, historicalRates) : [];
-  const previousRatesByCurrency = getRateByCurrency(previousRates);
+  const baselineRatesByCurrency = latestDate
+    ? getRateByCurrency(getBaselineRatesByDate(latestDate, historicalRates))
+    : null;
 
-  if (!latestRatesByCurrency || !previousRatesByCurrency) {
+  if (!latestRatesByCurrency || !baselineRatesByCurrency) {
     return null;
   }
 
   const currentRate = derivePairRate(latestRatesByCurrency, base, quote);
-  const previousRate = derivePairRate(previousRatesByCurrency, base, quote);
+  const baselineRate = derivePairRate(baselineRatesByCurrency, base, quote);
 
-  if (!currentRate || !previousRate) {
+  if (!currentRate || !baselineRate) {
     return null;
   }
 
   return {
     pair: `${base}/${quote}`,
     rate: formatLiveRate(currentRate),
-    ...formatChangePercent(currentRate, previousRate),
+    ...formatChangePercent(currentRate, baselineRate),
   };
 }
 

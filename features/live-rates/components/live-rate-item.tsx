@@ -4,7 +4,7 @@ export type LiveRate = {
   pair: string;
   rate: string;
   change: string;
-  direction: "up" | "down";
+  direction: "up" | "down" | "neutral";
 };
 
 type LiveRateItemProps = {

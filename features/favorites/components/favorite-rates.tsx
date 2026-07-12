@@ -73,7 +73,7 @@ function FavoriteRateItem({
     fromCurrency: favorite.fromCurrency,
     toCurrency: favorite.toCurrency,
   };
-  const directionLabel = rate.direction === "up" ? "up" : "down";
+  const directionLabel = rate.direction;
   const rowLabel = `Use ${rate.pair} in converter, rate ${rate.rate}, ${directionLabel} ${rate.change}`;
 
   function selectPair() {

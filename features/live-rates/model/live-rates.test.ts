@@ -28,19 +28,28 @@ const historicalRates: FrankfurterRate[] = [
 ];
 
 describe("live rate derivation", () => {
-  it("derives ticker rates and changes from the latest and previous available dates", () => {
+  it("derives ticker rates and changes from the earliest lookback date", () => {
     expect(deriveLiveRates({ historicalRates, latestRates })).toEqual([
-      { pair: "EUR/USD", rate: "1.1710", change: "-0.11%", direction: "down" },
-      { pair: "USD/JPY", rate: "156.48", change: "-0.19%", direction: "down" },
-      { pair: "GBP/USD", rate: "1.3776", change: "+0.28%", direction: "up" },
-      { pair: "USD/CHF", rate: "0.8027", change: "+0.22%", direction: "up" },
-      { pair: "EUR/GBP", rate: "0.8500", change: "-0.39%", direction: "down" },
-      { pair: "AUD/USD", rate: "0.6542", change: "-0.39%", direction: "down" },
-      { pair: "USD/CAD", rate: "1.3664", change: "+0.74%", direction: "up" },
+      { pair: "EUR/USD", rate: "1.1710", change: "+0.26%", direction: "up" },
+      { pair: "USD/JPY", rate: "156.48", change: "+0.36%", direction: "up" },
+      { pair: "GBP/USD", rate: "1.3776", change: "+0.49%", direction: "up" },
+      { pair: "USD/CHF", rate: "0.8027", change: "-1.31%", direction: "down" },
+      { pair: "EUR/GBP", rate: "0.8500", change: "-0.23%", direction: "down" },
+      { pair: "AUD/USD", rate: "0.6542", change: "+0.82%", direction: "up" },
+      { pair: "USD/CAD", rate: "1.3664", change: "-0.88%", direction: "down" },
     ]);
   });
 
   it("returns no live rates without a previous historical date", () => {
     expect(deriveLiveRates({ historicalRates: latestRates, latestRates })).toEqual([]);
+  });
+
+  it("marks unchanged rounded rates as neutral", () => {
+    expect(
+      deriveLiveRates({
+        historicalRates: latestRates.map((rate) => ({ ...rate, date: "2026-06-18" })),
+        latestRates,
+      })[0]
+    ).toEqual({ pair: "EUR/USD", rate: "1.1710", change: "0.00%", direction: "neutral" });
   });
 });
