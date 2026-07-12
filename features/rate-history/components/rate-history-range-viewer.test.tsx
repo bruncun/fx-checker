@@ -6,28 +6,26 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 import { RateHistoryRangePicker } from "./rate-history-range-viewer";
 
-const { refresh, testSearchParams } = vi.hoisted(() => ({
-  refresh: vi.fn(),
+const { replace, testSearchParams } = vi.hoisted(() => ({
+  replace: vi.fn(),
   testSearchParams: { current: "" },
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useRouter: () => ({ refresh }),
+  useRouter: () => ({ replace }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
 afterEach(() => {
-  refresh.mockReset();
+  replace.mockReset();
   testSearchParams.current = "";
   cleanup();
   vi.restoreAllMocks();
 });
 
 describe("RateHistoryRangePicker", () => {
-  it("selects the clicked range, updates the URL, and refreshes the server tree", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
+  it("selects the clicked range and navigates without scrolling", () => {
     render(<RateHistoryRangePicker selectedRange="1M" />);
 
     const nextRange = screen.getByRole("radio", { name: "3M" });
@@ -36,24 +34,20 @@ describe("RateHistoryRangePicker", () => {
 
     expect(nextRange.getAttribute("aria-checked")).toBe("true");
     expect(screen.getByRole("radio", { name: "1M" }).getAttribute("aria-checked")).toBe("false");
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
-    expect(refresh).toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
   });
 
   it("preserves existing URL state when selecting a range", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     testSearchParams.current = "from=GBP&to=JPY&range=1M";
 
     render(<RateHistoryRangePicker selectedRange="1M" />);
 
     fireEvent.click(screen.getByRole("radio", { name: "1Y" }));
 
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=GBP&to=JPY&range=1Y");
+    expect(replace).toHaveBeenCalledWith("/?from=GBP&to=JPY&range=1Y", { scroll: false });
   });
 
   it("moves to adjacent ranges with left and right shortcuts", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
     const { rerender } = render(
       <KeyboardShortcutsProvider>
         <RateHistoryRangePicker selectedRange="3M" />
@@ -62,7 +56,7 @@ describe("RateHistoryRangePicker", () => {
 
     fireEvent.keyDown(window, { key: "ArrowLeft" });
 
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=1M");
+    expect(replace).toHaveBeenCalledWith("/?range=1M", { scroll: false });
 
     rerender(
       <KeyboardShortcutsProvider>
@@ -72,12 +66,10 @@ describe("RateHistoryRangePicker", () => {
 
     fireEvent.keyDown(window, { key: "ArrowRight" });
 
-    expect(replaceState).toHaveBeenLastCalledWith(null, "", "/?range=3M");
+    expect(replace).toHaveBeenLastCalledWith("/?range=3M", { scroll: false });
   });
 
   it("preserves range picker roving focus while global history shortcuts are registered", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     render(
       <KeyboardShortcutsProvider>
         <RateHistoryRangePicker selectedRange="1M" />
@@ -93,12 +85,10 @@ describe("RateHistoryRangePicker", () => {
 
     expect(document.activeElement).toBe(nextRange);
     expect(nextRange.getAttribute("aria-checked")).toBe("true");
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
   });
 
   it("activates a roving-focused range with Enter", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     render(
       <KeyboardShortcutsProvider>
         <RateHistoryRangePicker selectedRange="1M" />
@@ -111,6 +101,6 @@ describe("RateHistoryRangePicker", () => {
     fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
     fireEvent.keyDown(screen.getByRole("radio", { name: "3M" }), { key: "Enter" });
 
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
   });
 });

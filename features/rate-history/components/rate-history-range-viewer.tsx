@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { RangePicker, type RangePickerOption } from "@/components/ui/range-picker";
@@ -27,7 +27,6 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
     serverRange: selectedRange,
   }));
   const currentRange = localRange.serverRange === selectedRange ? localRange.range : selectedRange;
-  const [, startTransition] = useTransition();
 
   const getRangeUrl = useCallback(
     (nextRange: HistoryRange) => {
@@ -53,21 +52,10 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
       setLocalRange({ range: nextRange, serverRange: selectedRange });
 
       if (nextUrl !== currentUrl) {
-        window.history.replaceState(null, "", nextUrl);
-        startTransition(() => {
-          router.refresh();
-        });
+        router.replace(nextUrl, { scroll: false });
       }
     },
-    [
-      currentRange,
-      getRangeUrl,
-      pathname,
-      router,
-      searchParamsString,
-      selectedRange,
-      startTransition,
-    ]
+    [currentRange, getRangeUrl, pathname, router, searchParamsString, selectedRange]
   );
 
   const selectAdjacentRange = useCallback(

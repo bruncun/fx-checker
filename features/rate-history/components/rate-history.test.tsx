@@ -7,13 +7,13 @@ import { RateHistory } from "./rate-history";
 import type { RateHistoryData } from "../model/rate-history";
 import { deriveRateHistoryViewModel } from "../model/rate-history-chart-model";
 
-const { refresh } = vi.hoisted(() => ({
-  refresh: vi.fn(),
+const { replace } = vi.hoisted(() => ({
+  replace: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useRouter: () => ({ refresh }),
+  useRouter: () => ({ replace }),
   useSearchParams: () => new URLSearchParams(""),
 }));
 
@@ -39,7 +39,7 @@ const denseHistory: RateHistoryData = {
 };
 
 afterEach(() => {
-  refresh.mockReset();
+  replace.mockReset();
   cleanup();
   vi.restoreAllMocks();
 });
@@ -82,12 +82,9 @@ describe("RateHistory", () => {
 
     expect(screen.getAllByRole("img")).toHaveLength(1);
 
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     fireEvent.click(screen.getByRole("radio", { name: "3M" }));
     expect(screen.getByRole("radio", { name: "3M" }).getAttribute("aria-checked")).toBe("true");
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
-    expect(refresh).toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
     expect(getChart()).toBeTruthy();
   });
 
