@@ -77,17 +77,23 @@ function RangePicker({
               ? { label: "Next range", value: shortcutLabels.next }
               : null;
 
+        const sharedProps = {
+          "aria-selected": isActive,
+          "data-range-picker-tab": true,
+          "data-range-value": option.value,
+          role: "tab",
+          tabIndex: isActive ? 0 : -1,
+        } as const;
+        const className = cn(
+          "fx-transition-surface block cursor-pointer rounded-8 px-200 py-150 text-preset-5 text-neutral-200",
+          "focus-visible:bg-neutral-500 focus-visible:text-neutral-50 focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          isActive && "bg-neutral-500 text-neutral-50"
+        );
         const button = (
           <button
-            aria-selected={isActive}
-            className={cn(
-              "fx-transition-surface block cursor-pointer rounded-8 px-200 py-150 text-preset-5 text-neutral-200",
-              "focus-visible:bg-neutral-500 focus-visible:text-neutral-50 focus-visible:shadow-[0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-              isActive && "bg-neutral-500 text-neutral-50"
-            )}
-            data-range-picker-tab
-            data-range-value={option.value}
+            {...sharedProps}
+            className={className}
             disabled={disabled}
             onKeyDown={(event) => {
               if (event.key !== "Enter" && event.key !== " ") {
@@ -105,8 +111,6 @@ function RangePicker({
                 onValueChange?.(option.value);
               }
             }}
-            role="tab"
-            tabIndex={isActive ? 0 : -1}
             type="button"
           >
             {option.label}

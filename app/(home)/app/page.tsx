@@ -18,13 +18,23 @@ type HomeProps = {
   }>;
 };
 
+type RateHistoryContentProps = {
+  receiveCurrencyCode: string;
+  selectedPair: string;
+  selectedRange: ReturnType<typeof getRateHistoryUrlStateFromParams>["selectedRange"];
+  sendCurrencyCode: string;
+};
+
 export const metadata: Metadata = {
   title: "Dashboard - Rate History",
 };
 
-async function HomeContent({ searchParams }: HomeProps) {
-  const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
-    getRateHistoryUrlStateFromParams(createUrlSearchParams(await searchParams));
+async function RateHistoryContent({
+  receiveCurrencyCode,
+  selectedPair,
+  selectedRange,
+  sendCurrencyCode,
+}: RateHistoryContentProps) {
   const data = await getHistoryPageData({
     baseCurrency: sendCurrencyCode,
     quoteCurrency: receiveCurrencyCode,
@@ -41,6 +51,22 @@ async function HomeContent({ searchParams }: HomeProps) {
   const model = deriveRateHistoryRangeViewModel(history, selectedRange);
 
   return <RateHistory model={model} pair={selectedPair} selectedRange={selectedRange} />;
+}
+
+async function HomeContent({ searchParams }: HomeProps) {
+  const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
+    getRateHistoryUrlStateFromParams(createUrlSearchParams(await searchParams));
+
+  return (
+    <Suspense fallback={<RateHistoryFallback />} key={`${selectedPair}-${selectedRange}`}>
+      <RateHistoryContent
+        receiveCurrencyCode={receiveCurrencyCode}
+        selectedPair={selectedPair}
+        selectedRange={selectedRange}
+        sendCurrencyCode={sendCurrencyCode}
+      />
+    </Suspense>
+  );
 }
 
 export default function Home({ searchParams }: HomeProps) {

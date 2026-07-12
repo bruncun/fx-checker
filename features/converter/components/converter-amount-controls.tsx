@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
@@ -107,7 +107,6 @@ function usePersistedConverterAmount({
   initialAmountSource?: AmountSide;
 }) {
   const pathname = usePathname() ?? "/";
-  const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [amountState, setAmountState] = React.useState<ConverterAmountState>({
@@ -132,27 +131,21 @@ function usePersistedConverterAmount({
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      if (window.location.pathname !== pathname) {
-        return;
-      }
+    if (window.location.pathname !== pathname) {
+      return;
+    }
 
-      nextSearchParams.set("amount", amountState.amount);
-      nextSearchParams.set("amountSource", amountState.amountSource);
+    nextSearchParams.set("amount", amountState.amount);
+    nextSearchParams.set("amountSource", amountState.amountSource);
 
-      const queryString = nextSearchParams.toString();
-      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
-      const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
+    const queryString = nextSearchParams.toString();
+    const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
 
-      if (nextUrl !== currentUrl) {
-        router.replace(nextUrl, { scroll: false });
-      }
-    }, 50);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [amountState, pathname, router, searchParamsString]);
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [amountState, pathname, searchParamsString]);
 
   return [amountState, setAmountState] as const;
 }

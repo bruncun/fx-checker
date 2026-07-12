@@ -36,6 +36,7 @@ function getOptimisticId() {
 function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const [, startTransition] = React.useTransition();
   const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
@@ -45,13 +46,13 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
   );
   const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
   const converterAmount = getConverterAmountFromParams(new URLSearchParams(searchParamsString));
-  const [optimisticSelectedCurrencies, setOptimisticSelectedCurrencies] = React.useState(() => ({
+  const [localSelectedCurrencies, setLocalSelectedCurrencies] = React.useState(() => ({
     currencies: selectedCurrencyPairFromUrl,
-    urlKey: selectedCurrencyPairUrlKey,
+    serverUrlKey: selectedCurrencyPairUrlKey,
   }));
   const selectedCurrencies =
-    optimisticSelectedCurrencies.urlKey === selectedCurrencyPairUrlKey
-      ? optimisticSelectedCurrencies.currencies
+    localSelectedCurrencies.serverUrlKey === selectedCurrencyPairUrlKey
+      ? localSelectedCurrencies.currencies
       : selectedCurrencyPairFromUrl;
   const { receiveCurrency, sendCurrency } = selectedCurrencies;
   const exchangeRate = getExchangeRate(
@@ -68,9 +69,9 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
   }) {
-    setOptimisticSelectedCurrencies({
+    setLocalSelectedCurrencies({
       currencies,
-      urlKey: selectedCurrencyPairUrlKey,
+      serverUrlKey: selectedCurrencyPairUrlKey,
     });
 
     const nextUrl = getCurrencyPairUrl({
@@ -82,7 +83,10 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
     const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
 
     if (nextUrl !== currentUrl) {
-      router.replace(nextUrl, { scroll: false });
+      window.history.replaceState(null, "", nextUrl);
+      startTransition(() => {
+        router.refresh();
+      });
     }
   }
 

@@ -65,6 +65,7 @@ afterEach(() => {
   showDataUnavailableError.mockClear();
   testSearchParams.current = "";
   cleanup();
+  vi.restoreAllMocks();
 });
 
 function renderCompareRates({
@@ -74,7 +75,7 @@ function renderCompareRates({
   amount?: string;
   favorites?: Favorite[];
 } = {}) {
-  render(
+  return render(
     <CompareRates
       amount={amount}
       amountSource="send"
@@ -119,6 +120,35 @@ describe("CompareRates", () => {
     expect(screen.getByText("@ 0.7360")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Remove USD/GBP from favorites" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Favorite USD/CHF" })).toBeTruthy();
+  });
+
+  it("uses live URL amount params without waiting for server props to change", () => {
+    const { rerender } = renderCompareRates({ amount: "1000" });
+
+    expect(screen.getByText("1,000")).toBeTruthy();
+    expect(
+      screen.getByRole("row", { name: "Use USD/GBP in converter, 736 GBP at 0.7360" })
+    ).toBeTruthy();
+
+    testSearchParams.current = "from=USD&to=EUR&amount=250&amountSource=send";
+
+    rerender(
+      <CompareRates
+        amount="1000"
+        amountSource="send"
+        availableCurrencies={availableCurrencies}
+        favoritesPromise={fulfilledPromise([])}
+        rates={rates}
+        receiveCurrency={{ countryCode: "eu", currencyCode: "EUR" }}
+        sendCurrency={{ countryCode: "us", currencyCode: "USD" }}
+      />
+    );
+
+    expect(screen.getByText("250")).toBeTruthy();
+    expect(
+      screen.getByRole("row", { name: "Use USD/GBP in converter, 184 GBP at 0.7360" })
+    ).toBeTruthy();
+    expect(routerRefresh).not.toHaveBeenCalled();
   });
 
   it("creates a favorite when a compare favorite is toggled", () => {

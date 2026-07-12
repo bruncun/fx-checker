@@ -35,7 +35,7 @@ import {
   useOptimisticFavorites,
 } from "@/features/favorites/stores/optimistic-favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import { getCurrencyPairUrl } from "@/features/home/utils/url-state";
+import { getConverterAmountFromParams, getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -435,9 +435,18 @@ function CompareRates({
   const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
     receiveCurrency.currencyCode
   );
+  const liveConverterAmount = React.useMemo(() => {
+    const liveSearchParams = new URLSearchParams(searchParamsString);
+
+    if (!liveSearchParams.has("amount") && !liveSearchParams.has("amountSource")) {
+      return { amount, amountSource };
+    }
+
+    return getConverterAmountFromParams(liveSearchParams);
+  }, [amount, amountSource, searchParamsString]);
   const sendAmount = getCompareSendAmount({
-    amount,
-    amountSource,
+    amount: liveConverterAmount.amount,
+    amountSource: liveConverterAmount.amountSource,
     rates,
     receiveCurrency,
     sendCurrency,
@@ -469,8 +478,8 @@ function CompareRates({
 
   return (
     <CompareRatesPanel
-      amount={amount}
-      amountSource={amountSource}
+      amount={liveConverterAmount.amount}
+      amountSource={liveConverterAmount.amountSource}
       availableCurrencies={availableCurrencies}
       compareRates={compareRates}
       favoritesPromise={favoritesPromise}

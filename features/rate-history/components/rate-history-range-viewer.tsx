@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { RangePicker, type RangePickerOption } from "@/components/ui/range-picker";
@@ -22,7 +22,23 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const [currentRange, setCurrentRange] = useState(selectedRange);
+  const [localRange, setLocalRange] = useState(() => ({
+    range: selectedRange,
+    serverRange: selectedRange,
+  }));
+  const currentRange = localRange.serverRange === selectedRange ? localRange.range : selectedRange;
+  const [, startTransition] = useTransition();
+
+  const getRangeUrl = useCallback(
+    (nextRange: HistoryRange) => {
+      const nextSearchParams = new URLSearchParams(searchParamsString);
+      nextSearchParams.set("range", nextRange);
+
+      const queryString = nextSearchParams.toString();
+      return queryString ? `${pathname}?${queryString}` : pathname;
+    },
+    [pathname, searchParamsString]
+  );
 
   const selectRange = useCallback(
     (value: string) => {
@@ -31,16 +47,27 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
       }
 
       const nextRange = value as HistoryRange;
-      const nextSearchParams = new URLSearchParams(searchParamsString);
-      nextSearchParams.set("range", nextRange);
+      const nextUrl = getRangeUrl(nextRange);
+      const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
 
-      const queryString = nextSearchParams.toString();
-      const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      setLocalRange({ range: nextRange, serverRange: selectedRange });
 
-      setCurrentRange(nextRange);
-      router.replace(nextUrl, { scroll: false });
+      if (nextUrl !== currentUrl) {
+        window.history.replaceState(null, "", nextUrl);
+        startTransition(() => {
+          router.refresh();
+        });
+      }
     },
-    [currentRange, pathname, router, searchParamsString]
+    [
+      currentRange,
+      getRangeUrl,
+      pathname,
+      router,
+      searchParamsString,
+      selectedRange,
+      startTransition,
+    ]
   );
 
   const selectAdjacentRange = useCallback(

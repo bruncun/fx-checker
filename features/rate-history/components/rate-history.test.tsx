@@ -7,9 +7,13 @@ import { RateHistory } from "./rate-history";
 import type { RateHistoryData } from "../model/rate-history";
 import { deriveRateHistoryViewModel } from "../model/rate-history-chart-model";
 
+const { refresh } = vi.hoisted(() => ({
+  refresh: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ refresh }),
   useSearchParams: () => new URLSearchParams(""),
 }));
 
@@ -35,7 +39,9 @@ const denseHistory: RateHistoryData = {
 };
 
 afterEach(() => {
+  refresh.mockReset();
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("RateHistory", () => {
@@ -58,8 +64,12 @@ describe("RateHistory", () => {
 
     expect(screen.getAllByRole("img", { name: /USD\/EUR rate history chart/ })).toHaveLength(1);
 
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     fireEvent.click(screen.getByRole("tab", { name: "3M" }));
     expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
+    expect(refresh).toHaveBeenCalled();
     expect(screen.getByRole("img", { name: "1M USD/EUR rate history chart" })).toBeTruthy();
   });
 

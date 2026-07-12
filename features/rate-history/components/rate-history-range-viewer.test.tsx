@@ -6,46 +6,55 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 import { RateHistoryRangePicker } from "./rate-history-range-viewer";
 
-const { replace, testSearchParams } = vi.hoisted(() => ({
-  replace: vi.fn(),
+const { refresh, testSearchParams } = vi.hoisted(() => ({
+  refresh: vi.fn(),
   testSearchParams: { current: "" },
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useRouter: () => ({ replace }),
+  useRouter: () => ({ refresh }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
 afterEach(() => {
-  replace.mockReset();
+  refresh.mockReset();
   testSearchParams.current = "";
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("RateHistoryRangePicker", () => {
-  it("selects the clicked range and navigates without scrolling", () => {
+  it("selects the clicked range, updates the URL, and refreshes the server tree", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     render(<RateHistoryRangePicker selectedRange="1M" />);
 
-    fireEvent.click(screen.getByRole("tab", { name: "3M" }));
+    const nextRange = screen.getByRole("tab", { name: "3M" });
 
-    expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
+    fireEvent.click(nextRange);
+
+    expect(nextRange.getAttribute("aria-selected")).toBe("true");
     expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("false");
-    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
+    expect(refresh).toHaveBeenCalled();
   });
 
-  it("preserves existing URL state when selecting a new range", () => {
+  it("preserves existing URL state when selecting a range", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     testSearchParams.current = "from=GBP&to=JPY&range=1M";
 
     render(<RateHistoryRangePicker selectedRange="1M" />);
 
     fireEvent.click(screen.getByRole("tab", { name: "1Y" }));
 
-    expect(replace).toHaveBeenCalledWith("/?from=GBP&to=JPY&range=1Y", { scroll: false });
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=GBP&to=JPY&range=1Y");
   });
 
   it("moves to adjacent ranges with left and right shortcuts", () => {
-    render(
+    const replaceState = vi.spyOn(window.history, "replaceState");
+    const { rerender } = render(
       <KeyboardShortcutsProvider>
         <RateHistoryRangePicker selectedRange="3M" />
       </KeyboardShortcutsProvider>
@@ -53,16 +62,22 @@ describe("RateHistoryRangePicker", () => {
 
     fireEvent.keyDown(window, { key: "ArrowLeft" });
 
-    expect(screen.getByRole("tab", { name: "1M" }).getAttribute("aria-selected")).toBe("true");
-    expect(replace).toHaveBeenLastCalledWith("/?range=1M", { scroll: false });
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=1M");
+
+    rerender(
+      <KeyboardShortcutsProvider>
+        <RateHistoryRangePicker selectedRange="1M" />
+      </KeyboardShortcutsProvider>
+    );
 
     fireEvent.keyDown(window, { key: "ArrowRight" });
 
-    expect(screen.getByRole("tab", { name: "3M" }).getAttribute("aria-selected")).toBe("true");
-    expect(replace).toHaveBeenLastCalledWith("/?range=3M", { scroll: false });
+    expect(replaceState).toHaveBeenLastCalledWith(null, "", "/?range=3M");
   });
 
   it("preserves range picker roving focus while global history shortcuts are registered", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     render(
       <KeyboardShortcutsProvider>
         <RateHistoryRangePicker selectedRange="1M" />
@@ -76,13 +91,14 @@ describe("RateHistoryRangePicker", () => {
 
     const nextRange = screen.getByRole("tab", { name: "3M" });
 
-    expect(nextRange.getAttribute("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(nextRange);
-    expect(replace).toHaveBeenCalledTimes(1);
-    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
+    expect(nextRange.getAttribute("aria-selected")).toBe("true");
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
   });
 
   it("activates a roving-focused range with Enter", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     render(
       <KeyboardShortcutsProvider>
         <RateHistoryRangePicker selectedRange="1M" />
@@ -95,6 +111,6 @@ describe("RateHistoryRangePicker", () => {
     fireEvent.keyDown(selectedRange, { key: "ArrowRight" });
     fireEvent.keyDown(screen.getByRole("tab", { name: "3M" }), { key: "Enter" });
 
-    expect(replace).toHaveBeenCalledWith("/?range=3M", { scroll: false });
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?range=3M");
   });
 });

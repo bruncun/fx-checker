@@ -113,6 +113,7 @@ afterEach(() => {
   testSearchParams.current = "";
   vi.useRealTimers();
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("Converter", () => {
@@ -242,7 +243,9 @@ describe("Converter", () => {
     expect(sendAmount).toHaveProperty("value", "12");
   });
 
-  it("swaps the active currencies and updates the displayed currency pair", () => {
+  it("swaps the active currencies, updates the URL, and refreshes the server tree", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     renderConverter();
 
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
@@ -254,6 +257,8 @@ describe("Converter", () => {
       "USD"
     );
     expect(screen.getByText("1 EUR = 1.1710 USD")).toBeTruthy();
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=EUR&to=USD");
+    expect(routerRefresh).toHaveBeenCalled();
   });
 
   it("opens send currency search with the primary K shortcut", async () => {
@@ -321,6 +326,8 @@ describe("Converter", () => {
   });
 
   it("swaps currencies with X unless a text field is active", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     renderConverter();
 
     fireEvent.keyDown(window, { key: "x" });
@@ -328,16 +335,18 @@ describe("Converter", () => {
     expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
       "EUR"
     );
+    expect(screen.getByRole("button", { name: "Select receive currency" }).textContent).toContain(
+      "USD"
+    );
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=EUR&to=USD");
 
     screen.getByRole("textbox", { name: "Send amount" }).focus();
     fireEvent.keyDown(screen.getByRole("textbox", { name: "Send amount" }), { key: "x" });
 
-    expect(screen.getByRole("button", { name: "Select send currency" }).textContent).toContain(
-      "EUR"
-    );
+    expect(replaceState).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps the send amount in place and recalculates the receive amount", () => {
+  it("keeps the send amount in place when currencies are swapped", () => {
     renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
@@ -350,7 +359,7 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "117.1");
   });
 
-  it("does not change the amount source when a formatted derived amount blurs unchanged", () => {
+  it("does not change the amount source when currencies are swapped", () => {
     renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
@@ -364,7 +373,7 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "2,927.5");
   });
 
-  it("keeps the receive amount in place when it was edited most recently", () => {
+  it("keeps the receive amount in place when currencies are swapped", () => {
     renderConverter();
 
     const sendAmount = screen.getByRole("textbox", { name: "Send amount" });
@@ -377,16 +386,20 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "100");
   });
 
-  it("derives cross rates from the shared response base", () => {
+  it("selects a receive currency, updates the URL, and refreshes the server tree", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     renderConverter();
 
     fireEvent.click(screen.getByRole("button", { name: "Select receive currency" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
 
     expect(screen.getByText("1 USD = 156.4816 JPY")).toBeTruthy();
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=USD&to=JPY");
+    expect(routerRefresh).toHaveBeenCalled();
   });
 
-  it("recalculates the receive amount when its currency changes", () => {
+  it("recalculates the receive amount when a receive currency is selected", () => {
     renderConverter();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
@@ -401,7 +414,9 @@ describe("Converter", () => {
     );
   });
 
-  it("keeps the most recently edited amount as the source when a currency changes", () => {
+  it("keeps the most recently edited amount as the source when a send currency is selected", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     renderConverter();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Receive amount" }), {
@@ -410,11 +425,14 @@ describe("Converter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Select send currency" }));
     fireEvent.click(screen.getByRole("button", { name: "JPY, Japanese Yen" }));
 
-    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty("value", "100");
     expect(screen.getByRole("textbox", { name: "Send amount" })).toHaveProperty("value", "18,324");
+    expect(screen.getByRole("textbox", { name: "Receive amount" })).toHaveProperty("value", "100");
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=JPY&to=EUR");
   });
 
-  it("preserves significant digits for very small rates", () => {
+  it("renders a very small rate immediately when a send currency is selected", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
     renderConverter({
       converterCurrencies: [
         ...currencies,
@@ -427,6 +445,7 @@ describe("Converter", () => {
     fireEvent.click(screen.getByRole("button", { name: "VND, Vietnamese Dong" }));
 
     expect(screen.getByText("1 VND = 0.00003333 EUR")).toBeTruthy();
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=VND&to=EUR");
   });
 
   it("optimistically favorites the selected pair", async () => {
@@ -559,37 +578,39 @@ describe("Converter", () => {
     expect(screen.getByRole("button", { name: /Log 200 USD to 170.79 EUR/ })).toBeTruthy();
   });
 
-  it("debounces amount updates into the search params", () => {
-    vi.useFakeTimers();
+  it("persists amount updates into the URL without an app router navigation", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
 
     renderConverter();
 
-    vi.advanceTimersByTime(50);
     expect(routerReplace).not.toHaveBeenCalled();
+    routerRefresh.mockClear();
+    routerReplace.mockClear();
+    replaceState.mockClear();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "100" },
     });
 
-    vi.advanceTimersByTime(49);
+    expect(replaceState).toHaveBeenCalledWith(
+      null,
+      "",
+      "/?from=USD&to=EUR&amount=100&amountSource=send"
+    );
     expect(routerReplace).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(1);
-    expect(routerReplace).toHaveBeenCalledWith("/?from=USD&to=EUR&amount=100&amountSource=send", {
-      scroll: false,
-    });
+    expect(routerRefresh).not.toHaveBeenCalled();
   });
 
   it("does not update search params for formatting-only amount input changes", () => {
-    vi.useFakeTimers();
+    const replaceState = vi.spyOn(window.history, "replaceState");
 
     renderConverter({ searchParams: "from=USD&to=EUR&amount=100&amountSource=send" });
 
     fireEvent.change(screen.getByRole("textbox", { name: "Send amount" }), {
       target: { value: "1,00" },
     });
-    vi.advanceTimersByTime(300);
 
+    expect(replaceState).not.toHaveBeenCalled();
     expect(routerReplace).not.toHaveBeenCalled();
   });
 });
