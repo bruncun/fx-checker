@@ -21,6 +21,7 @@ import {
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
+import { connection } from "next/server";
 
 type HomePageShellProps = {
   children: ReactNode;
@@ -42,6 +43,8 @@ async function HeaderStats() {
 }
 
 async function HeaderAccount() {
+  await connection();
+
   const account = await getHeaderAccount();
 
   return <UserDropdown email={account.email} isGuest={account.isGuest} />;
