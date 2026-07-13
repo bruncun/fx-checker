@@ -12,6 +12,7 @@ function TabPendingState({ className, label }: TabPendingStateProps) {
       aria-label={label}
       aria-live="polite"
       className={cn("py-600 text-center", className)}
+      data-tab-pending-state
       role="status"
     >
       <PendingSpinner aria-hidden="true" className="mx-auto" />

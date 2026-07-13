@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { TabPendingState } from "@/components/ui/tab-pending-state";
 import { RateDetails } from "./rate-details";
 import { RateDetailsNavigation } from "./rate-details-navigation";
 
@@ -28,6 +29,7 @@ afterEach(() => {
   testSearchParams.current = "";
   routerPush.mockReset();
   cleanup();
+  vi.restoreAllMocks();
 });
 
 function renderRateDetails(children: ReactNode, favoritesCount = 0) {
@@ -115,5 +117,47 @@ describe("RateDetails", () => {
 
     expect(routerPush).toHaveBeenCalledWith("/rate/compare?from=GBP&to=USD", { scroll: false });
     expect(routerPush).toHaveBeenCalledTimes(1);
+  });
+
+  it("reserves the previous panel height while the next section is pending", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement
+    ) {
+      const height = Number(
+        this.querySelector("[data-panel-height]")?.getAttribute("data-panel-height") ?? 0
+      );
+
+      return {
+        bottom: height,
+        height,
+        left: 0,
+        right: 0,
+        top: 0,
+        width: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      };
+    });
+
+    testPathname.current = "/app";
+
+    const { rerender } = render(
+      <RateDetails navigationSlot={<div />}>
+        <section aria-label="Rate history" data-panel-height="512" />
+      </RateDetails>
+    );
+
+    expect(document.getElementById("rate-details-history-panel")?.style.minHeight).toBe("");
+
+    testPathname.current = "/rate/favorites";
+
+    rerender(
+      <RateDetails navigationSlot={<div />}>
+        <TabPendingState label="Loading favorites" />
+      </RateDetails>
+    );
+
+    expect(document.getElementById("rate-details-favorites-panel")?.style.minHeight).toBe("512px");
   });
 });
