@@ -5,6 +5,7 @@ import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { FavoriteButtonFallback } from "@/features/converter";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 function SkeletonBlock({ className }: { className: string }) {
   return <span aria-hidden className={cn("fx-skeleton block", className)} />;
@@ -68,35 +69,72 @@ function HeaderStatsFallback() {
   );
 }
 
+const liveRateFallbackItems = [
+  { pair: "EUR/USD", rate: "1.1723", change: "-0.14%" },
+  { pair: "USD/JPY", rate: "157.91", change: "+0.04%" },
+  { pair: "GBP/USD", rate: "1.3575", change: "-0.22%" },
+  { pair: "USD/CHF", rate: "0.9098", change: "+0.13%" },
+  { pair: "EUR/GBP", rate: "0.8633", change: "+0.11%" },
+  { pair: "AUD/USD", rate: "0.7208", change: "+0.08%" },
+  { pair: "USD/CAD", rate: "1.3815", change: "+0.04%" },
+] as const;
+
+function LiveRateFallbackText({ children, className }: { children: ReactNode; className: string }) {
+  return (
+    <span aria-hidden="true" className={cn("fx-skeleton inline-block rounded-4", className)}>
+      <span className="text-transparent" style={{ visibility: "hidden" }}>
+        {children}
+      </span>
+    </span>
+  );
+}
+
+function LiveRateChangeFallback({ value }: { value: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "fx-skeleton inline-flex items-center rounded-4 text-transparent",
+        "text-preset-6 sm:text-preset-5 [&>span:first-child]:w-075 [&>span:first-child]:text-[6.5px] sm:[&>span:first-child]:w-100 sm:[&>span:first-child]:text-[8.5px]"
+      )}
+    >
+      <span className="inline-flex justify-center leading-none" style={{ visibility: "hidden" }}>
+        ▲&nbsp;
+      </span>
+      <span style={{ visibility: "hidden" }}>{value}</span>
+    </span>
+  );
+}
+
 function LiveRatesFallback() {
   return (
-    <aside
-      aria-labelledby="market-snapshot-fallback-heading"
-      className="relative flex w-full bg-neutral-700"
-    >
+    <aside aria-labelledby="Market snapshot" className="relative flex w-full bg-neutral-700">
       <div
         className={cn(
           "flex shrink-0 items-center gap-100 bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
           "sm:h-500 sm:px-200 sm:text-preset-5-medium"
         )}
       >
-        <span className="size-[6px] rounded-full bg-neutral-900" aria-hidden="true" />
         <span id="market-snapshot-fallback-heading">Market snapshot</span>
       </div>
-      <div
-        className="min-w-0 flex-1 overflow-x-auto"
-        role="region"
-        aria-label="Market snapshot exchange rates"
-      >
+      <div className="min-w-0 flex-1 overflow-x-auto" role="region">
         <ul
           className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
-          aria-label="Market snapshot exchange rates"
+          aria-label="Exchange rates"
         >
-          {Array.from({ length: 6 }, (_, index) => (
+          {liveRateFallbackItems.map((item) => (
             <li
-              className="flex min-w-[148px] items-center gap-125 p-150 uppercase sm:h-500 sm:px-[12.5px] sm:py-[13px]"
-              key={index}
-            />
+              className="flex items-center gap-125 p-150 uppercase sm:h-500 sm:px-[12.5px] sm:py-[13px]"
+              key={item.pair}
+            >
+              <LiveRateFallbackText className="text-preset-6 sm:text-preset-5">
+                {item.pair}
+              </LiveRateFallbackText>
+              <LiveRateFallbackText className="text-preset-6 sm:text-preset-5-medium">
+                {item.rate}
+              </LiveRateFallbackText>
+              <LiveRateChangeFallback value={item.change} />
+            </li>
           ))}
         </ul>
       </div>

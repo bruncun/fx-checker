@@ -8,10 +8,7 @@ type LiveRateListProps = {
 export function LiveRateList({ rates }: LiveRateListProps) {
   return (
     <div className="w-full overflow-x-clip">
-      <aside
-        aria-labelledby="market-snapshot-heading"
-        className="relative flex w-full bg-neutral-700"
-      >
+      <aside aria-label="Market snapshot" className="relative flex w-full bg-neutral-700">
         <div
           className={cn(
             "flex shrink-0 items-center bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
