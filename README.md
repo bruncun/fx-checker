@@ -21,70 +21,106 @@ This is a solution to the [FX Checker challenge on Frontend Mentor](https://www.
 
 ## Overview
 
-### The Challenge
+### The challenge
 
-Users should ultimately be able to:
+Your users should be able to:
 
-- enter an amount and see it convert in real time
-- choose send and receive currencies from a searchable picker
-- see the latest exchange rate for the active currency pair
-- swap send and receive currencies
-- favorite pairs and log conversions
-- search currencies by code or name
-- view market tickers, rate history, comparisons, favorites, and conversion history
-- use the interface across responsive layouts with keyboard-accessible interactive states
+#### Converter
 
-### Current Status
+- Enter an amount to send and see it convert in real time as they type
+- Pick the "send" and "receive" currencies from a searchable currency picker
+- See the live exchange rate for the active pair (for example, `1 USD = 0.8530 EUR`)
+- Swap the send and receive currencies with the swap button
+- Favorite the active pair, and log a conversion to their history
 
-The first foundation slice is intentionally narrower than the full challenge. The app currently establishes the project stack, CI gates, token-based styling, server-side Frankfurter integration, lightweight caching, and a home page that displays exchange-rate data availability.
+#### Currency picker
+
+- Search the full list of available currencies by code or name
+- See currencies grouped into "Popular" and "Other currencies", each row showing the flag, code, and name
+- See a check against the currency that's currently selected
+
+#### Live markets ticker
+
+- See a ticker of currency pairs, each with its current rate and 24-hour change (up or down)
+
+#### Rate history
+
+- View a line and area chart of the active pair's rate over time
+- Switch the chart range between 1D, 1W, 1M, 3M, 1Y, and 5Y
+- See the open, last, absolute change, and percentage change for the selected range
+
+#### Compare
+
+- See their send amount converted into a range of other currencies at once, each with its reference rate
+- Pin or unpin any comparison row to their favorites
+
+#### Favorites
+
+- See their pinned pairs, each with its live rate and 24-hour change
+- Load a pinned pair back into the converter by selecting its row
+- Unpin a pair they no longer want to track
+
+#### Conversion log
+
+- See a log of conversions they've made, each showing the relative time, the pair, and the send and receive amounts
+- Clear the whole log
+- Delete an individual entry
+
+#### UI & accessibility
+
+- View the optimal layout for the interface depending on their device's screen size
+- See hover and focus states for all interactive elements on the page
+- Navigate the entire app using only their keyboard
+
+### Screenshot
+
+![Dashboard screenshot](./screenshot.png)
+
+### Links
+
+- Solution URL: [https://www.frontendmentor.io/solutions/full-stack-currency-converter-E-JW3OiQsy](https://www.frontendmentor.io/solutions/full-stack-currency-converter-E-JW3OiQsy)
+- Live Site URL: [https://fx-checker.vercel.app](https://fx-checker.vercel.app)
 
 ## Process
 
 ### Built With
 
-- semantic HTML and accessible React components
 - [Next.js](https://nextjs.org/) App Router with React Server Components
 - [React](https://react.dev/) 19
-- [Supabase](https://supabase.com/) starter wiring for authentication-ready project structure
-- [Tailwind CSS](https://tailwindcss.com/) with project tokens mapped through CSS custom properties
-- shadcn/ui-style primitives, Radix UI components, and Lucide icons
+- [TypeScript](https://www.typescriptlang.org) 5
+- [Supabase](https://supabase.com/) starter wiring for database and auth
+- [Tailwind CSS](https://tailwindcss.com/) for themed reusable CSS
 - [Vitest](https://vitest.dev/) for unit tests
 - [Cypress](https://www.cypress.io/) for end-to-end tests
-- GitHub Actions for CI
-
-### Architecture Notes
-
-The first vertical slice keeps data flow server-led. Frankfurter access lives in `lib/frankfurter.ts`, where requests are timed out, retried, cached through Next.js `fetch`, validated, and logged. The home page converts integration failures into a page-level unavailable state.
-
-Styling uses Tailwind CSS with design tokens defined in `app/globals.css` and mapped in `tailwind.config.ts`. A formal style guide or design system is intentionally deferred because the current product surface is small and the design work does not yet justify that ceremony.
-
-Operationally, the app starts with lightweight `console.error` logging for server failures and relies on Vercel logs rather than adding a full observability platform.
+- [GitHub Actions](https://docs.github.com/en/actions) for CI
+- [D3](https://d3js.org) for data visualization
+- [Vercel](https://vercel.com) for deployment and hosting
 
 ### What I Learned
 
-This foundation phase was mostly about learning through constraints:
-
-- using Next.js App Router and React Server Components for server-owned data loading
-- letting the Supabase starter template provide useful defaults while gradually replacing starter-specific UI
-- mapping a compact set of design tokens into Tailwind instead of building a design system too early
-- leaning on Next.js `fetch` caching for reference data instead of introducing custom cache infrastructure
-- keeping CI explicit enough that type, lint, format, unit, and end-to-end failures are easy to diagnose
+- Next.js App Router and React Server Components for server rendering and other performance features
+- caching external APIs for faster and more reliable data fetching
+- collaborating with AI to accelerate pixel-perfect UI development
+- building components with custom input masking, keyboard navigation, WCAG patterns, CSV export, and data viz
+- optimizing FCP and LCP through resource caching, server rendering, and server actions
+- UX enhancements for keyboard and screen reader users
+- polishing interactions with subtle transitions
 
 ### Continued Development
 
 Next areas of focus:
 
-- build the converter interaction and searchable currency picker
-- add favorite pairs and conversion history
-- expand Frankfurter data access for rates and historical ranges
-- continue pruning unused starter-template artifacts as product screens replace them
-- revisit observability and data persistence only when the app outgrows the current lightweight choices
+- Digging deeper into Next.js
+- Collaborating with AI to build richer marketing UX
+- Building and designing more complex custom features
 
 ### AI Collaboration
 
-AI assistance was used as a pair-programming and documentation partner: brainstorming architecture trade-offs, shaping ADRs, reviewing implementation choices, and keeping the README aligned with both the Frontend Mentor challenge and the actual codebase.
+AI assistance was used as a pair-programming partner: brainstorming architecture trade-offs, documenting ADRs, implementing functionality, adversarially reviewing changes, debugging, and exploring new tech. Codex and GPT 5.5 were used for tooling.
 
-The useful pattern was to let AI help make implicit decisions explicit while keeping final choices grounded in the project constraints. The main risk is over-documenting a small project, so the docs intentionally stay lightweight.
+Collaborating on UI development went well. AI built UI chunks using Tailwind that were visually accurate enough that most of my time during this phase was spent on polish and validation. Accessibility generated out of the box left something to be desired and needed to be refined by hand.
+
+AI also made a breeze of backend development and performance optimizations. Experimentation came cheap which made it easy to build and fine tune a robust system.
 
 ## Development
 
