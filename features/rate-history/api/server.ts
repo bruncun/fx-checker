@@ -1,8 +1,8 @@
 import "server-only";
 
 import { getLatestRatesData } from "@/features/exchange-rates/api/server";
-import { getRates, type FrankfurterRate } from "@/lib/frankfurter";
-import { cacheLife } from "next/cache";
+import { EXCHANGE_RATES_CACHE_TAG, getRates, type FrankfurterRate } from "@/lib/frankfurter";
+import { cacheLife, cacheTag } from "next/cache";
 import {
   getDateYearsBefore,
   getRateHistoryRangeStartDate,
@@ -142,9 +142,6 @@ export async function getHistoryPageData({
   quoteCurrency: string;
   range: HistoryRange;
 }): Promise<HistoryPageData> {
-  "use cache";
-  cacheLife("days");
-
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -152,7 +149,34 @@ export async function getHistoryPageData({
       return { status: "unavailable" };
     }
 
-    const latestRate = latestRatesData.rates[0];
+    return getHistoryPageDataForLatestRates({
+      baseCurrency,
+      latestRates: latestRatesData.rates,
+      quoteCurrency,
+      range,
+    });
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+async function getHistoryPageDataForLatestRates({
+  baseCurrency,
+  latestRates,
+  quoteCurrency,
+  range,
+}: {
+  baseCurrency: string;
+  latestRates: FrankfurterRate[];
+  quoteCurrency: string;
+  range: HistoryRange;
+}): Promise<HistoryPageData> {
+  "use cache";
+  cacheLife("days");
+  cacheTag(EXCHANGE_RATES_CACHE_TAG);
+
+  try {
+    const latestRate = latestRates[0];
     const latestDate = latestRate?.date;
     const historyStartDate = latestDate
       ? range === "5Y"

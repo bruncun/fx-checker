@@ -6,6 +6,7 @@ import { getCurrencyReferenceData, getLatestRatesData, getLiveRatesData } from "
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
 }));
 
 const { getCurrencies, getRates } = vi.hoisted(() => ({
@@ -19,6 +20,7 @@ const { getLatestExchangeRateSnapshot, saveLatestExchangeRateSnapshot } = vi.hoi
 }));
 
 vi.mock("@/lib/frankfurter", () => ({
+  EXCHANGE_RATES_CACHE_TAG: "exchange-rates",
   getCurrencies,
   getRates,
 }));

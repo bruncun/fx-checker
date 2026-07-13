@@ -8,8 +8,8 @@ import type { Favorite } from "@/features/favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import {
   getConverterAmountFromParams,
+  getCurrencyCodePairFromParams,
   getCurrencyPairUrl,
-  getSelectedCurrencyPairFromParams,
   getSelectedCurrencyPairKey,
 } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -19,12 +19,12 @@ import { getExchangeRate, formatExchangeRate } from "../model/exchange";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
 export type SelectedCurrency = {
-  countryCode: FlagCountryCode;
+  countryCode?: FlagCountryCode;
   currencyCode: string;
 };
 
 type ConverterProps = {
-  currencies: AvailableCurrency[];
+  currencyReferencePromise: Promise<AvailableCurrency[]>;
   favoritesPromise: Promise<Favorite[]>;
   rates: FrankfurterRate[];
 };
@@ -33,15 +33,56 @@ function getOptimisticId() {
   return `optimistic:${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
 }
 
-function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
+const defaultSelectedCurrencies = {
+  receiveCurrency: { currencyCode: "EUR" },
+  sendCurrency: { currencyCode: "USD" },
+} satisfies { receiveCurrency: SelectedCurrency; sendCurrency: SelectedCurrency };
+
+function getSelectableCurrencyCodes(rates: FrankfurterRate[]) {
+  const sharedBase = rates[0]?.base;
+
+  if (!sharedBase || rates.some((rate) => rate.base !== sharedBase)) {
+    return new Set<string>();
+  }
+
+  return new Set([sharedBase, ...rates.map((rate) => rate.quote)]);
+}
+
+function getSelectedCurrencyPairFromCodes(rates: FrankfurterRate[], searchParams: URLSearchParams) {
+  const selectableCurrencyCodes = getSelectableCurrencyCodes(rates);
+  const { receiveCurrencyCode, sendCurrencyCode } = getCurrencyCodePairFromParams(searchParams);
+  const fallbackSendCurrencyCode = selectableCurrencyCodes.has("USD")
+    ? "USD"
+    : (selectableCurrencyCodes.values().next().value ??
+      defaultSelectedCurrencies.sendCurrency.currencyCode);
+  const fallbackReceiveCurrencyCode = selectableCurrencyCodes.has("EUR")
+    ? "EUR"
+    : ([...selectableCurrencyCodes].find((code) => code !== fallbackSendCurrencyCode) ??
+      fallbackSendCurrencyCode);
+
+  return {
+    receiveCurrency: {
+      currencyCode: selectableCurrencyCodes.has(receiveCurrencyCode)
+        ? receiveCurrencyCode
+        : fallbackReceiveCurrencyCode,
+    },
+    sendCurrency: {
+      currencyCode: selectableCurrencyCodes.has(sendCurrencyCode)
+        ? sendCurrencyCode
+        : fallbackSendCurrencyCode,
+    },
+  };
+}
+
+function Converter({ currencyReferencePromise, favoritesPromise, rates }: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
   const [, startTransition] = React.useTransition();
   const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const selectedCurrencyPairFromUrl = getSelectedCurrencyPairFromParams(
-    currencies,
+  const selectedCurrencyPairFromUrl = getSelectedCurrencyPairFromCodes(
+    rates,
     new URLSearchParams(searchParamsString)
   );
   const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
@@ -132,7 +173,7 @@ function Converter({ currencies, favoritesPromise, rates }: ConverterProps) {
     <>
       <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <ConverterAmountControls
-          currencies={currencies}
+          currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
           initialAmount={converterAmount.amount}
           initialAmountSource={converterAmount.amountSource}

@@ -5,7 +5,6 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
 import { ExchangeButton } from "@/components/ui/exchange-button";
-import type { FlagCountryCode } from "@/components/ui/flag";
 import {
   interactiveSurfaceClassName,
   interactiveSurfaceFocusOnNeutral700ClassName,
@@ -35,8 +34,7 @@ type ConverterAmountState = {
 type ConverterAmountPanelProps = {
   amount: string;
   amountSide: AmountSide;
-  countryCode: FlagCountryCode;
-  currencies: AvailableCurrency[];
+  currencyReferencePromise: Promise<AvailableCurrency[]>;
   currencyCode: string;
   focusSearchRequest: number;
   label: string;
@@ -45,12 +43,13 @@ type ConverterAmountPanelProps = {
   onInteraction: (side: AmountSide) => void;
 };
 
-type DeferredCurrencyPickerProps = CurrencyPickerProps & {
+type DeferredCurrencyPickerProps = Omit<CurrencyPickerProps, "countryCode" | "currencies"> & {
+  currenciesPromise: Promise<AvailableCurrency[]>;
   focusSearchRequest: number;
 };
 
 type ConverterAmountControlsProps = {
-  currencies: AvailableCurrency[];
+  currencyReferencePromise: Promise<AvailableCurrency[]>;
   exchangeRateLabel: string;
   favoritesPromise: Promise<Favorite[]>;
   initialAmount?: string;
@@ -68,10 +67,12 @@ type ConverterAmountControlsProps = {
 const logConversionAcknowledgementMs = 700;
 
 function DeferredCurrencyPicker({
+  currenciesPromise,
   focusSearchRequest,
   onPickerOpen,
   ...props
 }: DeferredCurrencyPickerProps) {
+  const currencies = React.use(currenciesPromise);
   const pickerRef = React.useRef<CurrencyPickerHandle>(null);
 
   React.useEffect(() => {
@@ -88,7 +89,20 @@ function DeferredCurrencyPicker({
     };
   }, [focusSearchRequest]);
 
-  return <CurrencyPicker {...props} ref={pickerRef} onPickerOpen={onPickerOpen} />;
+  const selectedCurrency =
+    currencies.find((currency) => currency.code === props.currencyCode) ?? currencies[0];
+
+  return selectedCurrency ? (
+    <CurrencyPicker
+      {...props}
+      countryCode={selectedCurrency.countryCode}
+      currencies={currencies}
+      ref={pickerRef}
+      onPickerOpen={onPickerOpen}
+    />
+  ) : (
+    <CurrencyPickerFallback currencyCode={props.currencyCode} />
+  );
 }
 
 function isPositiveAmount(amount: string) {
@@ -153,8 +167,7 @@ function usePersistedConverterAmount({
 function ConverterAmountPanel({
   amount,
   amountSide,
-  countryCode,
-  currencies,
+  currencyReferencePromise,
   currencyCode,
   focusSearchRequest,
   label,
@@ -188,26 +201,46 @@ function ConverterAmountPanel({
           value={amount}
           className={label === "Receive" ? "text-lime-500" : ""}
         />
-        <DeferredCurrencyPicker
-          countryCode={countryCode}
-          currencies={currencies}
-          currencyCode={currencyCode}
-          flagFetchPriority="high"
-          flagLoading="eager"
-          focusSearchRequest={focusSearchRequest}
-          onPickerOpen={() => {
-            onInteraction(amountSide);
-          }}
-          onCurrencySelect={(currency) => {
-            onCurrencyChange({
-              countryCode: currency.countryCode,
-              currencyCode: currency.code,
-            });
-          }}
-          left={label === "Send"}
-        />
+        <React.Suspense fallback={<CurrencyPickerFallback currencyCode={currencyCode} />}>
+          <DeferredCurrencyPicker
+            currenciesPromise={currencyReferencePromise}
+            currencyCode={currencyCode}
+            flagFetchPriority="high"
+            flagLoading="eager"
+            focusSearchRequest={focusSearchRequest}
+            onPickerOpen={() => {
+              onInteraction(amountSide);
+            }}
+            onCurrencySelect={(currency) => {
+              onCurrencyChange({
+                countryCode: currency.countryCode,
+                currencyCode: currency.code,
+              });
+            }}
+            left={label === "Send"}
+          />
+        </React.Suspense>
       </div>
     </fieldset>
+  );
+}
+
+function CurrencyPickerFallback({ currencyCode }: { currencyCode: string }) {
+  return (
+    <button
+      aria-label={currencyCode}
+      className={cn(
+        interactiveSurfaceClassName,
+        "h-500 w-1200 p-125 text-preset-4 text-neutral-50 uppercase"
+      )}
+      disabled
+      tabIndex={-1}
+      type="button"
+    >
+      <span aria-hidden="true" className="fx-skeleton fx-skeleton-control size-250 rounded-full" />
+      <span>{currencyCode}</span>
+      <span aria-hidden="true" className="fx-skeleton fx-skeleton-control size-150 rounded-4" />
+    </button>
   );
 }
 
@@ -241,7 +274,7 @@ function FavoriteButtonFallback() {
 }
 
 function ConverterAmountControls({
-  currencies,
+  currencyReferencePromise,
   exchangeRateLabel,
   favoritesPromise,
   initialAmount,
@@ -354,7 +387,7 @@ function ConverterAmountControls({
           {...sendCurrency}
           amount={sendAmount}
           amountSide="send"
-          currencies={currencies}
+          currencyReferencePromise={currencyReferencePromise}
           focusSearchRequest={focusSearchRequests.send}
           label="Send"
           onInteraction={setLastInteractedSide}
@@ -372,7 +405,7 @@ function ConverterAmountControls({
           {...receiveCurrency}
           amount={receiveAmount}
           amountSide="receive"
-          currencies={currencies}
+          currencyReferencePromise={currencyReferencePromise}
           focusSearchRequest={focusSearchRequests.receive}
           label="Receive"
           onInteraction={setLastInteractedSide}
@@ -400,13 +433,15 @@ function ConverterAmountControls({
           {exchangeRateLabel}
         </p>
         <ConverterActionGroup>
-          <ConverterFavoriteButton
-            favoritesPromise={favoritesPromise}
-            pair={{
-              fromCurrency: sendCurrency.currencyCode,
-              toCurrency: receiveCurrency.currencyCode,
-            }}
-          />
+          <React.Suspense fallback={<FavoriteButtonFallback />}>
+            <ConverterFavoriteButton
+              favoritesPromise={favoritesPromise}
+              pair={{
+                fromCurrency: sendCurrency.currencyCode,
+                toCurrency: receiveCurrency.currencyCode,
+              }}
+            />
+          </React.Suspense>
           <LogConversionButton
             aria-disabled={isLogAcknowledged ? true : undefined}
             aria-label={

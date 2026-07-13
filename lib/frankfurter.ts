@@ -2,7 +2,7 @@ import "server-only";
 
 const DEFAULT_FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2";
 const EXCHANGE_RATES_REVALIDATE_SECONDS = 60 * 60 * 24;
-const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
+export const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
 
 type FrankfurterEndpoint = "currencies" | "rates";

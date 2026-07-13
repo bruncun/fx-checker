@@ -1,8 +1,8 @@
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import {
-  getCurrencyReferenceData,
+  getCurrencyReferenceDataForLatestRates,
   getLatestRatesData,
-  getLiveRatesData,
+  getLiveRatesDataForLatestRates,
 } from "@/features/exchange-rates/api/server";
 import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites";
 import { getServerFavorites } from "@/features/favorites/api/server";
@@ -17,14 +17,16 @@ export const metadata: Metadata = {
 };
 
 async function FavoriteRatesContent() {
-  const [currencyReferenceData, latestRatesData, liveRatesData] = await Promise.all([
-    getCurrencyReferenceData(),
-    getLatestRatesData(),
-    getLiveRatesData(),
+  const latestRatesData = await getLatestRatesData();
+
+  assertDataAvailable(latestRatesData);
+
+  const [currencyReferenceData, liveRatesData] = await Promise.all([
+    getCurrencyReferenceDataForLatestRates(latestRatesData.rates),
+    getLiveRatesDataForLatestRates(latestRatesData.rates),
   ]);
 
   assertDataAvailable(currencyReferenceData);
-  assertDataAvailable(latestRatesData);
   assertDataAvailable(liveRatesData);
 
   return (

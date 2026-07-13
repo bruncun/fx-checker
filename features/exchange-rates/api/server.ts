@@ -5,12 +5,17 @@ import {
   type AvailableCurrency,
 } from "@/features/converter/model/currencies";
 import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
-import { getCurrencies, getRates, type FrankfurterRate } from "@/lib/frankfurter";
+import {
+  EXCHANGE_RATES_CACHE_TAG,
+  getCurrencies,
+  getRates,
+  type FrankfurterRate,
+} from "@/lib/frankfurter";
 import {
   getLatestExchangeRateSnapshot,
   saveLatestExchangeRateSnapshot,
 } from "@/lib/latest-exchange-rate-snapshot";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 const LIVE_RATE_LOOKBACK_DAYS = 7;
 
@@ -71,7 +76,9 @@ function getDateDaysBefore(date: string, days: number) {
 
 export async function getLatestRatesData(): Promise<LatestRatesData> {
   try {
-    return await getFreshLatestRatesData();
+    const rates = await getRates();
+
+    return await getFreshLatestRatesDataForRates(rates);
   } catch {
     try {
       const snapshot = await getLatestExchangeRateSnapshot();
@@ -93,11 +100,10 @@ export async function getLatestRatesData(): Promise<LatestRatesData> {
   }
 }
 
-async function getFreshLatestRatesData(): Promise<LatestRatesData> {
+async function getFreshLatestRatesDataForRates(rates: FrankfurterRate[]): Promise<LatestRatesData> {
   "use cache";
   cacheLife("days");
-
-  const rates = await getRates();
+  cacheTag(EXCHANGE_RATES_CACHE_TAG);
 
   if (rates.length === 0) {
     return { status: "unavailable" };
@@ -125,9 +131,6 @@ async function getFreshLatestRatesData(): Promise<LatestRatesData> {
 }
 
 export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData> {
-  "use cache";
-  cacheLife("days");
-
   try {
     const [currencies, latestRatesData] = await Promise.all([
       getCurrencies(),
@@ -138,7 +141,30 @@ export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData>
       return { status: "unavailable" };
     }
 
-    const availableCurrencies = deriveAvailableCurrencies(currencies, latestRatesData.rates);
+    return deriveCurrencyReferenceDataForLatestRates(currencies, latestRatesData.rates);
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+export async function getCurrencyReferenceDataForLatestRates(
+  latestRates: FrankfurterRate[]
+): Promise<CurrencyReferenceData> {
+  const currencies = await getCurrencies();
+
+  return deriveCurrencyReferenceDataForLatestRates(currencies, latestRates);
+}
+
+async function deriveCurrencyReferenceDataForLatestRates(
+  currencies: Awaited<ReturnType<typeof getCurrencies>>,
+  latestRates: FrankfurterRate[]
+): Promise<CurrencyReferenceData> {
+  "use cache";
+  cacheLife("days");
+  cacheTag(EXCHANGE_RATES_CACHE_TAG);
+
+  try {
+    const availableCurrencies = deriveAvailableCurrencies(currencies, latestRates);
 
     if (availableCurrencies.length < 2) {
       return { status: "unavailable" };
@@ -155,9 +181,6 @@ export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData>
 }
 
 export async function getLiveRatesData(): Promise<LiveRatesData> {
-  "use cache";
-  cacheLife("days");
-
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -165,7 +188,21 @@ export async function getLiveRatesData(): Promise<LiveRatesData> {
       return { status: "unavailable" };
     }
 
-    const latestDate = latestRatesData.rates[0]?.date;
+    return getLiveRatesDataForLatestRates(latestRatesData.rates);
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
+export async function getLiveRatesDataForLatestRates(
+  latestRates: FrankfurterRate[]
+): Promise<LiveRatesData> {
+  "use cache";
+  cacheLife("days");
+  cacheTag(EXCHANGE_RATES_CACHE_TAG);
+
+  try {
+    const latestDate = latestRates[0]?.date;
     const lookbackStartDate = latestDate
       ? getDateDaysBefore(latestDate, LIVE_RATE_LOOKBACK_DAYS)
       : null;
@@ -181,7 +218,7 @@ export async function getLiveRatesData(): Promise<LiveRatesData> {
     const liveRateHistoryRates = recentRates.filter((rate) => rate.date < latestDate);
     const liveRates = deriveLiveRates({
       historicalRates: liveRateHistoryRates,
-      latestRates: latestRatesData.rates,
+      latestRates,
     });
 
     return {

@@ -96,7 +96,7 @@ function renderConverter({
   return render(
     <KeyboardShortcutsProvider>
       <Converter
-        currencies={converterCurrencies}
+        currencyReferencePromise={fulfilledPromise(converterCurrencies)}
         favoritesPromise={fulfilledPromise(favorites)}
         rates={converterRates}
       />
@@ -166,15 +166,15 @@ describe("Converter", () => {
     renderConverter({
       converterCurrencies: [
         currencies[0],
-        { code: "TINY", countryCode: "eu", name: "Tiny Currency" },
+        { code: "XCD", countryCode: "lc", name: "Tiny Currency" },
       ],
       converterRates: [
         rates[0],
-        { date: "2026-06-19", base: "EUR", quote: "TINY", rate: 0.0000001 },
+        { date: "2026-06-19", base: "EUR", quote: "XCD", rate: 0.0000001 },
       ],
       initialSelectedCurrencies: {
         sendCurrency: { countryCode: "us", currencyCode: "USD" },
-        receiveCurrency: { countryCode: "eu", currencyCode: "TINY" },
+        receiveCurrency: { countryCode: "lc", currencyCode: "XCD" },
       },
     });
 

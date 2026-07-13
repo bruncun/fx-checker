@@ -6,6 +6,7 @@ import { getHistoryPageData, getYearlyDateRanges } from "./server";
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
 }));
 
 const { getRates } = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ const { getLatestRatesData } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/frankfurter", () => ({
+  EXCHANGE_RATES_CACHE_TAG: "exchange-rates",
   getRates,
 }));
 

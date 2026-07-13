@@ -1,6 +1,9 @@
 import { CompareRates, CompareRatesFallback } from "@/features/compare-rates";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
-import { getCurrencyReferenceData, getLatestRatesData } from "@/features/exchange-rates/api/server";
+import {
+  getCurrencyReferenceDataForLatestRates,
+  getLatestRatesData,
+} from "@/features/exchange-rates/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   getConverterAmountFromParams,
@@ -53,13 +56,13 @@ async function CompareRatesContent({
 }
 
 async function CompareRatesShell({ searchParams }: CompareRatesPageProps) {
-  const [currencyReferenceData, latestRatesData] = await Promise.all([
-    getCurrencyReferenceData(),
-    getLatestRatesData(),
-  ]);
+  const latestRatesData = await getLatestRatesData();
+
+  assertDataAvailable(latestRatesData);
+
+  const currencyReferenceData = await getCurrencyReferenceDataForLatestRates(latestRatesData.rates);
 
   assertDataAvailable(currencyReferenceData);
-  assertDataAvailable(latestRatesData);
 
   return (
     <Suspense fallback={<CompareRatesFallback />}>
