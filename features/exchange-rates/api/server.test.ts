@@ -8,6 +8,9 @@ vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
   cacheTag: vi.fn(),
 }));
+vi.mock("next/server", () => ({
+  after: (callback: () => unknown) => callback(),
+}));
 
 const { getCurrencies, getRates } = vi.hoisted(() => ({
   getCurrencies: vi.fn(),

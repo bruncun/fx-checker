@@ -16,6 +16,7 @@ import {
   saveLatestExchangeRateSnapshot,
 } from "@/lib/latest-exchange-rate-snapshot";
 import { cacheLife, cacheTag } from "next/cache";
+import { after } from "next/server";
 
 const LIVE_RATE_LOOKBACK_DAYS = 7;
 
@@ -111,13 +112,15 @@ async function getFreshLatestRatesDataForRates(rates: FrankfurterRate[]): Promis
 
   const fetchedAt = new Date().toISOString();
 
-  try {
-    await saveLatestExchangeRateSnapshot(rates, fetchedAt);
-  } catch (error) {
-    console.error("Failed to persist latest exchange rate snapshot", {
-      cause: error instanceof Error ? error.message : String(error),
-    });
-  }
+  after(async () => {
+    try {
+      await saveLatestExchangeRateSnapshot(rates, fetchedAt);
+    } catch (error) {
+      console.error("Failed to persist latest exchange rate snapshot", {
+        cause: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
 
   return {
     freshness: {
