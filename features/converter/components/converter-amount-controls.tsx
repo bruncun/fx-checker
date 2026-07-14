@@ -136,6 +136,14 @@ function isPositiveAmount(amount: string) {
   }
 }
 
+function areConverterAmountStatesEqual(left: ConverterAmountState, right: ConverterAmountState) {
+  return (
+    left.amount === right.amount &&
+    left.amountSource === right.amountSource &&
+    left.receiveAmount === right.receiveAmount
+  );
+}
+
 function usePersistedConverterAmount({
   initialAmount,
   initialAmountSource,
@@ -148,16 +156,39 @@ function usePersistedConverterAmount({
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
+  const routeAmountState = React.useMemo<ConverterAmountState>(
+    () => ({
+      amount: initialAmount ?? "",
+      amountSource: initialAmountSource ?? "send",
+      receiveAmount: initialAmountSource === "send" ? initialReceiveAmount : undefined,
+    }),
+    [initialAmount, initialAmountSource, initialReceiveAmount]
+  );
   const [amountState, setAmountState] = React.useState<ConverterAmountState>({
-    amount: initialAmount ?? "",
-    amountSource: initialAmountSource ?? "send",
-    receiveAmount: initialAmountSource === "send" ? initialReceiveAmount : undefined,
+    ...routeAmountState,
   });
   const hasMountedRef = React.useRef(false);
+  const skipNextPersistenceRef = React.useRef(false);
+
+  React.useEffect(() => {
+    setAmountState((currentAmountState) => {
+      if (areConverterAmountStatesEqual(currentAmountState, routeAmountState)) {
+        return currentAmountState;
+      }
+
+      skipNextPersistenceRef.current = true;
+      return routeAmountState;
+    });
+  }, [routeAmountState]);
 
   React.useEffect(() => {
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
+      return;
+    }
+
+    if (skipNextPersistenceRef.current) {
+      skipNextPersistenceRef.current = false;
       return;
     }
 

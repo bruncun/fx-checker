@@ -613,6 +613,42 @@ describe("Converter", () => {
     expect(routerRefresh).not.toHaveBeenCalled();
   });
 
+  it("keeps the focused amount input mounted when its URL amount params update", () => {
+    const view = renderConverter();
+    const replaceState = vi
+      .spyOn(window.history, "replaceState")
+      .mockImplementation((_, __, url) => {
+        if (typeof url === "string") {
+          testSearchParams.current = url.startsWith("/?") ? url.slice(2) : url;
+        }
+      });
+    const sendAmount = getAmountInput("Send");
+
+    sendAmount.focus();
+    fireEvent.change(sendAmount, {
+      target: { value: "1" },
+    });
+
+    expect(replaceState).toHaveBeenCalledWith(
+      null,
+      "",
+      "/?from=USD&to=EUR&amount=1&amountSource=send"
+    );
+
+    view.rerender(
+      <KeyboardShortcutsProvider>
+        <Converter
+          currencyReferencePromise={fulfilledPromise(currencies)}
+          favoritesPromise={fulfilledPromise([])}
+          rates={rates}
+        />
+      </KeyboardShortcutsProvider>
+    );
+
+    expect(getAmountInput("Send")).toBe(sendAmount);
+    expect(document.activeElement).toBe(sendAmount);
+  });
+
   it("does not update search params for formatting-only amount input changes", () => {
     const replaceState = vi.spyOn(window.history, "replaceState");
 
