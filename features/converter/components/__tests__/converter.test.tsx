@@ -135,6 +135,38 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "2,134.93");
   });
 
+  it("loads a logged receive amount from the URL instead of recalculating it", () => {
+    renderConverter({
+      searchParams: "from=USD&to=EUR&amount=1000.00&amountSource=send&receiveAmount=853.02",
+    });
+
+    expect(getAmountInput("Send")).toHaveProperty("value", "1,000.00");
+    expect(getAmountInput("Receive")).toHaveProperty("value", "853.02");
+  });
+
+  it("refreshes converter amounts when route search params change outside the converter", () => {
+    const view = renderConverter({
+      searchParams: "from=USD&to=EUR&amount=100&amountSource=send",
+    });
+
+    expect(getAmountInput("Send")).toHaveProperty("value", "100");
+
+    testSearchParams.current =
+      "from=USD&to=EUR&amount=1000.00&amountSource=send&receiveAmount=853.02";
+    view.rerender(
+      <KeyboardShortcutsProvider>
+        <Converter
+          currencyReferencePromise={fulfilledPromise(currencies)}
+          favoritesPromise={fulfilledPromise([])}
+          rates={rates}
+        />
+      </KeyboardShortcutsProvider>
+    );
+
+    expect(getAmountInput("Send")).toHaveProperty("value", "1,000.00");
+    expect(getAmountInput("Receive")).toHaveProperty("value", "853.02");
+  });
+
   it("converts back from the receive amount as it is edited", () => {
     renderConverter();
 

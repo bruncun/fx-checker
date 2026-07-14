@@ -313,6 +313,7 @@ function ConversionLog({
       amountSource: "send",
       pathname,
       receiveCurrency,
+      receiveAmount: conversion.receiveAmount,
       searchParams: new URLSearchParams(searchParamsString),
       sendCurrency,
     });

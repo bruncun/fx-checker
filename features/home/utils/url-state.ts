@@ -127,6 +127,7 @@ function getCurrencyPairUrl({
   amountSource,
   pathname,
   receiveCurrency,
+  receiveAmount,
   searchParams,
   sendCurrency,
 }: {
@@ -134,6 +135,7 @@ function getCurrencyPairUrl({
   amountSource?: AmountSide;
   pathname: string;
   receiveCurrency: SelectedCurrency;
+  receiveAmount?: string;
   searchParams: URLSearchParams;
   sendCurrency: SelectedCurrency;
 }) {
@@ -141,6 +143,7 @@ function getCurrencyPairUrl({
 
   nextSearchParams.set("from", sendCurrency.currencyCode);
   nextSearchParams.set("to", receiveCurrency.currencyCode);
+  nextSearchParams.delete("receiveAmount");
 
   if (amount !== undefined) {
     nextSearchParams.set("amount", amount);
@@ -148,6 +151,10 @@ function getCurrencyPairUrl({
 
   if (amountSource !== undefined) {
     nextSearchParams.set("amountSource", amountSource);
+  }
+
+  if (receiveAmount !== undefined) {
+    nextSearchParams.set("receiveAmount", receiveAmount);
   }
 
   const queryString = nextSearchParams.toString();
@@ -175,7 +182,11 @@ function getConverterAmountFromParams(searchParams: URLSearchParams) {
   return {
     amount,
     amountSource,
-  } satisfies { amount: string; amountSource: AmountSide };
+    receiveAmount:
+      amountSource === "send" && searchParams.has("receiveAmount")
+        ? (searchParams.get("receiveAmount") ?? "")
+        : undefined,
+  } satisfies { amount: string; amountSource: AmountSide; receiveAmount?: string };
 }
 
 export {

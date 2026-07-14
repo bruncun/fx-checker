@@ -29,6 +29,7 @@ import {
 type ConverterAmountState = {
   amount: string;
   amountSource: AmountSide;
+  receiveAmount?: string;
 };
 
 type ConverterAmountPanelProps = {
@@ -54,6 +55,7 @@ type ConverterAmountControlsProps = {
   favoritesPromise: Promise<Favorite[]>;
   initialAmount?: string;
   initialAmountSource?: AmountSide;
+  initialReceiveAmount?: string;
   rates: FrankfurterRate[];
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
@@ -116,9 +118,11 @@ function isPositiveAmount(amount: string) {
 function usePersistedConverterAmount({
   initialAmount,
   initialAmountSource,
+  initialReceiveAmount,
 }: {
   initialAmount?: string;
   initialAmountSource?: AmountSide;
+  initialReceiveAmount?: string;
 }) {
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
@@ -126,6 +130,7 @@ function usePersistedConverterAmount({
   const [amountState, setAmountState] = React.useState<ConverterAmountState>({
     amount: initialAmount ?? "",
     amountSource: initialAmountSource ?? "send",
+    receiveAmount: initialAmountSource === "send" ? initialReceiveAmount : undefined,
   });
   const hasMountedRef = React.useRef(false);
 
@@ -140,8 +145,13 @@ function usePersistedConverterAmount({
       ? (nextSearchParams.get("amount") ?? "")
       : null;
     const currentAmountSource = nextSearchParams.get("amountSource") ?? "send";
+    const currentReceiveAmount = nextSearchParams.get("receiveAmount") ?? undefined;
 
-    if (currentAmount === amountState.amount && currentAmountSource === amountState.amountSource) {
+    if (
+      currentAmount === amountState.amount &&
+      currentAmountSource === amountState.amountSource &&
+      currentReceiveAmount === amountState.receiveAmount
+    ) {
       return;
     }
 
@@ -151,6 +161,12 @@ function usePersistedConverterAmount({
 
     nextSearchParams.set("amount", amountState.amount);
     nextSearchParams.set("amountSource", amountState.amountSource);
+
+    if (amountState.receiveAmount === undefined) {
+      nextSearchParams.delete("receiveAmount");
+    } else {
+      nextSearchParams.set("receiveAmount", amountState.receiveAmount);
+    }
 
     const queryString = nextSearchParams.toString();
     const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
@@ -279,6 +295,7 @@ function ConverterAmountControls({
   favoritesPromise,
   initialAmount,
   initialAmountSource,
+  initialReceiveAmount,
   rates,
   receiveCurrency,
   sendCurrency,
@@ -291,10 +308,12 @@ function ConverterAmountControls({
     send: 0,
   });
   const [lastInteractedSide, setLastInteractedSide] = React.useState<AmountSide>("send");
-  const [{ amount, amountSource }, setAmountState] = usePersistedConverterAmount({
+  const [amountState, setAmountState] = usePersistedConverterAmount({
     initialAmount,
     initialAmountSource,
+    initialReceiveAmount,
   });
+  const { amount, amountSource } = amountState;
   const [isLogAcknowledged, setIsLogAcknowledged] = React.useState(false);
   const logAcknowledgementTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const exchangeRate = getExchangeRate(
@@ -304,7 +323,10 @@ function ConverterAmountControls({
   );
   const inverseExchangeRate = exchangeRate === null ? null : new MoneyDecimal(1).div(exchangeRate);
   const sendAmount = amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate);
-  const receiveAmount = amountSource === "receive" ? amount : convertAmount(amount, exchangeRate);
+  const receiveAmount =
+    amountSource === "receive"
+      ? amount
+      : (amountState.receiveAmount ?? convertAmount(amount, exchangeRate));
   const canLogConversion =
     exchangeRate !== null && isPositiveAmount(sendAmount) && isPositiveAmount(receiveAmount);
 

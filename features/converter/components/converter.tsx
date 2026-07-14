@@ -173,10 +173,17 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
     <>
       <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <ConverterAmountControls
+          key={[
+            selectedCurrencyPairUrlKey,
+            converterAmount.amount,
+            converterAmount.amountSource,
+            converterAmount.receiveAmount ?? "",
+          ].join(":")}
           currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
           initialAmount={converterAmount.amount}
           initialAmountSource={converterAmount.amountSource}
+          initialReceiveAmount={converterAmount.receiveAmount}
           favoritesPromise={favoritesPromise}
           rates={rates}
           receiveCurrency={receiveCurrency}

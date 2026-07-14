@@ -143,7 +143,7 @@ describe("ConversionLog", () => {
     fireEvent.click(getConversionRow("conversion-usd-eur"));
 
     expect(routerReplace).toHaveBeenCalledWith(
-      "/rate/log?from=USD&to=EUR&amount=1000.00&amountSource=send",
+      "/rate/log?from=USD&to=EUR&amount=1000.00&amountSource=send&receiveAmount=853.02",
       { scroll: false }
     );
   });

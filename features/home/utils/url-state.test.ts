@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import {
   createUrlSearchParams,
+  getConverterAmountFromParams,
   getCurrencyCodePairFromParams,
   getCurrencyPairLabelFromParams,
+  getCurrencyPairUrl,
   getRateHistoryUrlStateFromParams,
   getSelectedCurrencyPairFromParams,
 } from "./url-state";
@@ -80,5 +82,52 @@ describe("url state", () => {
       receiveCurrency: { countryCode: "gb", currencyCode: "GBP" },
       sendCurrency: { countryCode: "us", currencyCode: "USD" },
     });
+  });
+
+  it("reads a logged receive amount only for send-sourced converter amounts", () => {
+    expect(
+      getConverterAmountFromParams(
+        createUrlSearchParams({
+          amount: "1000.00",
+          amountSource: "send",
+          receiveAmount: "853.02",
+        })
+      )
+    ).toEqual({
+      amount: "1000.00",
+      amountSource: "send",
+      receiveAmount: "853.02",
+    });
+
+    expect(
+      getConverterAmountFromParams(
+        createUrlSearchParams({
+          amount: "853.02",
+          amountSource: "receive",
+          receiveAmount: "853.02",
+        })
+      )
+    ).toEqual({
+      amount: "853.02",
+      amountSource: "receive",
+      receiveAmount: undefined,
+    });
+  });
+
+  it("clears logged receive amounts when building ordinary currency-pair URLs", () => {
+    expect(
+      getCurrencyPairUrl({
+        pathname: "/rate/favorites",
+        receiveCurrency: { countryCode: "gb", currencyCode: "GBP" },
+        searchParams: createUrlSearchParams({
+          amount: "1000.00",
+          amountSource: "send",
+          from: "USD",
+          receiveAmount: "853.02",
+          to: "EUR",
+        }),
+        sendCurrency: { countryCode: "us", currencyCode: "USD" },
+      })
+    ).toBe("/rate/favorites?amount=1000.00&amountSource=send&from=USD&to=GBP");
   });
 });
