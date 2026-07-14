@@ -92,15 +92,11 @@ describe("LiveRateList", () => {
 
     expect(negativeChange?.textContent).toBe("-0.14%");
     expect(negativeChange?.getAttribute("data-change-indicator")).toBe("▼\u00a0");
-    expect(negativeChange?.className).toContain(
-      "before:content-[attr(data-change-indicator)]"
-    );
+    expect(negativeChange?.className).toContain("before:content-[attr(data-change-indicator)]");
     expect(negativeChange?.classList.contains("text-red-500")).toBe(true);
     expect(positiveChange?.textContent).toBe("+0.04%");
     expect(positiveChange?.getAttribute("data-change-indicator")).toBe("▲\u00a0");
-    expect(positiveChange?.className).toContain(
-      "before:content-[attr(data-change-indicator)]"
-    );
+    expect(positiveChange?.className).toContain("before:content-[attr(data-change-indicator)]");
     expect(positiveChange?.classList.contains("text-green-500")).toBe(true);
   });
 

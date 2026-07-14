@@ -15,7 +15,7 @@ import {
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AvailableCurrency } from "../model/currencies";
-import { getExchangeRate, formatExchangeRate } from "../model/exchange";
+import { getExchangeRate, formatExchangeRate, type AmountSide } from "../model/exchange";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
 export type SelectedCurrency = {
@@ -91,6 +91,12 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
     currencies: selectedCurrencyPairFromUrl,
     serverUrlKey: selectedCurrencyPairUrlKey,
   }));
+  const [focusTriggerRequests, setFocusTriggerRequests] = React.useState<
+    Record<AmountSide, number>
+  >({
+    receive: 0,
+    send: 0,
+  });
   const selectedCurrencies =
     localSelectedCurrencies.serverUrlKey === selectedCurrencyPairUrlKey
       ? localSelectedCurrencies.currencies
@@ -106,10 +112,20 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
       ? `Rate unavailable for ${sendCurrency.currencyCode}/${receiveCurrency.currencyCode}`
       : `1 ${sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${receiveCurrency.currencyCode}`;
 
-  function updateSelectedCurrencies(currencies: {
-    receiveCurrency: SelectedCurrency;
-    sendCurrency: SelectedCurrency;
-  }) {
+  function updateSelectedCurrencies(
+    currencies: {
+      receiveCurrency: SelectedCurrency;
+      sendCurrency: SelectedCurrency;
+    },
+    selectedSide?: AmountSide
+  ) {
+    if (selectedSide) {
+      setFocusTriggerRequests((requests) => ({
+        ...requests,
+        [selectedSide]: requests[selectedSide] + 1,
+      }));
+    }
+
     setLocalSelectedCurrencies({
       currencies,
       serverUrlKey: selectedCurrencyPairUrlKey,
@@ -181,6 +197,7 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
           ].join(":")}
           currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
+          focusTriggerRequests={focusTriggerRequests}
           initialAmount={converterAmount.amount}
           initialAmountSource={converterAmount.amountSource}
           initialReceiveAmount={converterAmount.receiveAmount}

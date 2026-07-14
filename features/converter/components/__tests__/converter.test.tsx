@@ -423,7 +423,7 @@ describe("Converter", () => {
     expect(getAmountInput("Receive")).toHaveProperty("value", "15,648.16");
   });
 
-  it("keeps the most recently edited amount as the source when a send currency is selected", () => {
+  it("keeps the most recently edited amount as the source when a send currency is selected", async () => {
     const replaceState = vi.spyOn(window.history, "replaceState");
 
     renderConverter();
@@ -437,6 +437,9 @@ describe("Converter", () => {
     expect(getAmountInput("Send")).toHaveProperty("value", "18,324");
     expect(getAmountInput("Receive")).toHaveProperty("value", "100");
     expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=JPY&to=EUR");
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "JPY" }));
+    });
   });
 
   it("renders a very small rate immediately when a send currency is selected", () => {

@@ -75,6 +75,7 @@ export interface CurrencyPickerProps {
 
 export type CurrencyPickerHandle = {
   focusSearch: () => void;
+  focusTrigger: () => void;
 };
 
 interface CurrencyItemProps {
@@ -251,7 +252,11 @@ function CurrencyPicker({
     });
   }
 
-  React.useImperativeHandle(ref, () => ({ focusSearch }));
+  function focusTrigger() {
+    triggerRef.current?.focus({ preventScroll: true });
+  }
+
+  React.useImperativeHandle(ref, () => ({ focusSearch, focusTrigger }));
 
   const updateAvailableHeight = React.useCallback(() => {
     const panel = panelRef.current;
