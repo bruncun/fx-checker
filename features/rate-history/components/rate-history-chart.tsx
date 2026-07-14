@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import type {
@@ -11,6 +11,7 @@ import type {
 
 const chartWidth = 267;
 const chartHeight = 272;
+const touchScrubIntentDelayMs = 120;
 
 type RateHistoryChartProps = {
   chart: RateHistoryChartModel;
@@ -38,11 +39,23 @@ function getKeyboardPageStep(pointCount: number) {
   return Math.max(1, Math.ceil(pointCount / 10));
 }
 
+type PendingTouchPointer = {
+  clientX: number;
+  element: HTMLDivElement;
+  pointerId: number;
+  timeoutId: number;
+};
+
 function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
   const chartId = `rate-history-chart-${range.toLowerCase()}`;
   const gradientId = `rate-history-area-${range.toLowerCase()}`;
   const keyboardHelpId = `rate-history-chart-keyboard-help-${range.toLowerCase()}`;
   const summaryId = `rate-history-chart-summary-${range.toLowerCase()}`;
+  const activePointerId = useRef<number | null>(null);
+  const isTouchScrubbingRef = useRef(false);
+  const pendingTouchPointer = useRef<PendingTouchPointer | null>(null);
+  const chartSurfaceRef = useRef<HTMLDivElement>(null);
+  const [isTouchScrubbing, setIsTouchScrubbing] = useState(false);
   const [hoverPointIndex, setHoverPointIndex] = useState<number | null>(null);
   const [keyboardPointIndex, setKeyboardPointIndex] = useState<number | null>(null);
   const hoverPoint = hoverPointIndex === null ? null : (chart.points[hoverPointIndex] ?? null);
@@ -57,20 +70,150 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
     [activePoint, chart.lastDateLabel, chart.lastRate]
   );
 
-  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    const bounds = event.currentTarget.getBoundingClientRect();
+  useEffect(() => {
+    const chartSurface = chartSurfaceRef.current;
+
+    function handleNativeTouchMove(event: globalThis.TouchEvent) {
+      if (isTouchScrubbingRef.current) {
+        event.preventDefault();
+      }
+    }
+
+    chartSurface?.addEventListener("touchmove", handleNativeTouchMove, { passive: false });
+
+    return () => {
+      clearPendingTouchPointer();
+      chartSurface?.removeEventListener("touchmove", handleNativeTouchMove);
+    };
+  }, []);
+
+  function setTouchScrubbing(nextIsTouchScrubbing: boolean) {
+    isTouchScrubbingRef.current = nextIsTouchScrubbing;
+    setIsTouchScrubbing(nextIsTouchScrubbing);
+  }
+
+  function clearPendingTouchPointer() {
+    if (pendingTouchPointer.current) {
+      window.clearTimeout(pendingTouchPointer.current.timeoutId);
+      pendingTouchPointer.current = null;
+    }
+  }
+
+  function updateHoverPointFromClientX(element: HTMLDivElement, clientX: number) {
+    const bounds = element.getBoundingClientRect();
 
     if (bounds.width === 0) {
       return;
     }
 
-    const pointerX = clamp(
-      ((event.clientX - bounds.left) / bounds.width) * chartWidth,
-      0,
-      chartWidth
-    );
+    const pointerX = clamp(((clientX - bounds.left) / bounds.width) * chartWidth, 0, chartWidth);
 
     setHoverPointIndex(getNearestPointIndex(chart.points, pointerX));
+  }
+
+  function updateHoverPointFromPointer(event: PointerEvent<HTMLDivElement>) {
+    updateHoverPointFromClientX(event.currentTarget, event.clientX);
+  }
+
+  function capturePointer(element: HTMLDivElement, pointerId: number, touchScrubbing = false) {
+    element.setPointerCapture(pointerId);
+    activePointerId.current = pointerId;
+    setTouchScrubbing(touchScrubbing);
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary) {
+      return;
+    }
+
+    clearPendingTouchPointer();
+
+    if (event.pointerType === "touch") {
+      const element = event.currentTarget;
+      const { clientX, pointerId } = event;
+
+      pendingTouchPointer.current = {
+        clientX,
+        element,
+        pointerId,
+        timeoutId: window.setTimeout(() => {
+          const pendingPointer = pendingTouchPointer.current;
+
+          if (pendingPointer?.pointerId !== pointerId || !element.isConnected) {
+            return;
+          }
+
+          capturePointer(element, pointerId, true);
+          updateHoverPointFromClientX(element, pendingPointer.clientX);
+          pendingTouchPointer.current = null;
+        }, touchScrubIntentDelayMs),
+      };
+      return;
+    }
+
+    capturePointer(event.currentTarget, event.pointerId);
+    updateHoverPointFromPointer(event);
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (pendingTouchPointer.current?.pointerId === event.pointerId) {
+      pendingTouchPointer.current.clientX = event.clientX;
+    }
+
+    if (event.pointerType === "touch" && activePointerId.current !== event.pointerId) {
+      return;
+    }
+
+    if (activePointerId.current !== null && activePointerId.current !== event.pointerId) {
+      return;
+    }
+
+    if (activePointerId.current === event.pointerId) {
+      event.preventDefault();
+    }
+
+    updateHoverPointFromPointer(event);
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (pendingTouchPointer.current?.pointerId === event.pointerId) {
+      clearPendingTouchPointer();
+      return;
+    }
+
+    if (activePointerId.current !== event.pointerId) {
+      return;
+    }
+
+    activePointerId.current = null;
+    setTouchScrubbing(false);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    updateHoverPointFromPointer(event);
+  }
+
+  function handlePointerCancel(event: PointerEvent<HTMLDivElement>) {
+    if (pendingTouchPointer.current?.pointerId === event.pointerId) {
+      clearPendingTouchPointer();
+      return;
+    }
+
+    if (activePointerId.current !== event.pointerId) {
+      return;
+    }
+
+    activePointerId.current = null;
+    setTouchScrubbing(false);
+    setHoverPointIndex(null);
+  }
+
+  function handlePointerLeave() {
+    if (activePointerId.current === null) {
+      setHoverPointIndex(null);
+    }
   }
 
   function moveKeyboardPoint(nextIndex: number) {
@@ -152,9 +295,13 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
           ))}
         </div>
         <div
-          className="relative h-[272px] w-full cursor-crosshair overflow-hidden"
-          onPointerLeave={() => setHoverPointIndex(null)}
+          ref={chartSurfaceRef}
+          className={`relative h-[272px] w-full cursor-crosshair overflow-hidden select-none ${isTouchScrubbing ? "touch-none" : ""}`}
+          onPointerCancel={handlePointerCancel}
+          onPointerDown={handlePointerDown}
+          onPointerLeave={handlePointerLeave}
           onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
         >
           <svg
             aria-hidden="true"

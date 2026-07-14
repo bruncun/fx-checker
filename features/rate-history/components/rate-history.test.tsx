@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RateHistory } from "./rate-history";
@@ -41,6 +41,7 @@ const denseHistory: RateHistoryData = {
 afterEach(() => {
   replace.mockReset();
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -135,6 +136,106 @@ describe("RateHistory", () => {
 
     expect(details.textContent).toContain("0.8600");
     expect(details.textContent).toContain("Jun 19 16:00 CET");
+  });
+
+  it("waits for touch intent before capturing chart drags", () => {
+    vi.useFakeTimers();
+
+    render(
+      <RateHistory model={deriveRateHistoryViewModel(history)} pair="USD/EUR" selectedRange="1M" />
+    );
+
+    const chart = getChart();
+    const hoverSurface = chart.querySelector<HTMLElement>(".cursor-crosshair");
+    const details = getChartDetails();
+
+    expect(hoverSurface).toBeInstanceOf(HTMLElement);
+    expect(hoverSurface?.className).toContain("select-none");
+    expect(hoverSurface?.className).not.toContain("touch-none");
+
+    vi.spyOn(hoverSurface as HTMLElement, "getBoundingClientRect").mockReturnValue({
+      bottom: 272,
+      height: 272,
+      left: 0,
+      right: 267,
+      toJSON: () => ({}),
+      top: 0,
+      width: 267,
+      x: 0,
+      y: 0,
+    });
+
+    const setPointerCapture = vi.fn();
+    const releasePointerCapture = vi.fn();
+
+    Object.assign(hoverSurface as HTMLElement, {
+      hasPointerCapture: () => true,
+      releasePointerCapture,
+      setPointerCapture,
+    });
+
+    fireEvent.pointerDown(hoverSurface as HTMLElement, {
+      clientX: 0,
+      isPrimary: true,
+      pointerId: 5,
+      pointerType: "touch",
+    });
+    fireEvent.pointerMove(hoverSurface as HTMLElement, {
+      clientX: 0,
+      pointerId: 5,
+      pointerType: "touch",
+    });
+
+    expect(setPointerCapture).not.toHaveBeenCalled();
+    expect(details.textContent).toContain("0.8600");
+
+    fireEvent.pointerUp(hoverSurface as HTMLElement, {
+      clientX: 0,
+      pointerId: 5,
+      pointerType: "touch",
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(120);
+    });
+
+    expect(setPointerCapture).not.toHaveBeenCalled();
+    expect(details.textContent).toContain("0.8600");
+
+    fireEvent.pointerDown(hoverSurface as HTMLElement, {
+      clientX: 0,
+      isPrimary: true,
+      pointerId: 6,
+      pointerType: "touch",
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(120);
+    });
+
+    expect(setPointerCapture).toHaveBeenCalledWith(6);
+    expect(hoverSurface?.className).toContain("touch-none");
+    expect(details.textContent).toContain("0.8500");
+
+    const touchMoveEvent = new Event("touchmove", { bubbles: true, cancelable: true });
+
+    hoverSurface?.dispatchEvent(touchMoveEvent);
+
+    expect(touchMoveEvent.defaultPrevented).toBe(true);
+
+    fireEvent.pointerLeave(hoverSurface as HTMLElement, { pointerId: 6, pointerType: "touch" });
+
+    expect(details.textContent).toContain("0.8500");
+
+    fireEvent.pointerUp(hoverSurface as HTMLElement, {
+      clientX: 267,
+      pointerId: 6,
+      pointerType: "touch",
+    });
+
+    expect(releasePointerCapture).toHaveBeenCalledWith(6);
+    expect(hoverSurface?.className).not.toContain("touch-none");
+    expect(details.textContent).toContain("0.8600");
   });
 
   it("supports keyboard exploration of chart points", () => {
