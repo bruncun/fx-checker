@@ -31,8 +31,10 @@ describe("LiveRateList", () => {
     const items = within(list).getAllByRole("listitem");
 
     expect(items).toHaveLength(7);
-    expect(items[0]?.textContent).toBe("EUR/USD, 1.1723, ▼\u00a0-0.14%");
-    expect(items[6]?.textContent).toBe("USD/CAD, 1.3815, ▲\u00a0+0.04%");
+    expect(items[0]?.getAttribute("aria-label")).toBe("EUR/USD, 1.1723, -0.14%");
+    expect(items[0]?.textContent).toBe("EUR/USD1.1723-0.14%");
+    expect(items[6]?.getAttribute("aria-label")).toBe("USD/CAD, 1.3815, +0.04%");
+    expect(items[6]?.textContent).toBe("USD/CAD1.3815+0.04%");
   });
 
   it("renders a single static rate group", () => {
@@ -62,6 +64,7 @@ describe("LiveRateList", () => {
     const list = within(scroller).getByRole("list");
 
     expect(within(list).getAllByRole("listitem")).toHaveLength(7);
+    expect(list.querySelectorAll(".sr-only")).toHaveLength(0);
     expect(within(list).queryAllByRole("button")).toHaveLength(0);
     expect(screen.queryByRole("toolbar")).toBeNull();
   });
@@ -83,13 +86,22 @@ describe("LiveRateList", () => {
 
     const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
     const list = within(scroller).getByRole("list");
+    const items = within(list).getAllByRole("listitem");
+    const negativeChange = items[0]?.querySelector("span:last-child");
+    const positiveChange = items[1]?.querySelector("span:last-child");
 
-    expect(within(list).getByText("-0.14%").parentElement?.classList.contains("text-red-500")).toBe(
-      true
+    expect(negativeChange?.textContent).toBe("-0.14%");
+    expect(negativeChange?.getAttribute("data-change-indicator")).toBe("▼\u00a0");
+    expect(negativeChange?.className).toContain(
+      "before:content-[attr(data-change-indicator)]"
     );
-    expect(
-      within(list).getByText("+0.04%").parentElement?.classList.contains("text-green-500")
-    ).toBe(true);
+    expect(negativeChange?.classList.contains("text-red-500")).toBe(true);
+    expect(positiveChange?.textContent).toBe("+0.04%");
+    expect(positiveChange?.getAttribute("data-change-indicator")).toBe("▲\u00a0");
+    expect(positiveChange?.className).toContain(
+      "before:content-[attr(data-change-indicator)]"
+    );
+    expect(positiveChange?.classList.contains("text-green-500")).toBe(true);
   });
 
   it("uses muted text and no arrow for neutral changes", () => {
@@ -103,9 +115,8 @@ describe("LiveRateList", () => {
     const list = within(scroller).getByRole("list");
     const item = within(list).getByRole("listitem");
 
-    expect(item.textContent).toBe("EUR/USD, 1.1710, 0.00%");
-    expect(
-      within(list).getByText("0.00%").parentElement?.classList.contains("text-neutral-200")
-    ).toBe(true);
+    expect(item.getAttribute("aria-label")).toBe("EUR/USD, 1.1710, 0.00%");
+    expect(item.textContent).toBe("EUR/USD1.17100.00%");
+    expect(within(list).getByText("0.00%").classList.contains("text-neutral-200")).toBe(true);
   });
 });
