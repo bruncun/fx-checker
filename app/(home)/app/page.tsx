@@ -58,7 +58,7 @@ async function HomeContent({ searchParams }: HomeProps) {
     getRateHistoryUrlStateFromParams(createUrlSearchParams(await searchParams));
 
   return (
-    <Suspense fallback={<RateHistoryFallback />} key={selectedPair}>
+    <Suspense fallback={<RateHistoryFallback />} key={`${selectedPair}:${selectedRange}`}>
       <RateHistoryContent
         receiveCurrencyCode={receiveCurrencyCode}
         selectedPair={selectedPair}
