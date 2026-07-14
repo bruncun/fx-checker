@@ -76,6 +76,8 @@ afterEach(() => {
   routerReplace.mockClear();
   showDataUnavailableError.mockClear();
   testSearchParams.current = "";
+  document.getElementById("converter")?.remove();
+  delete (Element.prototype as { scrollIntoView?: Element["scrollIntoView"] }).scrollIntoView;
   cleanup();
 });
 
@@ -129,6 +131,32 @@ function getFavoriteAction(rowId: string) {
   return action;
 }
 
+function renderConverterTarget(rect: Partial<DOMRect>) {
+  const converter = document.createElement("section");
+  const scrollIntoView = vi.fn();
+
+  converter.id = "converter";
+  converter.getBoundingClientRect = vi.fn(
+    () =>
+      ({
+        bottom: 0,
+        height: 0,
+        left: 0,
+        right: 0,
+        top: 0,
+        width: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+        ...rect,
+      }) satisfies DOMRect
+  );
+  Element.prototype.scrollIntoView = scrollIntoView;
+  document.body.append(converter);
+
+  return { scrollIntoView };
+}
+
 describe("FavoriteRates", () => {
   it("renders favorite pairs with rates and the real favorites count", () => {
     renderFavoriteRates();
@@ -166,6 +194,32 @@ describe("FavoriteRates", () => {
     });
 
     expect(document.querySelector('[data-rate-details-row-id="USD/EUR"]')).toBeNull();
+  });
+
+  it("scrolls the converter into view when favorite selection would otherwise be hard to notice", () => {
+    const { scrollIntoView } = renderConverterTarget({
+      bottom: 200,
+      height: 600,
+      top: -400,
+    });
+    renderFavoriteRates();
+
+    fireEvent.click(getFavoriteRow("USD/EUR"));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+  });
+
+  it("does not scroll the converter when enough of it is already visible", () => {
+    const { scrollIntoView } = renderConverterTarget({
+      bottom: 650,
+      height: 600,
+      top: 50,
+    });
+    renderFavoriteRates();
+
+    fireEvent.click(getFavoriteRow("USD/EUR"));
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it("shows the data unavailable error when removing a favorite fails", async () => {

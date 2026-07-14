@@ -35,6 +35,7 @@ import {
   useOptimisticFavorites,
 } from "@/features/favorites/stores/optimistic-favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
+import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
 import { getConverterAmountFromParams, getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
@@ -469,6 +470,7 @@ function CompareRates({
 
     router.replace(nextUrl, { scroll: false });
     setPreferredTabStopCode(currency.code);
+    scrollConverterIntoViewIfNeeded();
   }
 
   return (

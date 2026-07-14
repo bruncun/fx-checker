@@ -25,6 +25,7 @@ import {
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { MoneyDecimal } from "@/features/converter/model/exchange";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
+import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
 import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -319,6 +320,7 @@ function ConversionLog({
     });
 
     router.replace(nextUrl, { scroll: false });
+    scrollConverterIntoViewIfNeeded();
   }
 
   function removeConversion(id: string) {

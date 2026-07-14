@@ -23,6 +23,7 @@ import {
   useOptimisticFavorites,
 } from "@/features/favorites/stores/optimistic-favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
+import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
 import { getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import { deriveLiveRateForPair, type LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -190,6 +191,7 @@ function FavoriteRates({
     });
 
     router.replace(nextUrl, { scroll: false });
+    scrollConverterIntoViewIfNeeded();
   }
 
   function toggleFavorite(pair: FavoriteCurrencyPair) {
