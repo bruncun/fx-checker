@@ -3,10 +3,21 @@ import {
   createUrlSearchParams,
   getRateHistoryUrlStateFromParams,
 } from "@/features/home/utils/url-state";
-import { RateHistory, deriveRateHistoryData } from "@/features/rate-history";
+import {
+  RateHistoryChartPanel,
+  RateHistoryEmptyState,
+  RateHistoryStats,
+  deriveRateHistoryData,
+  type RateHistoryRangeModel,
+} from "@/features/rate-history";
 import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/model/rate-history-chart-model";
-import { getHistoryPageData } from "@/features/rate-history/api/server";
-import { RateHistoryFallback } from "@/features/rate-details/components/rate-details-fallback";
+import { RateHistoryRangePicker } from "@/features/rate-history/components/rate-history-range-viewer";
+import { getHistoryPageData, type HistoryPageData } from "@/features/rate-history/api/server";
+import {
+  ChartFallback,
+  RateHistoryFallback,
+  RateHistoryStatsFallback,
+} from "@/features/rate-details/components/rate-details-fallback";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -19,6 +30,7 @@ type HomeProps = {
 };
 
 type RateHistoryContentProps = {
+  historyPageData: Promise<HistoryPageData>;
   receiveCurrencyCode: string;
   selectedPair: string;
   selectedRange: ReturnType<typeof getRateHistoryUrlStateFromParams>["selectedRange"];
@@ -29,17 +41,19 @@ export const metadata: Metadata = {
   title: "Dashboard",
 };
 
-async function RateHistoryContent({
+type RateHistoryPanelData = {
+  panel: RateHistoryRangeModel | null;
+  pair: string;
+};
+
+async function getRateHistoryPanelData({
+  historyPageData,
   receiveCurrencyCode,
   selectedPair,
   selectedRange,
   sendCurrencyCode,
-}: RateHistoryContentProps) {
-  const data = await getHistoryPageData({
-    baseCurrency: sendCurrencyCode,
-    quoteCurrency: receiveCurrencyCode,
-    range: selectedRange,
-  });
+}: RateHistoryContentProps): Promise<RateHistoryPanelData> {
+  const data = await historyPageData;
 
   assertDataAvailable(data);
 
@@ -49,23 +63,69 @@ async function RateHistoryContent({
     rates: data.historicalRates,
   });
   const model = deriveRateHistoryRangeViewModel(history, selectedRange);
+  const selectedPanel =
+    model?.ranges.find((panel) => panel.range === selectedRange) ?? model?.ranges[0] ?? null;
 
-  return <RateHistory model={model} pair={selectedPair} selectedRange={selectedRange} />;
+  return {
+    pair: model?.pair ?? selectedPair,
+    panel: selectedPanel,
+  };
+}
+
+async function RateHistoryStatsContent(props: RateHistoryContentProps) {
+  const { panel } = await getRateHistoryPanelData(props);
+
+  return panel ? <RateHistoryStats panel={panel} /> : null;
+}
+
+async function RateHistoryChartContent(props: RateHistoryContentProps) {
+  const { pair, panel } = await getRateHistoryPanelData(props);
+
+  return panel ? (
+    <RateHistoryChartPanel panel={panel} pair={pair} />
+  ) : (
+    <RateHistoryEmptyState pair={pair} />
+  );
 }
 
 async function HomeContent({ searchParams }: HomeProps) {
   const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
     getRateHistoryUrlStateFromParams(createUrlSearchParams(await searchParams));
+  const historyPageData = getHistoryPageData({
+    baseCurrency: sendCurrencyCode,
+    quoteCurrency: receiveCurrencyCode,
+    range: selectedRange,
+  });
+  const boundaryKey = `${selectedPair}:${selectedRange}`;
 
   return (
-    <Suspense fallback={<RateHistoryFallback />} key={`${selectedPair}:${selectedRange}`}>
-      <RateHistoryContent
-        receiveCurrencyCode={receiveCurrencyCode}
-        selectedPair={selectedPair}
-        selectedRange={selectedRange}
-        sendCurrencyCode={sendCurrencyCode}
-      />
-    </Suspense>
+    <div className="uppercase">
+      <div
+        className="lg:flex lg:items-center lg:justify-between lg:gap-400"
+        role="group"
+        aria-label="Header"
+      >
+        <Suspense fallback={<RateHistoryStatsFallback />} key={`stats:${boundaryKey}`}>
+          <RateHistoryStatsContent
+            historyPageData={historyPageData}
+            receiveCurrencyCode={receiveCurrencyCode}
+            selectedPair={selectedPair}
+            selectedRange={selectedRange}
+            sendCurrencyCode={sendCurrencyCode}
+          />
+        </Suspense>
+        <RateHistoryRangePicker selectedRange={selectedRange} />
+      </div>
+      <Suspense fallback={<ChartFallback />} key={`chart:${boundaryKey}`}>
+        <RateHistoryChartContent
+          historyPageData={historyPageData}
+          receiveCurrencyCode={receiveCurrencyCode}
+          selectedPair={selectedPair}
+          selectedRange={selectedRange}
+          sendCurrencyCode={sendCurrencyCode}
+        />
+      </Suspense>
+    </div>
   );
 }
 

@@ -24,21 +24,27 @@ function RateHistoryFallback() {
   return (
     <section aria-busy="true" aria-label="Rate history" className="uppercase">
       <div className="lg:flex lg:items-center lg:justify-between lg:gap-400">
-        <div className="grid grid-cols-2 gap-125 sm:inline-grid sm:grid-cols-4 sm:gap-200">
-          {fallbackHistoryStats.map((stat) => (
-            <article
-              className="rounded-16 bg-neutral-700 px-250 py-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:min-w-[140px]"
-              key={stat.label}
-            >
-              <p className="text-preset-4 text-neutral-50/70">{stat.label}</p>
-              <SkeletonBlock className="mt-200 h-300 rounded-6" style={{ width: stat.width }} />
-            </article>
-          ))}
-        </div>
+        <RateHistoryStatsFallback />
         <RangePickerFallback />
       </div>
       <ChartFallback />
     </section>
+  );
+}
+
+function RateHistoryStatsFallback() {
+  return (
+    <div className="grid grid-cols-2 gap-125 sm:inline-grid sm:grid-cols-4 sm:gap-200">
+      {fallbackHistoryStats.map((stat) => (
+        <article
+          className="rounded-16 bg-neutral-700 px-250 py-150 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:min-w-[140px]"
+          key={stat.label}
+        >
+          <p className="text-preset-4 text-neutral-50/70">{stat.label}</p>
+          <SkeletonBlock className="mt-200 h-300 rounded-6" style={{ width: stat.width }} />
+        </article>
+      ))}
+    </div>
   );
 }
 
@@ -194,4 +200,9 @@ function RateDetailsNavigationFallback() {
   );
 }
 
-export { RateDetailsNavigationFallback, RateHistoryFallback };
+export {
+  ChartFallback,
+  RateDetailsNavigationFallback,
+  RateHistoryFallback,
+  RateHistoryStatsFallback,
+};

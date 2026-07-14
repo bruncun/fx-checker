@@ -1,4 +1,9 @@
-export { RateHistory } from "./components/rate-history";
+export {
+  RateHistory,
+  RateHistoryChartPanel,
+  RateHistoryEmptyState,
+  RateHistoryStats,
+} from "./components/rate-history";
 export {
   deriveRateHistoryData,
   getDateYearsBefore,
