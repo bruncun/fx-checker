@@ -30,7 +30,7 @@ const mobileMenuGutter = 16;
 const mobileMenuPaddingY = 16;
 const mobileMenuRowHeight = 40;
 const mobileMenuComfortableHeight = 240;
-const mobileTriggerIdealTop = 52;
+type MenuPlacement = "bottom" | "top";
 
 function getSectionAccessibleName(section: SectionNavigationItem | undefined) {
   if (!section) {
@@ -38,10 +38,6 @@ function getSectionAccessibleName(section: SectionNavigationItem | undefined) {
   }
 
   return section.count === undefined ? section.label : `${section.label}, ${section.count}`;
-}
-
-function isCoarsePointer() {
-  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
 
 function SectionNavigation({
@@ -53,7 +49,8 @@ function SectionNavigation({
   ...props
 }: SectionNavigationProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [menuPlacement, setMenuPlacement] = React.useState<"bottom" | "top">("bottom");
+  const [menuPlacement, setMenuPlacement] = React.useState<MenuPlacement>("bottom");
+  const [animatedPlacement, setAnimatedPlacement] = React.useState<MenuPlacement | null>(null);
   const panelId = React.useId();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -63,8 +60,48 @@ function SectionNavigation({
   const activeLabel = activeItem?.label ?? "";
   const activeCount = activeItem?.count;
   const activeAccessibleName = getSectionAccessibleName(activeItem);
+
+  const getMenuPlacement = React.useCallback(
+    (currentPlacement: MenuPlacement) => {
+      const trigger = triggerRef.current;
+
+      if (!trigger) {
+        return currentPlacement;
+      }
+
+      const visualViewport = window.visualViewport;
+      const viewportTop = visualViewport?.offsetTop ?? 0;
+      const viewportBottom = viewportTop + (visualViewport?.height ?? window.innerHeight);
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelHeight = panelRef.current?.getBoundingClientRect().height;
+      const estimatedMenuHeight = Math.min(
+        items.length * mobileMenuRowHeight + mobileMenuPaddingY,
+        mobileMenuComfortableHeight
+      );
+      const menuHeight = panelHeight && panelHeight > 0 ? panelHeight : estimatedMenuHeight;
+      const menuTop = triggerRect.top - mobileMenuGap - menuHeight;
+      const menuBottom = triggerRect.bottom + mobileMenuGap + menuHeight;
+      const spaceBelow = viewportBottom - triggerRect.bottom - mobileMenuGap - mobileMenuGutter;
+      const spaceAbove = triggerRect.top - viewportTop - mobileMenuGap - mobileMenuGutter;
+      const topCollides = menuTop < viewportTop + mobileMenuGutter;
+      const bottomCollides = menuBottom > viewportBottom - mobileMenuGutter;
+
+      if (currentPlacement === "bottom" && bottomCollides && spaceAbove > spaceBelow) {
+        return "top";
+      }
+
+      if (currentPlacement === "top" && topCollides && spaceBelow > spaceAbove) {
+        return "bottom";
+      }
+
+      return currentPlacement;
+    },
+    [items.length]
+  );
+
   function closeMenu(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
+    setAnimatedPlacement(null);
 
     if (options?.restoreFocus ?? true) {
       requestAnimationFrame(() => {
@@ -74,31 +111,22 @@ function SectionNavigation({
   }
 
   function openMenu() {
-    const trigger = triggerRef.current;
-
-    if (trigger) {
-      const visualViewport = window.visualViewport;
-      const viewportTop = visualViewport?.offsetTop ?? 0;
-      const viewportBottom = viewportTop + (visualViewport?.height ?? window.innerHeight);
-      const triggerRect = trigger.getBoundingClientRect();
-      const triggerViewportTop = triggerRect.top - viewportTop;
-      const menuHeight = items.length * mobileMenuRowHeight + mobileMenuPaddingY;
-      const spaceBelow = viewportBottom - triggerRect.bottom - mobileMenuGap - mobileMenuGutter;
-      const spaceAbove = triggerRect.top - viewportTop - mobileMenuGap - mobileMenuGutter;
-      const comfortableHeight = Math.min(menuHeight, mobileMenuComfortableHeight);
-      const scrollDistance = Math.max(0, triggerViewportTop - mobileTriggerIdealTop);
-
-      if (isCoarsePointer() && scrollDistance > 1) {
-        window.scrollTo({ behavior: "smooth", top: window.scrollY + scrollDistance });
-      }
-
-      setMenuPlacement(
-        spaceBelow < comfortableHeight && spaceAbove > spaceBelow ? "top" : "bottom"
-      );
-    }
-
+    setMenuPlacement(getMenuPlacement("bottom"));
+    setAnimatedPlacement(null);
     setIsOpen(true);
   }
+
+  const updateMenuPlacement = React.useCallback(() => {
+    setMenuPlacement((currentPlacement) => {
+      const nextPlacement = getMenuPlacement(currentPlacement);
+
+      if (nextPlacement !== currentPlacement) {
+        setAnimatedPlacement(nextPlacement);
+      }
+
+      return nextPlacement;
+    });
+  }, [getMenuPlacement]);
 
   const rovingFocus = useRovingTabIndex<HTMLAnchorElement>({
     containerRef: panelRef,
@@ -133,6 +161,24 @@ function SectionNavigation({
     });
     linkToFocus?.focus({ preventScroll: true });
   }, [isOpen, rovingFocus, value]);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    window.addEventListener("scroll", updateMenuPlacement, { passive: true });
+    window.addEventListener("resize", updateMenuPlacement);
+    window.visualViewport?.addEventListener("scroll", updateMenuPlacement);
+    window.visualViewport?.addEventListener("resize", updateMenuPlacement);
+
+    return () => {
+      window.removeEventListener("scroll", updateMenuPlacement);
+      window.removeEventListener("resize", updateMenuPlacement);
+      window.visualViewport?.removeEventListener("scroll", updateMenuPlacement);
+      window.visualViewport?.removeEventListener("resize", updateMenuPlacement);
+    };
+  }, [isOpen, updateMenuPlacement]);
 
   function handlePanelKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
@@ -187,9 +233,14 @@ function SectionNavigation({
           ref={panelRef}
           className={cn(
             "fx-panel-in absolute right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),var(--shadow-elevation-popover)] sm:hidden",
-            menuPlacement === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"
+            menuPlacement === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]",
+            animatedPlacement === "top" && "fx-panel-flip-top",
+            animatedPlacement === "bottom" && "fx-panel-flip-bottom"
           )}
           id={panelId}
+          onAnimationEnd={() => {
+            setAnimatedPlacement(null);
+          }}
           onKeyDown={handlePanelKeyDown}
         >
           <ul>

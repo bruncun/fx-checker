@@ -48,17 +48,10 @@ describe("SectionNavigation", () => {
     expect(screen.getByRole("link", { name: "History" }).hasAttribute("aria-current")).toBe(false);
   });
 
-  it("smoothly scrolls coarse-pointer triggers before opening the mobile menu", () => {
+  it("opens the mobile menu without scrolling the window", () => {
     const scrollTo = vi.fn();
 
-    vi.stubGlobal(
-      "matchMedia",
-      vi.fn((query: string) => ({
-        matches: query === "(pointer: coarse)",
-      }))
-    );
     vi.stubGlobal("scrollTo", scrollTo);
-    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
 
     render(
       <SectionNavigation aria-label="Rate details sections" items={sections} value="history" />
@@ -80,8 +73,76 @@ describe("SectionNavigation", () => {
 
     fireEvent.click(trigger);
 
-    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 188 });
+    expect(scrollTo).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "Compare" })).toBeTruthy();
+  });
+
+  it("flips the open mobile menu above the trigger when scrolling would push it below the viewport", () => {
+    const triggerRect = {
+      bottom: 140,
+      height: 40,
+      left: 0,
+      right: 320,
+      top: 100,
+      width: 320,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    };
+
+    render(
+      <SectionNavigation aria-label="Rate details sections" items={sections} value="history" />
+    );
+
+    const trigger = screen.getByRole("button", { name: "Rate details sections: History" });
+
+    vi.spyOn(trigger, "getBoundingClientRect").mockImplementation(() => triggerRect);
+
+    fireEvent.click(trigger);
+    const panel = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
+
+    expect(panel?.className).toContain("top-[calc(100%+8px)]");
+
+    triggerRect.top = 700;
+    triggerRect.bottom = 740;
+    fireEvent.scroll(window);
+
+    expect(panel?.className).toContain("bottom-[calc(100%+8px)]");
+    expect(panel?.className).toContain("fx-panel-flip-top");
+  });
+
+  it("flips the open mobile menu below the trigger when scrolling creates more room below", () => {
+    const triggerRect = {
+      bottom: 740,
+      height: 40,
+      left: 0,
+      right: 320,
+      top: 700,
+      width: 320,
+      x: 0,
+      y: 700,
+      toJSON: () => ({}),
+    };
+
+    render(
+      <SectionNavigation aria-label="Rate details sections" items={sections} value="history" />
+    );
+
+    const trigger = screen.getByRole("button", { name: "Rate details sections: History" });
+
+    vi.spyOn(trigger, "getBoundingClientRect").mockImplementation(() => triggerRect);
+
+    fireEvent.click(trigger);
+    const panel = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
+
+    expect(panel?.className).toContain("bottom-[calc(100%+8px)]");
+
+    triggerRect.top = 100;
+    triggerRect.bottom = 140;
+    fireEvent.scroll(window);
+
+    expect(panel?.className).toContain("top-[calc(100%+8px)]");
+    expect(panel?.className).toContain("fx-panel-flip-bottom");
   });
 
   it("uses inset neutral-200 shadows instead of hover or focus fills for menu links", () => {

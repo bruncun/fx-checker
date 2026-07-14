@@ -397,6 +397,28 @@
     }
   }
 
+  @keyframes fx-panel-flip-from-bottom {
+    from {
+      opacity: 0.96;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fx-panel-flip-from-top {
+    from {
+      opacity: 0.96;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @keyframes fx-skeleton-shimmer {
     from {
       background-position: 100% 0;
@@ -443,6 +465,16 @@
 
   .fx-panel-in {
     animation: fx-panel-in var(--fx-motion-duration-panel) var(--fx-motion-ease-snap) both;
+  }
+
+  .fx-panel-flip-top {
+    animation: fx-panel-flip-from-bottom var(--fx-motion-duration-quick) var(--fx-motion-ease-snap)
+      both;
+  }
+
+  .fx-panel-flip-bottom {
+    animation: fx-panel-flip-from-top var(--fx-motion-duration-quick) var(--fx-motion-ease-snap)
+      both;
   }
 
   .fx-transition-surface {
@@ -517,7 +549,9 @@
     .fx-state-in,
     .fx-list-row-in,
     .fx-list-row-out,
-    .fx-panel-in {
+    .fx-panel-in,
+    .fx-panel-flip-top,
+    .fx-panel-flip-bottom {
       animation-duration: 1ms;
       transform: none;
     }
