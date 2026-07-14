@@ -25,6 +25,7 @@ const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
 const panelViewportGutter = 16;
 const mobilePanelGap = 20;
 const mobilePanelMinimumVisibleHeight = 111;
+const mobilePickerScrollAnimationMs = 240;
 const mobileTriggerIdealTop = 52;
 
 function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup[] {
@@ -45,8 +46,18 @@ function isPrintableSearchKey(event: React.KeyboardEvent) {
   );
 }
 
-function getMobilePickerScrollBehavior(): ScrollBehavior {
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+function isCoarsePointer() {
+  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+function getLockedBodyScrollY() {
+  const top = Number.parseFloat(document.body.style.top);
+
+  return Number.isFinite(top) && top < 0 ? Math.abs(top) : window.scrollY;
 }
 
 export interface CurrencyPickerProps {
@@ -122,8 +133,12 @@ function CurrencyPicker({
   const resultsId = React.useId();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const resultsRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const searchRef = React.useRef<HTMLInputElement>(null);
+  const mobilePickerInitialScrollYRef = React.useRef<number | null>(null);
+  const mobilePickerScrollYRef = React.useRef<number | null>(null);
+  const mobilePickerShouldAnimateRef = React.useRef(false);
   const rovingFocus = useRovingTabIndex<HTMLButtonElement>({
     containerRef: panelRef,
     itemSelector: "[data-currency-option]",
@@ -156,12 +171,12 @@ function CurrencyPicker({
     visibleCurrencies.find((currency) => currency.code === activeCurrencyCode) ??
     visibleCurrencies[0];
 
-  function scrollTriggerIntoMobilePosition() {
+  function getMobileScrollTarget() {
     const trigger = triggerRef.current;
     const root = rootRef.current;
 
-    if (!trigger || !root || !window.matchMedia?.("(pointer: coarse)").matches) {
-      return;
+    if (!trigger || !root || !isCoarsePointer()) {
+      return null;
     }
 
     const visualViewport = window.visualViewport;
@@ -176,14 +191,29 @@ function CurrencyPicker({
     const scrollDistance = Math.max(0, triggerOverflow, panelOverflow);
 
     if (scrollDistance <= 1) {
-      return;
+      return null;
     }
 
     const nextScrollY = Math.max(0, window.scrollY + scrollDistance);
 
-    if (Math.abs(nextScrollY - window.scrollY) > 1) {
-      window.scrollTo({ top: nextScrollY, behavior: getMobilePickerScrollBehavior() });
+    return Math.abs(nextScrollY - window.scrollY) > 1 ? nextScrollY : null;
+  }
+
+  function scrollTriggerIntoMobilePosition() {
+    const nextScrollY = getMobileScrollTarget();
+    const currentScrollY = window.scrollY;
+
+    mobilePickerInitialScrollYRef.current = currentScrollY;
+    if (nextScrollY === null) {
+      mobilePickerScrollYRef.current = currentScrollY;
+      mobilePickerShouldAnimateRef.current = false;
+      return false;
     }
+
+    mobilePickerScrollYRef.current = nextScrollY;
+    mobilePickerShouldAnimateRef.current = !prefersReducedMotion();
+
+    return true;
   }
 
   function focusSearchInput() {
@@ -200,10 +230,14 @@ function CurrencyPicker({
     onPickerOpen?.();
   }
 
-  function openPickerFromTrigger() {
-    scrollTriggerIntoMobilePosition();
+  function finishOpeningPicker() {
     flushSync(openPicker);
     focusSearchInput();
+  }
+
+  function openPickerFromTrigger() {
+    scrollTriggerIntoMobilePosition();
+    finishOpeningPicker();
   }
 
   function focusSearch() {
@@ -218,6 +252,29 @@ function CurrencyPicker({
   }
 
   React.useImperativeHandle(ref, () => ({ focusSearch }));
+
+  const updateAvailableHeight = React.useCallback(() => {
+    const panel = panelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const visualViewport = window.visualViewport;
+    const rootTop = rootRef.current?.getBoundingClientRect().top ?? 0;
+    const panelTop = rootTop + panel.offsetTop;
+    const isWebKit = typeof CSS !== "undefined" && CSS.supports("-webkit-backdrop-filter", "none");
+    const viewportBottom = visualViewport
+      ? visualViewport.height + (isWebKit ? 0 : visualViewport.offsetTop)
+      : window.innerHeight;
+    const availableHeight = Math.max(
+      0,
+      Math.floor(viewportBottom - panelTop - panelViewportGutter)
+    );
+
+    panel.style.setProperty("--currency-picker-available-height", `${availableHeight}px`);
+    panel.style.setProperty("--currency-picker-panel-top", `${Math.max(0, panelTop)}px`);
+  }, []);
 
   function closePicker(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
@@ -242,24 +299,6 @@ function CurrencyPicker({
       return;
     }
 
-    const updateAvailableHeight = () => {
-      const visualViewport = window.visualViewport;
-      const rootTop = rootRef.current?.getBoundingClientRect().top ?? 0;
-      const panelTop = rootTop + panel.offsetTop;
-      const isWebKit =
-        typeof CSS !== "undefined" && CSS.supports("-webkit-backdrop-filter", "none");
-      const viewportBottom = visualViewport
-        ? visualViewport.height + (isWebKit ? 0 : visualViewport.offsetTop)
-        : window.innerHeight;
-      const availableHeight = Math.max(
-        0,
-        Math.floor(viewportBottom - panelTop - panelViewportGutter)
-      );
-
-      panel.style.setProperty("--currency-picker-available-height", `${availableHeight}px`);
-      panel.style.setProperty("--currency-picker-panel-top", `${Math.max(0, panelTop)}px`);
-    };
-
     updateAvailableHeight();
     window.addEventListener("resize", updateAvailableHeight);
     window.addEventListener("scroll", updateAvailableHeight, true);
@@ -272,7 +311,128 @@ function CurrencyPicker({
       window.visualViewport?.removeEventListener("resize", updateAvailableHeight);
       window.visualViewport?.removeEventListener("scroll", updateAvailableHeight);
     };
+  }, [isOpen, updateAvailableHeight]);
+
+  React.useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const results = resultsRef.current;
+
+    if (!isOpen || !panel || !results) {
+      return;
+    }
+
+    let lastTouchY = 0;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? 0;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      const target = event.target;
+
+      if (!touch || !(target instanceof Node)) {
+        return;
+      }
+
+      if (!panel.contains(target)) {
+        return;
+      }
+
+      const deltaY = lastTouchY - touch.clientY;
+      lastTouchY = touch.clientY;
+
+      if (!results.contains(target)) {
+        event.preventDefault();
+        return;
+      }
+
+      const canScrollResults = results.scrollHeight > results.clientHeight;
+
+      if (!canScrollResults) {
+        event.preventDefault();
+        return;
+      }
+
+      const isScrollingPastTop = results.scrollTop <= 0 && deltaY < 0;
+      const isScrollingPastBottom =
+        Math.ceil(results.scrollTop + results.clientHeight) >= results.scrollHeight && deltaY > 0;
+
+      if (isScrollingPastTop || isScrollingPastBottom) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+    };
   }, [isOpen]);
+
+  React.useLayoutEffect(() => {
+    if (!isOpen || !isCoarsePointer()) {
+      return;
+    }
+
+    const initialScrollY = mobilePickerInitialScrollYRef.current ?? window.scrollY;
+    const scrollY = mobilePickerScrollYRef.current ?? initialScrollY;
+    const shouldAnimate = mobilePickerShouldAnimateRef.current;
+    let animationFrameId = 0;
+
+    mobilePickerInitialScrollYRef.current = null;
+    mobilePickerScrollYRef.current = null;
+    mobilePickerShouldAnimateRef.current = false;
+
+    const bodyStyle = document.body.style;
+    const previousPosition = bodyStyle.position;
+    const previousTop = bodyStyle.top;
+    const previousWidth = bodyStyle.width;
+    const previousOverflow = bodyStyle.overflow;
+
+    bodyStyle.position = "fixed";
+    bodyStyle.top = `-${initialScrollY}px`;
+    bodyStyle.width = "100%";
+    bodyStyle.overflow = "hidden";
+    updateAvailableHeight();
+
+    if (!shouldAnimate || Math.abs(scrollY - initialScrollY) <= 1) {
+      bodyStyle.top = `-${scrollY}px`;
+      updateAvailableHeight();
+    } else {
+      const startedAt = performance.now();
+      const animateBodyOffset = (timestamp: number) => {
+        const progress = Math.min(1, (timestamp - startedAt) / mobilePickerScrollAnimationMs);
+        const easedProgress = 1 - (1 - progress) ** 3;
+        const nextScrollY = initialScrollY + (scrollY - initialScrollY) * easedProgress;
+
+        bodyStyle.top = `-${nextScrollY}px`;
+        updateAvailableHeight();
+
+        if (progress < 1) {
+          animationFrameId = requestAnimationFrame(animateBodyOffset);
+        }
+      };
+
+      animationFrameId = requestAnimationFrame(animateBodyOffset);
+    }
+
+    return () => {
+      const lockedScrollY = getLockedBodyScrollY();
+
+      if (animationFrameId !== 0) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      bodyStyle.position = previousPosition;
+      bodyStyle.top = previousTop;
+      bodyStyle.width = previousWidth;
+      bodyStyle.overflow = previousOverflow;
+      window.scrollTo({ top: lockedScrollY, behavior: "auto" });
+    };
+  }, [isOpen, updateAvailableHeight]);
 
   usePointerDownOutside({
     enabled: isOpen,
@@ -452,8 +612,10 @@ function CurrencyPicker({
           />
 
           <div
+            ref={resultsRef}
             className="flex min-h-0 flex-col gap-025 overflow-y-auto overscroll-contain"
             aria-label="Currency results"
+            data-currency-results-scroll
             data-test-id="currency-results"
             id={resultsId}
           >

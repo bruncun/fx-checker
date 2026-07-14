@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -20,6 +20,7 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") {
@@ -36,6 +37,16 @@ function renderCurrencyPicker(onCurrencySelect = vi.fn(), currencyCode = "USD") 
     onCurrencySelect,
     trigger: screen.getByRole("button", { name: currencyCode }),
   };
+}
+
+function createTouchEvent(type: string, clientY: number) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+
+  Object.defineProperty(event, "touches", {
+    value: [{ clientY }],
+  });
+
+  return event as TouchEvent;
 }
 
 describe("CurrencyPicker", () => {
@@ -71,6 +82,7 @@ describe("CurrencyPicker", () => {
   });
 
   it("scrolls coarse-pointer triggers to the mobile picker position before focusing search", () => {
+    vi.useFakeTimers();
     const { trigger } = renderCurrencyPicker();
     const scrollTo = vi.fn();
 
@@ -96,20 +108,28 @@ describe("CurrencyPicker", () => {
 
     fireEvent.click(trigger);
 
-    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 188 });
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Currency picker" })).toBeTruthy();
     expect(document.activeElement).toBe(
       screen.getByRole("searchbox", { name: "Search currencies" })
     );
+
+    act(() => {
+      vi.advanceTimersByTime(240);
+    });
+
+    expect(document.body.style.top).toBe("-188px");
   });
 
-  it("keeps mobile picker positioning instant when reduced motion is preferred", () => {
+  it("locks the document scroll position while the mobile picker is open", () => {
+    vi.useFakeTimers();
     const { trigger } = renderCurrencyPicker();
     const scrollTo = vi.fn();
 
     vi.stubGlobal(
       "matchMedia",
       vi.fn((query: string) => ({
-        matches: query === "(pointer: coarse)" || query === "(prefers-reduced-motion: reduce)",
+        matches: query === "(pointer: coarse)",
       }))
     );
     vi.stubGlobal("scrollTo", scrollTo);
@@ -128,10 +148,25 @@ describe("CurrencyPicker", () => {
 
     fireEvent.click(trigger);
 
-    expect(scrollTo).toHaveBeenCalledWith({ behavior: "auto", top: 188 });
+    expect(document.body.style.position).toBe("fixed");
+    expect(document.body.style.top).toBe("0px");
+    expect(document.body.style.overflow).toBe("hidden");
+
+    act(() => {
+      vi.advanceTimersByTime(240);
+    });
+
+    expect(document.body.style.top).toBe("-188px");
+
+    fireEvent.click(trigger);
+
+    expect(document.body.style.position).toBe("");
+    expect(document.body.style.top).toBe("");
+    expect(document.body.style.overflow).toBe("");
+    expect(scrollTo).toHaveBeenLastCalledWith({ behavior: "auto", top: 188 });
   });
 
-  it("does not reposition mobile triggers that are already at the picker position", () => {
+  it("keeps mobile triggers at the current scroll offset when they are already positioned", () => {
     const { trigger } = renderCurrencyPicker();
     const scrollTo = vi.fn();
 
@@ -158,12 +193,14 @@ describe("CurrencyPicker", () => {
     fireEvent.click(trigger);
 
     expect(scrollTo).not.toHaveBeenCalled();
+    expect(document.body.style.top).toBe("-188px");
     expect(document.activeElement).toBe(
       screen.getByRole("searchbox", { name: "Search currencies" })
     );
   });
 
   it("scrolls far enough to show the minimum usable mobile picker height", () => {
+    vi.useFakeTimers();
     const { trigger } = renderCurrencyPicker();
     const scrollTo = vi.fn();
 
@@ -190,7 +227,47 @@ describe("CurrencyPicker", () => {
 
     fireEvent.click(trigger);
 
-    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 47 });
+    expect(scrollTo).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(240);
+    });
+
+    expect(document.body.style.top).toBe("-47px");
+  });
+
+  it("prevents touch scrolling from chaining past the mobile picker results", () => {
+    const { trigger } = renderCurrencyPicker();
+
+    fireEvent.click(trigger);
+
+    const results = screen.getByLabelText("Currency results");
+    Object.defineProperty(results, "clientHeight", { configurable: true, value: 100 });
+    Object.defineProperty(results, "scrollHeight", { configurable: true, value: 300 });
+    Object.defineProperty(results, "scrollTop", { configurable: true, value: 0 });
+
+    document.dispatchEvent(createTouchEvent("touchstart", 100));
+    const touchMove = createTouchEvent("touchmove", 120);
+    results.dispatchEvent(touchMove);
+
+    expect(touchMove.defaultPrevented).toBe(true);
+  });
+
+  it("allows touch scrolling within the mobile picker results", () => {
+    const { trigger } = renderCurrencyPicker();
+
+    fireEvent.click(trigger);
+
+    const results = screen.getByLabelText("Currency results");
+    Object.defineProperty(results, "clientHeight", { configurable: true, value: 100 });
+    Object.defineProperty(results, "scrollHeight", { configurable: true, value: 300 });
+    Object.defineProperty(results, "scrollTop", { configurable: true, value: 50 });
+
+    document.dispatchEvent(createTouchEvent("touchstart", 100));
+    const touchMove = createTouchEvent("touchmove", 80);
+    results.dispatchEvent(touchMove);
+
+    expect(touchMove.defaultPrevented).toBe(false);
   });
 
   it("toggles closed when the trigger is clicked again", () => {
