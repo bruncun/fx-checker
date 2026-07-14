@@ -23,6 +23,8 @@ type CurrencyPickerGroup = {
 
 const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
 const panelViewportGutter = 16;
+const mobilePanelGap = 20;
+const mobilePanelMinimumVisibleHeight = 111;
 const mobileTriggerIdealTop = 52;
 
 function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup[] {
@@ -41,6 +43,10 @@ function isPrintableSearchKey(event: React.KeyboardEvent) {
   return (
     event.key.length === 1 && event.key !== " " && !event.altKey && !event.ctrlKey && !event.metaKey
   );
+}
+
+function getMobilePickerScrollBehavior(): ScrollBehavior {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 }
 
 export interface CurrencyPickerProps {
@@ -160,12 +166,23 @@ function CurrencyPicker({
 
     const visualViewport = window.visualViewport;
     const viewportTop = visualViewport?.offsetTop ?? 0;
+    const viewportHeight = visualViewport?.height ?? window.innerHeight;
     const triggerRect = trigger.getBoundingClientRect();
-    const currentDocumentTop = triggerRect.top + window.scrollY;
-    const nextScrollY = Math.max(0, currentDocumentTop - viewportTop - mobileTriggerIdealTop);
+    const triggerViewportTop = triggerRect.top - viewportTop;
+    const panelViewportTop = triggerRect.bottom - viewportTop + mobilePanelGap;
+    const panelOverflow =
+      panelViewportTop + mobilePanelMinimumVisibleHeight + panelViewportGutter - viewportHeight;
+    const triggerOverflow = triggerViewportTop - mobileTriggerIdealTop;
+    const scrollDistance = Math.max(0, triggerOverflow, panelOverflow);
+
+    if (scrollDistance <= 1) {
+      return;
+    }
+
+    const nextScrollY = Math.max(0, window.scrollY + scrollDistance);
 
     if (Math.abs(nextScrollY - window.scrollY) > 1) {
-      window.scrollTo({ top: nextScrollY, behavior: "auto" });
+      window.scrollTo({ top: nextScrollY, behavior: getMobilePickerScrollBehavior() });
     }
   }
 

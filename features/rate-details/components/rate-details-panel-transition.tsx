@@ -9,6 +9,8 @@ import {
   getRateDetailsTabId,
 } from "./rate-details-navigation-state";
 
+const panelHeightTransitionMs = 160;
+
 type RateDetailsPanelTransitionProps = {
   children: ReactNode;
 };
@@ -16,8 +18,13 @@ type RateDetailsPanelTransitionProps = {
 function RateDetailsPanelTransition({ children }: RateDetailsPanelTransitionProps) {
   const section = getRateDetailsSectionFromPathname(usePathname());
   const contentRef = useRef<HTMLDivElement>(null);
-  const lastContentHeightRef = useRef(0);
+  const releaseReservedHeightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reservedHeightAnimationFrameRef = useRef<number | null>(null);
+  const [lastSettledPanel, setLastSettledPanel] = useState({ height: 0, section });
   const [reservedHeight, setReservedHeight] = useState<number | null>(null);
+  const sectionChanged = lastSettledPanel.section !== section;
+  const renderedReservedHeight =
+    reservedHeight ?? (sectionChanged ? lastSettledPanel.height || null : null);
 
   useLayoutEffect(() => {
     const content = contentRef.current;
@@ -26,15 +33,65 @@ function RateDetailsPanelTransition({ children }: RateDetailsPanelTransitionProp
       return;
     }
 
+    const didSectionChange = lastSettledPanel.section !== section;
+    const previousSectionHeight = lastSettledPanel.height;
+
+    function clearReleaseReservedHeightTimeout() {
+      if (!releaseReservedHeightTimeoutRef.current) {
+        return;
+      }
+
+      clearTimeout(releaseReservedHeightTimeoutRef.current);
+      releaseReservedHeightTimeoutRef.current = null;
+    }
+
+    function clearReservedHeightAnimationFrame() {
+      if (!reservedHeightAnimationFrameRef.current) {
+        return;
+      }
+
+      cancelAnimationFrame(reservedHeightAnimationFrameRef.current);
+      reservedHeightAnimationFrameRef.current = null;
+    }
+
+    function releaseReservedHeightAfterTransition() {
+      if (releaseReservedHeightTimeoutRef.current) {
+        return;
+      }
+
+      releaseReservedHeightTimeoutRef.current = setTimeout(() => {
+        releaseReservedHeightTimeoutRef.current = null;
+        setReservedHeight(null);
+      }, panelHeightTransitionMs);
+    }
+
+    function updateLastSettledPanel(nextHeight: number) {
+      if (nextHeight <= 0) {
+        return;
+      }
+
+      setLastSettledPanel((currentPanel) =>
+        currentPanel.section === section && currentPanel.height === nextHeight
+          ? currentPanel
+          : { height: nextHeight, section }
+      );
+    }
+
     function syncPanelHeight() {
       if (!content) {
         return;
       }
 
       const isPending = Boolean(content.querySelector("[data-tab-pending-state]"));
+      const shouldReduceMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       if (isPending) {
-        const previousHeight = lastContentHeightRef.current;
+        clearReservedHeightAnimationFrame();
+        clearReleaseReservedHeightTimeout();
+
+        const previousHeight = lastSettledPanel.height;
 
         setReservedHeight(previousHeight > 0 ? previousHeight : null);
         return;
@@ -42,8 +99,46 @@ function RateDetailsPanelTransition({ children }: RateDetailsPanelTransitionProp
 
       const nextHeight = Math.ceil(content.getBoundingClientRect().height);
 
-      if (nextHeight > 0) {
-        lastContentHeightRef.current = nextHeight;
+      if (didSectionChange && reservedHeight === null) {
+        if (
+          shouldReduceMotion ||
+          previousSectionHeight <= 0 ||
+          nextHeight >= previousSectionHeight
+        ) {
+          updateLastSettledPanel(nextHeight);
+          clearReservedHeightAnimationFrame();
+          clearReleaseReservedHeightTimeout();
+          setReservedHeight(null);
+          return;
+        }
+
+        clearReservedHeightAnimationFrame();
+        clearReleaseReservedHeightTimeout();
+
+        reservedHeightAnimationFrameRef.current = requestAnimationFrame(() => {
+          reservedHeightAnimationFrameRef.current = null;
+          updateLastSettledPanel(nextHeight);
+          setReservedHeight(nextHeight);
+        });
+        return;
+      }
+
+      updateLastSettledPanel(nextHeight);
+
+      if (reservedHeight !== null) {
+        if (shouldReduceMotion || nextHeight > reservedHeight) {
+          clearReservedHeightAnimationFrame();
+          clearReleaseReservedHeightTimeout();
+          setReservedHeight(null);
+          return;
+        }
+
+        if (nextHeight !== reservedHeight) {
+          setReservedHeight(nextHeight);
+        }
+
+        releaseReservedHeightAfterTransition();
+        return;
       }
 
       setReservedHeight(null);
@@ -51,16 +146,15 @@ function RateDetailsPanelTransition({ children }: RateDetailsPanelTransitionProp
 
     syncPanelHeight();
 
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(syncPanelHeight);
 
-    const observer = new ResizeObserver(syncPanelHeight);
-
-    observer.observe(content);
+    observer?.observe(content);
 
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
+      clearReservedHeightAnimationFrame();
+      clearReleaseReservedHeightTimeout();
     };
   });
 
@@ -68,10 +162,10 @@ function RateDetailsPanelTransition({ children }: RateDetailsPanelTransitionProp
     <div
       key={section}
       aria-labelledby={getRateDetailsTabId(section)}
-      className="fx-tab-panel-in"
+      className="fx-tab-panel-in fx-transition-layout"
       id={getRateDetailsPanelId(section)}
       role="tabpanel"
-      style={{ minHeight: reservedHeight ?? undefined }}
+      style={{ minHeight: renderedReservedHeight ?? undefined }}
     >
       <div ref={contentRef}>{children}</div>
     </div>

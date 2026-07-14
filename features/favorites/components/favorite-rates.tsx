@@ -231,7 +231,7 @@ function FavoriteRates({
         lead={
           <>
             Pin a pair to track its rate here. Tap the star
-            <br />
+            <br className="hidden sm:inline" />
             icon on any conversion or comparison row.
           </>
         }

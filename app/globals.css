@@ -458,6 +458,12 @@
     transition-timing-function: var(--fx-motion-ease-snap);
   }
 
+  .fx-transition-layout {
+    transition-property: min-height;
+    transition-duration: var(--fx-motion-duration-base);
+    transition-timing-function: var(--fx-motion-ease-snap);
+  }
+
   .fx-skeleton {
     --fx-skeleton-base: hsl(var(--neutral-500) / 0.46);
     --fx-skeleton-highlight: hsl(var(--neutral-300) / 0.14);
@@ -517,7 +523,8 @@
     }
 
     .fx-transition-surface,
-    .fx-transition-icon {
+    .fx-transition-icon,
+    .fx-transition-layout {
       transition-duration: 1ms;
     }
 

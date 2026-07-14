@@ -346,7 +346,7 @@ function CompareRatesPanel({
         lead={
           <>
             Enter an amount in SEND above to see what your money
-            <br />
+            <br className="hidden sm:inline" />
             is worth in other currencies.
           </>
         }

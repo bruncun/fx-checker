@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act } from "react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -30,6 +31,7 @@ afterEach(() => {
   routerPush.mockReset();
   cleanup();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 function renderRateDetails(children: ReactNode, favoritesCount = 0) {
@@ -119,7 +121,8 @@ describe("RateDetails", () => {
     expect(routerPush).toHaveBeenCalledTimes(1);
   });
 
-  it("reserves the previous panel height while the next section is pending", () => {
+  it("reserves the previous panel height while the next section is pending", async () => {
+    vi.useFakeTimers();
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
       this: HTMLElement
     ) {
@@ -158,6 +161,28 @@ describe("RateDetails", () => {
       </RateDetails>
     );
 
+    await act(async () => {
+      await Promise.resolve();
+    });
+
     expect(document.getElementById("rate-details-favorites-panel")?.style.minHeight).toBe("512px");
+
+    rerender(
+      <RateDetails navigationSlot={<div />}>
+        <section aria-label="Favorites" data-panel-height="284" />
+      </RateDetails>
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(document.getElementById("rate-details-favorites-panel")?.style.minHeight).toBe("284px");
+
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+
+    expect(document.getElementById("rate-details-favorites-panel")?.style.minHeight).toBe("");
   });
 });

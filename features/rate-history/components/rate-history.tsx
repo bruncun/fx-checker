@@ -25,7 +25,7 @@ function RateHistory({ model, pair, selectedRange = "1M" }: RateHistoryProps) {
         lead={
           <>
             We couldn&apos;t load rate history for {selectedPair} right now.
-            <br />
+            <br className="hidden sm:inline" />
             This usually clears up in a minute.
           </>
         }

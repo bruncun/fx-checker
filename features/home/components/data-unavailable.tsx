@@ -20,7 +20,7 @@ function DataUnavailableContent() {
         lead={
           <>
             FX Checker hit an unexpected error right now.
-            <br />
+            <br className="hidden sm:inline" />
             Please refresh the page in a moment.
           </>
         }

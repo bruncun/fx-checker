@@ -74,7 +74,44 @@ describe("CurrencyPicker", () => {
     const { trigger } = renderCurrencyPicker();
     const scrollTo = vi.fn();
 
-    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(pointer: coarse)",
+      }))
+    );
+    vi.stubGlobal("scrollTo", scrollTo);
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 280,
+      height: 40,
+      left: 0,
+      right: 120,
+      top: 240,
+      width: 120,
+      x: 0,
+      y: 240,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(trigger);
+
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 188 });
+    expect(document.activeElement).toBe(
+      screen.getByRole("searchbox", { name: "Search currencies" })
+    );
+  });
+
+  it("keeps mobile picker positioning instant when reduced motion is preferred", () => {
+    const { trigger } = renderCurrencyPicker();
+    const scrollTo = vi.fn();
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(pointer: coarse)" || query === "(prefers-reduced-motion: reduce)",
+      }))
+    );
     vi.stubGlobal("scrollTo", scrollTo);
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
     vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
@@ -92,9 +129,68 @@ describe("CurrencyPicker", () => {
     fireEvent.click(trigger);
 
     expect(scrollTo).toHaveBeenCalledWith({ behavior: "auto", top: 188 });
+  });
+
+  it("does not reposition mobile triggers that are already at the picker position", () => {
+    const { trigger } = renderCurrencyPicker();
+    const scrollTo = vi.fn();
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(pointer: coarse)",
+      }))
+    );
+    vi.stubGlobal("scrollTo", scrollTo);
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 188 });
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 92,
+      height: 40,
+      left: 0,
+      right: 120,
+      top: 52,
+      width: 120,
+      x: 0,
+      y: 52,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(trigger);
+
+    expect(scrollTo).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(
       screen.getByRole("searchbox", { name: "Search currencies" })
     );
+  });
+
+  it("scrolls far enough to show the minimum usable mobile picker height", () => {
+    const { trigger } = renderCurrencyPicker();
+    const scrollTo = vi.fn();
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(pointer: coarse)",
+      }))
+    );
+    vi.stubGlobal("scrollTo", scrollTo);
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 200 });
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 100,
+      height: 40,
+      left: 0,
+      right: 120,
+      top: 60,
+      width: 120,
+      x: 0,
+      y: 60,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(trigger);
+
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 47 });
   });
 
   it("toggles closed when the trigger is clicked again", () => {

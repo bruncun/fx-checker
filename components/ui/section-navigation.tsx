@@ -25,12 +25,23 @@ export interface SectionNavigationProps extends React.ComponentPropsWithoutRef<"
   value: string;
 }
 
+const mobileMenuGap = 8;
+const mobileMenuGutter = 16;
+const mobileMenuPaddingY = 16;
+const mobileMenuRowHeight = 40;
+const mobileMenuComfortableHeight = 240;
+const mobileTriggerIdealTop = 52;
+
 function getSectionAccessibleName(section: SectionNavigationItem | undefined) {
   if (!section) {
     return "";
   }
 
   return section.count === undefined ? section.label : `${section.label}, ${section.count}`;
+}
+
+function isCoarsePointer() {
+  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
 
 function SectionNavigation({
@@ -42,6 +53,7 @@ function SectionNavigation({
   ...props
 }: SectionNavigationProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [menuPlacement, setMenuPlacement] = React.useState<"bottom" | "top">("bottom");
   const panelId = React.useId();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -62,6 +74,29 @@ function SectionNavigation({
   }
 
   function openMenu() {
+    const trigger = triggerRef.current;
+
+    if (trigger) {
+      const visualViewport = window.visualViewport;
+      const viewportTop = visualViewport?.offsetTop ?? 0;
+      const viewportBottom = viewportTop + (visualViewport?.height ?? window.innerHeight);
+      const triggerRect = trigger.getBoundingClientRect();
+      const triggerViewportTop = triggerRect.top - viewportTop;
+      const menuHeight = items.length * mobileMenuRowHeight + mobileMenuPaddingY;
+      const spaceBelow = viewportBottom - triggerRect.bottom - mobileMenuGap - mobileMenuGutter;
+      const spaceAbove = triggerRect.top - viewportTop - mobileMenuGap - mobileMenuGutter;
+      const comfortableHeight = Math.min(menuHeight, mobileMenuComfortableHeight);
+      const scrollDistance = Math.max(0, triggerViewportTop - mobileTriggerIdealTop);
+
+      if (isCoarsePointer() && scrollDistance > 1) {
+        window.scrollTo({ behavior: "smooth", top: window.scrollY + scrollDistance });
+      }
+
+      setMenuPlacement(
+        spaceBelow < comfortableHeight && spaceAbove > spaceBelow ? "top" : "bottom"
+      );
+    }
+
     setIsOpen(true);
   }
 
@@ -150,7 +185,10 @@ function SectionNavigation({
       {isOpen ? (
         <div
           ref={panelRef}
-          className="fx-panel-in absolute top-[calc(100%+8px)] right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),var(--shadow-elevation-popover)] sm:hidden"
+          className={cn(
+            "fx-panel-in absolute right-0 left-0 z-50 rounded-10 bg-neutral-700 p-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600)),var(--shadow-elevation-popover)] sm:hidden",
+            menuPlacement === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"
+          )}
           id={panelId}
           onKeyDown={handlePanelKeyDown}
         >

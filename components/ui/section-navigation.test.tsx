@@ -15,6 +15,8 @@ const sections: SectionNavigationItem[] = [
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("SectionNavigation", () => {
@@ -44,6 +46,42 @@ describe("SectionNavigation", () => {
       "page"
     );
     expect(screen.getByRole("link", { name: "History" }).hasAttribute("aria-current")).toBe(false);
+  });
+
+  it("smoothly scrolls coarse-pointer triggers before opening the mobile menu", () => {
+    const scrollTo = vi.fn();
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query === "(pointer: coarse)",
+      }))
+    );
+    vi.stubGlobal("scrollTo", scrollTo);
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+
+    render(
+      <SectionNavigation aria-label="Rate details sections" items={sections} value="history" />
+    );
+
+    const trigger = screen.getByRole("button", { name: "Rate details sections: History" });
+
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue({
+      bottom: 280,
+      height: 40,
+      left: 0,
+      right: 320,
+      top: 240,
+      width: 320,
+      x: 0,
+      y: 240,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.click(trigger);
+
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 188 });
+    expect(screen.getByRole("link", { name: "Compare" })).toBeTruthy();
   });
 
   it("uses inset neutral-200 shadows instead of hover or focus fills for menu links", () => {
