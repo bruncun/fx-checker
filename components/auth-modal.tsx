@@ -16,6 +16,7 @@ export function AuthModal({ children, title }: AuthModalProps) {
       closeLabel={`Close ${title.toLocaleLowerCase()}`}
       onClose={() => {
         router.replace("/");
+        router.refresh();
       }}
       title={title}
     >

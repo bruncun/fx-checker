@@ -37,7 +37,8 @@ function AppModal({
   const titleId = React.useId();
 
   React.useLayoutEffect(() => {
-    invokerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    invokerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     if (initialFocus === "first") {
       const firstFocusable = getFocusableElements(dialogRef.current).find(
@@ -87,7 +88,9 @@ function AppModal({
       return;
     }
 
-    const currentIndex = focusableElements.findIndex((element) => element === document.activeElement);
+    const currentIndex = focusableElements.findIndex(
+      (element) => element === document.activeElement
+    );
 
     if (event.shiftKey && document.activeElement === firstElement) {
       lastElement.focus();

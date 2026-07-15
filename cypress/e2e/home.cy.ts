@@ -104,6 +104,33 @@ describe("home page", () => {
     cy.findByRole("dialog", { name: "Login" }).should("be.visible");
   });
 
+  it("opens auth modals from the guest saved-data alert", () => {
+    cy.visit("/guest");
+    cy.location("pathname").should("eq", "/");
+
+    cy.findByRole("button", { name: "Favorite" }).click();
+    cy.findByRole("alert").within(() => {
+      cy.findByRole("link", { name: "Log in" }).click();
+    });
+
+    cy.location("pathname").should("eq", "/auth/login");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
+    cy.findByRole("dialog", { name: "Login" }).should("be.visible");
+
+    cy.findByRole("dialog", { name: "Login" }).within(() => {
+      cy.findByRole("button", { name: "Close login" }).click();
+    });
+    cy.findByRole("dialog", { name: "Login" }).should("not.exist");
+
+    cy.findByRole("alert").within(() => {
+      cy.findByRole("link", { name: "sign up" }).click();
+    });
+
+    cy.location("pathname").should("eq", "/auth/sign-up");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
+    cy.findByRole("dialog", { name: "Sign up" }).should("be.visible");
+  });
+
   it("renders direct auth visits as standalone pages", () => {
     cy.visit("/auth/login");
 

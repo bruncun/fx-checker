@@ -5,14 +5,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AuthModal } from "./auth-modal";
 
+const routerRefresh = vi.fn();
 const routerReplace = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: routerReplace }),
+  useRouter: () => ({ refresh: routerRefresh, replace: routerReplace }),
 }));
 
 afterEach(() => {
   cleanup();
+  routerRefresh.mockClear();
   routerReplace.mockClear();
 });
 
@@ -23,5 +25,6 @@ describe("AuthModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close login" }));
 
     expect(routerReplace).toHaveBeenCalledWith("/");
+    expect(routerRefresh).toHaveBeenCalledOnce();
   });
 });
