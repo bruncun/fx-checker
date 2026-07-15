@@ -346,9 +346,8 @@ function CompareRatesPanel({
         title="No comparison available"
         lead={
           <>
-            Enter an amount in SEND above to see what your money
-            <br className="hidden sm:inline" />
-            is worth in other currencies.
+            Enter an amount in SEND above to see what your
+            <br className="hidden sm:inline" /> money is worth in other currencies.
           </>
         }
       />

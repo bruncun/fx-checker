@@ -406,7 +406,7 @@ function ConversionLog({
         lead={
           <>
             Every conversion is recorded here automatically when you tap LOG CONVERSION.
-            <br className="hidden sm:inline" />
+            <br className="hidden sm:inline" />{" "}
             {isGuestMode
               ? "Your log is private to this session and this browser."
               : "Your log is private to your account."}
