@@ -130,6 +130,12 @@ describe("KeyboardShortcutsProvider", () => {
     fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
 
     expect(await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" }).className).toContain(
+      "max-w-[420px]"
+    );
+    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" }).className).not.toContain(
+      "max-w-none"
+    );
     expect(screen.getByText("Focus currency search")).toBeTruthy();
     expect(document.activeElement).toBe(
       screen.getByRole("button", { name: "Close keyboard shortcuts" })

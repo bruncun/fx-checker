@@ -21,7 +21,6 @@ function ShortcutKey({ children }: { children: React.ReactNode }) {
 function KeyboardShortcutsDialog({ formatShortcut, onClose }: KeyboardShortcutsDialogProps) {
   return (
     <AppModal
-      className="max-w-none"
       closeLabel="Close keyboard shortcuts"
       onClose={onClose}
       title="Keyboard Shortcuts"
