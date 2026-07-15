@@ -10,6 +10,7 @@ import {
   getSelectedCurrencyPairFromParams,
 } from "@/features/home/utils/url-state";
 import { getServerFavorites } from "@/features/favorites/api/server";
+import { getCompareRatesModel } from "@/features/compare-rates/model/compare-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -43,6 +44,12 @@ async function CompareRatesContent({
     urlSearchParams
   );
   const converterAmount = getConverterAmountFromParams(urlSearchParams);
+  const compareRatesModel = getCompareRatesModel({
+    ...converterAmount,
+    ...selectedCurrencies,
+    availableCurrencies,
+    rates: latestRates,
+  });
 
   return (
     <CompareRates
@@ -50,6 +57,8 @@ async function CompareRatesContent({
       {...selectedCurrencies}
       availableCurrencies={availableCurrencies}
       favoritesPromise={favoritesPromise}
+      initialCompareRates={compareRatesModel.compareRates}
+      initialSendAmount={compareRatesModel.sendAmount}
       rates={latestRates}
     />
   );

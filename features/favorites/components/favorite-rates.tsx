@@ -25,17 +25,17 @@ import {
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
 import { getCurrencyPairUrl } from "@/features/home/utils/url-state";
-import { deriveLiveRateForPair, type LiveRate } from "@/features/live-rates";
+import type { LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-type FavoriteRateItemData = {
-  favorite: Favorite;
-  fromCurrency: AvailableCurrency;
-  rate: LiveRate;
-  toCurrency: AvailableCurrency;
-};
+import {
+  getAvailableCurrencyByCode,
+  getFavoriteRateRow,
+  getLiveRateByPair,
+  toSelectedCurrency,
+  type FavoriteRateItemData,
+} from "../model/favorite-rate-rows";
 
 function getFavoriteRateMotionKey(item: FavoriteRateItemData) {
   return getFavoritePairKey(item.favorite);
@@ -51,13 +51,6 @@ type FavoriteRateItemProps = FavoriteRateItemData & {
   }) => void;
   tabIndex: 0 | -1;
 };
-
-function toSelectedCurrency(currency: AvailableCurrency): SelectedCurrency {
-  return {
-    countryCode: currency.countryCode,
-    currencyCode: currency.code,
-  };
-}
 
 function FavoriteRateItem({
   favorite,
@@ -129,6 +122,7 @@ function FavoriteRateItem({
 type FavoriteRatesProps = {
   availableCurrencies: AvailableCurrency[];
   favorites: Favorite[];
+  initialFavoriteRates?: FavoriteRateItemData[];
   latestRates: FrankfurterRate[];
   liveRates: LiveRate[];
   liveRateHistoryRates: FrankfurterRate[];
@@ -137,6 +131,7 @@ type FavoriteRatesProps = {
 function FavoriteRates({
   availableCurrencies,
   favorites: initialFavorites,
+  initialFavoriteRates,
   latestRates,
   liveRates,
   liveRateHistoryRates,
@@ -150,26 +145,27 @@ function FavoriteRates({
   const [preferredTabStopPair, setPreferredTabStopPair] = React.useState(
     favorites[0] ? `${favorites[0].fromCurrency}/${favorites[0].toCurrency}` : ""
   );
-  const currencyByCode = new Map(availableCurrencies.map((currency) => [currency.code, currency]));
-  const liveRateByPair = new Map(liveRates.map((liveRate) => [liveRate.pair, liveRate]));
+  const currencyByCode = getAvailableCurrencyByCode(availableCurrencies);
+  const liveRateByPair = getLiveRateByPair(liveRates);
+  const initialFavoriteRateByKey = new Map(
+    (initialFavoriteRates ?? []).map((item) => [getFavoritePairKey(item.favorite), item])
+  );
   const favoriteRates = favorites.flatMap((favorite) => {
-    const fromCurrency = currencyByCode.get(favorite.fromCurrency);
-    const toCurrency = currencyByCode.get(favorite.toCurrency);
+    const initialFavoriteRate = initialFavoriteRateByKey.get(getFavoritePairKey(favorite));
 
-    if (!fromCurrency || !toCurrency) {
-      return [];
+    if (initialFavoriteRate) {
+      return [{ ...initialFavoriteRate, favorite }];
     }
 
-    const rate =
-      liveRateByPair.get(`${favorite.fromCurrency}/${favorite.toCurrency}`) ??
-      deriveLiveRateForPair({
-        base: favorite.fromCurrency,
-        historicalRates: liveRateHistoryRates,
-        latestRates,
-        quote: favorite.toCurrency,
-      });
+    const row = getFavoriteRateRow({
+      currencyByCode,
+      favorite,
+      latestRates,
+      liveRateByPair,
+      liveRateHistoryRates,
+    });
 
-    return rate ? [{ favorite, fromCurrency, rate, toCurrency }] : [];
+    return row ? [row] : [];
   });
   const favoriteTransitions = useTransitioningList({
     getKey: getFavoriteRateMotionKey,

@@ -189,7 +189,6 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
     <>
       <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <ConverterAmountControls
-          key={selectedCurrencyPairUrlKey}
           currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
           focusTriggerRequests={focusTriggerRequests}

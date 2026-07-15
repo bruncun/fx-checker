@@ -12,33 +12,16 @@ import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import type { AvailableCurrency } from "../model/currencies";
+import {
+  getCurrencyGroups,
+  type CurrencyPickerItem,
+} from "../model/currency-groups";
 
-export type CurrencyPickerItem = AvailableCurrency;
-
-type CurrencyPickerGroup = {
-  count: number;
-  currencies: CurrencyPickerItem[];
-  label: string;
-};
-
-const popularCurrencyCodes = new Set(["USD", "EUR", "GBP"]);
 const panelViewportGutter = 16;
 const mobilePanelGap = 20;
 const mobilePanelMinimumVisibleHeight = 111;
 const mobilePickerScrollAnimationMs = 240;
 const mobileTriggerIdealTop = 52;
-
-function getCurrencyGroups(currencies: AvailableCurrency[]): CurrencyPickerGroup[] {
-  const popularCurrencies = currencies.filter((currency) =>
-    popularCurrencyCodes.has(currency.code)
-  );
-  const otherCurrencies = currencies.filter((currency) => !popularCurrencyCodes.has(currency.code));
-
-  return [
-    { count: popularCurrencies.length, currencies: popularCurrencies, label: "Popular" },
-    { count: otherCurrencies.length, currencies: otherCurrencies, label: "Other currencies" },
-  ].filter((group) => group.count > 0);
-}
 
 function isPrintableSearchKey(event: React.KeyboardEvent) {
   return (

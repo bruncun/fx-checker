@@ -13,12 +13,7 @@ import {
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
-import {
-  convertAmount,
-  formatExchangeRate,
-  getExchangeRate,
-  MoneyDecimal,
-} from "@/features/converter/model/exchange";
+import type { AmountSide } from "@/features/converter/model/exchange";
 import type { SelectedCurrency } from "@/features/converter";
 import {
   findFavorite,
@@ -40,8 +35,13 @@ import { getConverterAmountFromParams, getCurrencyPairUrl } from "@/features/hom
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  formatMoneyValue,
+  getCompareCurrencies,
+  getCompareRatesModel,
+  type CompareRateItemData,
+} from "../model/compare-rates";
 
-const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];
 const COMPARE_FALLBACK_CURRENCIES = [
   { code: "GBP", countryCode: "gb", name: "British Pound" },
   { code: "JPY", countryCode: "jp", name: "Japanese Yen" },
@@ -69,39 +69,6 @@ function SkeletonIconButton() {
   );
 }
 
-function formatMoneyValue(value: string, fallback = "0") {
-  if (!value) {
-    return fallback;
-  }
-
-  try {
-    const decimal = new MoneyDecimal(value);
-    const fractionDigits = Math.max(0, decimal.decimalPlaces());
-
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: fractionDigits,
-      minimumFractionDigits: fractionDigits,
-    }).format(decimal.toNumber());
-  } catch {
-    return fallback;
-  }
-}
-
-function getCompareCurrencies(currencies: AvailableCurrency[], sendCurrencyCode: string) {
-  const currencyByCode = new Map(currencies.map((currency) => [currency.code, currency]));
-  const preferredCurrencies = COMPARE_CURRENCY_PRESETS.flatMap((code) => {
-    const currency = currencyByCode.get(code);
-
-    return currency && currency.code !== sendCurrencyCode ? [currency] : [];
-  });
-  const preferredCodes = new Set(preferredCurrencies.map((currency) => currency.code));
-  const fallbackCurrencies = currencies.filter(
-    (currency) => currency.code !== sendCurrencyCode && !preferredCodes.has(currency.code)
-  );
-
-  return [...preferredCurrencies, ...fallbackCurrencies].slice(0, 8);
-}
-
 type CompareRateItemProps = {
   amount: string;
   currency: AvailableCurrency;
@@ -112,8 +79,6 @@ type CompareRateItemProps = {
   rate: string;
   tabIndex: 0 | -1;
 };
-
-type CompareRateItemData = Pick<CompareRateItemProps, "amount" | "currency" | "rate">;
 
 type CompareFavoriteButtonProps = {
   actionProps: RateDetailsRowActionProps;
@@ -267,15 +232,20 @@ function CompareRateItem({
 
 type CompareRatesProps = {
   amount: string;
-  amountSource: "send" | "receive";
+  amountSource: AmountSide;
   availableCurrencies: AvailableCurrency[];
   favoritesPromise: Promise<Favorite[]>;
+  initialCompareRates?: CompareRateItemData[];
+  initialSendAmount?: string;
   rates: FrankfurterRate[];
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
 };
 
-type CompareRatesPanelProps = Omit<CompareRatesProps, "favoritesPromise"> & {
+type CompareRatesPanelProps = Omit<
+  CompareRatesProps,
+  "favoritesPromise" | "initialCompareRates" | "initialSendAmount"
+> & {
   compareRates: CompareRateItemData[];
   favoritesPromise?: Promise<Favorite[]>;
   onCompareCurrencySelect?: (currency: AvailableCurrency) => void;
@@ -283,52 +253,6 @@ type CompareRatesPanelProps = Omit<CompareRatesProps, "favoritesPromise"> & {
   sendAmount: string;
   tabStopCode: string;
 };
-
-function getCompareSendAmount({
-  amount,
-  amountSource,
-  rates,
-  receiveCurrency,
-  sendCurrency,
-}: Pick<
-  CompareRatesProps,
-  "amount" | "amountSource" | "rates" | "receiveCurrency" | "sendCurrency"
->) {
-  const selectedExchangeRate = getExchangeRate(
-    rates,
-    sendCurrency.currencyCode,
-    receiveCurrency.currencyCode
-  );
-  const inverseExchangeRate =
-    selectedExchangeRate === null ? null : new MoneyDecimal(1).div(selectedExchangeRate);
-
-  return amountSource === "send" ? amount : convertAmount(amount, inverseExchangeRate) || "";
-}
-
-function getCompareRateItems({
-  availableCurrencies,
-  rates,
-  sendAmount,
-  sendCurrency,
-}: Pick<CompareRatesProps, "availableCurrencies" | "rates" | "sendCurrency"> & {
-  sendAmount: string;
-}) {
-  return getCompareCurrencies(availableCurrencies, sendCurrency.currencyCode)
-    .map((currency) => {
-      const rate = getExchangeRate(rates, sendCurrency.currencyCode, currency.code);
-
-      if (rate === null) {
-        return null;
-      }
-
-      return {
-        amount: formatMoneyValue(convertAmount(sendAmount, rate)),
-        currency,
-        rate: formatExchangeRate(rate),
-      };
-    })
-    .filter((item): item is CompareRateItemData => item !== null);
-}
 
 function CompareRatesPanel({
   compareRates,
@@ -419,6 +343,8 @@ function CompareRates({
   amountSource,
   availableCurrencies,
   favoritesPromise,
+  initialCompareRates,
+  initialSendAmount,
   rates,
   receiveCurrency,
   sendCurrency,
@@ -439,19 +365,21 @@ function CompareRates({
 
     return getConverterAmountFromParams(liveSearchParams);
   }, [amount, amountSource, searchParamsString]);
-  const sendAmount = getCompareSendAmount({
-    amount: liveConverterAmount.amount,
-    amountSource: liveConverterAmount.amountSource,
-    rates,
-    receiveCurrency,
-    sendCurrency,
-  });
-  const compareRates = getCompareRateItems({
-    availableCurrencies,
-    rates,
-    sendAmount,
-    sendCurrency,
-  });
+  const canUseInitialModel =
+    liveConverterAmount.amount === amount &&
+    liveConverterAmount.amountSource === amountSource &&
+    initialCompareRates !== undefined &&
+    initialSendAmount !== undefined;
+  const { compareRates, sendAmount } = canUseInitialModel
+    ? { compareRates: initialCompareRates, sendAmount: initialSendAmount }
+    : getCompareRatesModel({
+        amount: liveConverterAmount.amount,
+        amountSource: liveConverterAmount.amountSource,
+        availableCurrencies,
+        rates,
+        receiveCurrency,
+        sendCurrency,
+      });
   const tabStopCode = compareRates.some((item) => item.currency.code === preferredTabStopCode)
     ? preferredTabStopCode
     : (compareRates[0]?.currency.code ?? "");

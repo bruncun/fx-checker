@@ -6,6 +6,7 @@ import {
 } from "@/features/exchange-rates/api/server";
 import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites";
 import { getServerFavorites } from "@/features/favorites/api/server";
+import { getFavoriteRateRows } from "@/features/favorites/model/favorite-rate-rows";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { deriveLiveRateForPair } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -50,7 +51,7 @@ async function FavoriteRatesUserContent({
   liveRateHistoryRates: FrankfurterRate[];
 }) {
   const favorites = await getServerFavorites();
-  const favoriteRates = favorites.flatMap((favorite) => {
+  const liveRates = favorites.flatMap((favorite) => {
     const rate = deriveLiveRateForPair({
       base: favorite.fromCurrency,
       historicalRates: liveRateHistoryRates,
@@ -60,13 +61,21 @@ async function FavoriteRatesUserContent({
 
     return rate ? [rate] : [];
   });
+  const favoriteRateRows = getFavoriteRateRows({
+    availableCurrencies,
+    favorites,
+    latestRates,
+    liveRates,
+    liveRateHistoryRates,
+  });
 
   return (
     <FavoriteRates
       availableCurrencies={availableCurrencies}
       favorites={favorites}
+      initialFavoriteRates={favoriteRateRows}
       latestRates={latestRates}
-      liveRates={favoriteRates}
+      liveRates={liveRates}
       liveRateHistoryRates={liveRateHistoryRates}
     />
   );
