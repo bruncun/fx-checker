@@ -7,18 +7,6 @@ import { UnauthOnlyRoute } from "@/components/unauth-only-route";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-const features = [
-  <>
-    Latest <br className="hidden sm:inline" />
-    reference rates
-  </>,
-  "Compare and save currency pairs",
-  <>
-    Review recent <br className="hidden sm:inline" />
-    conversion history
-  </>,
-];
-
 const marketSnapshotRates = [
   { change: "▲ 0.18%", direction: "up", pair: "USD/GBP", rate: "0.7319" },
   { change: "▼ 0.11%", direction: "down", pair: "USD/JPY", rate: "146.72" },
@@ -40,16 +28,16 @@ export default function LandingPage() {
       </header>
 
       <section className="mx-auto grid min-h-[calc(100vh-120px)] w-full max-w-[1180px] items-center justify-items-center gap-400 px-200 pt-400 pb-800 sm:gap-500 sm:px-400 lg:grid-cols-[minmax(0,1.5fr)_minmax(380px,.5fr)] lg:justify-items-stretch lg:gap-800 lg:pt-500 lg:pb-1000">
-        <div className="max-w-[640px] text-left sm:text-center lg:text-left">
+        <div className="max-w-[640px] text-left sm:text-center lg:mx-400 lg:text-left">
           <p className="mb-200 text-preset-5-medium text-lime-500 uppercase sm:text-preset-4">
-            Currency insight, without the clutter
+            Thoughtfully crafted
           </p>
           <h1 className="text-[44px] leading-[0.98] font-bold text-neutral-50 sm:text-[48px]">
-            Check the rate before money moves.
+            Currency conversion
           </h1>
           <p className="mt-300 max-w-[560px] text-preset-3 leading-[1.5] text-neutral-100 sm:mx-auto sm:text-[18px] lg:mx-0">
-            FX Checker keeps daily exchange rates, comparisons, favorites, and logged conversions in
-            one focused workspace.
+            Daily exchange rates, historical trends, and personalized tracking for the currencies
+            you care about.
           </p>
           <div className="mt-400 flex flex-col gap-150 sm:flex-row sm:justify-center lg:justify-start">
             <Link
@@ -63,17 +51,6 @@ export default function LandingPage() {
             </Link>
             <GuestModeLink className="w-full sm:w-auto sm:min-w-[208px]" size="lg" />
           </div>
-          <ul className="mt-300 grid gap-150 text-preset-5-medium text-neutral-100 uppercase sm:grid-cols-3 sm:justify-items-center lg:mb-200 lg:justify-items-start">
-            {features.map((feature, index) => (
-              <li
-                className="flex items-center gap-100 sm:justify-center lg:justify-start"
-                key={index}
-              >
-                <Icon decorative height={16} iconName="check" width={16} />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div className="relative mx-auto -mt-100 w-full max-w-[544px] lg:mx-0 lg:mt-0 lg:justify-self-end">
