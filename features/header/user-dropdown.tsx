@@ -123,8 +123,9 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
         throw new Error("Failed to sign out");
       }
 
-      router.push("/auth/login");
+      router.replace("/auth/login");
       router.refresh();
+      setIsSigningOut(false);
     } catch (error) {
       console.error("Failed to sign out", error);
       setIsSigningOut(false);
@@ -275,7 +276,10 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
                 className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
                 data-user-menu-option
                 href="/auth/login"
-                onClick={() => closeMenu({ restoreFocus: false })}
+                onClick={() => {
+                  requestAnimationFrame(() => closeMenu({ restoreFocus: false }));
+                }}
+                replace
                 tabIndex={-1}
               >
                 Log in
@@ -284,7 +288,10 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
                 className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
                 data-user-menu-option
                 href="/auth/sign-up"
-                onClick={() => closeMenu({ restoreFocus: false })}
+                onClick={() => {
+                  requestAnimationFrame(() => closeMenu({ restoreFocus: false }));
+                }}
+                replace
                 tabIndex={-1}
               >
                 Sign up

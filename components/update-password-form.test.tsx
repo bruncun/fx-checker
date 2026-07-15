@@ -5,14 +5,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { UpdatePasswordForm } from "./update-password-form";
 
-const { fetchMock, routerPush } = vi.hoisted(() => ({
+const { fetchMock, routerReplace } = vi.hoisted(() => ({
   fetchMock: vi.fn(),
-  routerPush: vi.fn(),
+  routerReplace: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: routerPush,
+    replace: routerReplace,
   }),
 }));
 
@@ -37,7 +37,7 @@ describe("UpdatePasswordForm", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Save new password" }));
 
     await waitFor(() => {
-      expect(routerPush).toHaveBeenCalledWith("/auth/login");
+      expect(routerReplace).toHaveBeenCalledWith("/auth/login");
     });
 
     expect(screen.getByLabelText("New password")).toHaveProperty("value", "updated-password");

@@ -55,6 +55,7 @@ export function DismissibleGuestPersistenceAlert() {
         <Link
           className="rounded-4 text-preset-5-medium text-neutral-50 underline-offset-4 hover:underline hover:decoration-neutral-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500"
           href="/auth/login"
+          replace
         >
           Log in
         </Link>
@@ -62,6 +63,7 @@ export function DismissibleGuestPersistenceAlert() {
         <Link
           className="rounded-4 text-preset-5-medium text-neutral-50 underline-offset-4 hover:underline hover:decoration-neutral-200 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-lime-500"
           href="/auth/sign-up"
+          replace
         >
           sign up
         </Link>

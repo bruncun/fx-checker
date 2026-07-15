@@ -35,6 +35,102 @@ describe("home page", () => {
     cy.findByRole("heading", { name: "Check the rate before money moves." }).should("not.exist");
   });
 
+  it("opens auth forms as modals from the guest account menu", () => {
+    cy.visit("/");
+
+    cy.findByRole("button", { name: "Account menu" }).click();
+    cy.findByRole("link", { name: "Log in" }).click();
+
+    cy.location("pathname").should("eq", "/auth/login");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
+    cy.findByRole("dialog", { name: "Login" }).within(() => {
+      cy.findByRole("button", { name: "Close login" }).should("be.focused");
+      cy.findByRole("textbox", { name: /Email/ }).should("be.visible");
+      cy.findByRole("button", { name: "Login" }).should("be.visible");
+      cy.findByRole("link", { name: "Forgot your password?" }).click();
+    });
+
+    cy.location("pathname").should("eq", "/auth/forgot-password");
+    cy.findByRole("dialog", { name: "Reset Your Password" }).within(() => {
+      cy.findByRole("textbox", { name: /Email/ }).should("be.visible");
+      cy.findByRole("link", { name: "Login" }).click();
+    });
+
+    cy.findByRole("dialog", { name: "Login" }).within(() => {
+      cy.findByRole("link", { name: "Sign up" }).click();
+    });
+
+    cy.location("pathname").should("eq", "/auth/sign-up");
+    cy.findByRole("dialog", { name: "Sign up" }).within(() => {
+      cy.findByRole("button", { name: "Close sign up" }).should("be.focused");
+      cy.findByRole("textbox", { name: /Email/ }).should("be.visible");
+      cy.findByRole("link", { name: "Login" }).click();
+    });
+
+    cy.findByRole("dialog", { name: "Login" }).within(() => {
+      cy.findByRole("button", { name: "Close login" }).click();
+    });
+    cy.location("pathname").should("eq", "/");
+    cy.findByRole("dialog", { name: "Login" }).should("not.exist");
+  });
+
+  it("swaps forgot-password modal content to the sent confirmation", () => {
+    cy.intercept("POST", "/auth/forgot-password/action", {
+      body: { error: null, success: true },
+      delay: 200,
+      statusCode: 200,
+    }).as("forgotPassword");
+
+    cy.visit("/");
+
+    cy.findByRole("button", { name: "Account menu" }).click();
+    cy.findByRole("link", { name: "Log in" }).click();
+    cy.findByRole("dialog", { name: "Login" }).within(() => {
+      cy.findByRole("link", { name: "Forgot your password?" }).click();
+    });
+
+    cy.findByRole("dialog", { name: "Reset Your Password" }).within(() => {
+      cy.findByRole("textbox", { name: /Email/ }).type("user@example.test");
+      cy.findByRole("button", { name: "Send reset email" }).click();
+      cy.findByRole("button", { name: "Sending..." }).should("be.disabled");
+    });
+
+    cy.wait("@forgotPassword");
+    cy.location("pathname").should("eq", "/auth/forgot-password/sent");
+    cy.findByRole("dialog", { name: "Check Your Email" }).within(() => {
+      cy.contains(/you will receive a password reset email/i).should("be.visible");
+      cy.findByRole("link", { name: "Login" }).click();
+    });
+    cy.findByRole("dialog", { name: "Login" }).should("be.visible");
+  });
+
+  it("renders direct auth visits as standalone pages", () => {
+    cy.visit("/auth/login");
+
+    cy.contains("Login").should("be.visible");
+    cy.findByRole("button", { name: "Login" }).should("be.visible");
+    cy.findByRole("dialog", { name: "Login" }).should("not.exist");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("not.exist");
+
+    cy.findByRole("link", { name: "Sign up" }).click();
+    cy.location("pathname").should("eq", "/auth/sign-up");
+    cy.findByRole("button", { name: "Sign up" }).should("be.visible");
+    cy.findByRole("dialog", { name: "Sign up" }).should("not.exist");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("not.exist");
+
+    cy.findByRole("link", { name: "Login" }).click();
+    cy.location("pathname").should("eq", "/auth/login");
+    cy.findByRole("link", { name: "Forgot your password?" }).click();
+    cy.location("pathname").should("eq", "/auth/forgot-password");
+    cy.findByRole("button", { name: "Send reset email" }).should("be.visible");
+    cy.findByRole("dialog", { name: "Reset Your Password" }).should("not.exist");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("not.exist");
+
+    cy.visit("/auth/forgot-password/sent");
+    cy.contains(/you will receive a password reset email/i).should("be.visible");
+    cy.findByRole("dialog", { name: "Check Your Email" }).should("not.exist");
+  });
+
   it("offers guest mode from sign-up and starts the guest app at the top on mobile", () => {
     cy.viewport(375, 667);
     cy.visit("/auth/sign-up");
