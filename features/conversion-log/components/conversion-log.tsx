@@ -24,11 +24,11 @@ import {
   useOptimisticConversions,
 } from "@/features/conversion-log/stores/optimistic-conversions";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
+import { useConverterPairSelection } from "@/features/home/hooks/use-converter-pair-selection";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
-import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/utils/url-state";
+import { getCurrencyByCode } from "@/features/home/utils/url-state";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   formatAmount,
   formatRelativeTime,
@@ -189,11 +189,9 @@ function ConversionLog({
   conversions: initialConversions,
   isGuestMode = false,
 }: ConversionLogProps) {
-  const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const selectConverterPair = useConverterPairSelection();
   const showDataUnavailableError = useDataUnavailableError();
-  const searchParams = useSearchParams();
-  const searchParamsString = searchParams.toString();
   const conversions = useOptimisticConversions(initialConversions);
   const [preferredTabStopId, setPreferredTabStopId] = React.useState(conversions[0]?.id ?? "");
   const shouldAnimateConversionEntry = React.useCallback(
@@ -228,18 +226,13 @@ function ConversionLog({
       return;
     }
 
-    const nextUrl = getCurrencyPairUrl({
+    selectConverterPair({
       amount: conversion.sendAmount,
       amountSource: "send",
-      pathname,
       receiveCurrency,
       receiveAmount: conversion.receiveAmount,
-      searchParams: new URLSearchParams(searchParamsString),
       sendCurrency,
     });
-
-    router.replace(nextUrl, { scroll: false });
-    scrollConverterIntoViewIfNeeded();
   }
 
   function removeConversion(id: string) {

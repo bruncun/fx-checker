@@ -31,11 +31,11 @@ import {
   useOptimisticFavorites,
 } from "@/features/favorites/stores/optimistic-favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
-import { getConverterAmountFromParams, getCurrencyPairUrl } from "@/features/home/utils/url-state";
+import { useConverterPairSelection } from "@/features/home/hooks/use-converter-pair-selection";
+import { getConverterAmountFromParams } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   formatMoneyValue,
   getCompareCurrencies,
@@ -354,8 +354,7 @@ function CompareRates({
   receiveCurrency,
   sendCurrency,
 }: CompareRatesProps) {
-  const pathname = usePathname() ?? "/";
-  const router = useRouter();
+  const selectConverterPair = useConverterPairSelection();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [preferredTabStopCode, setPreferredTabStopCode] = React.useState(
@@ -390,19 +389,15 @@ function CompareRates({
     : (compareRates[0]?.currency.code ?? "");
 
   function selectCompareCurrency(currency: AvailableCurrency) {
-    const nextUrl = getCurrencyPairUrl({
-      pathname,
+    selectConverterPair({
       receiveCurrency: {
         countryCode: currency.countryCode,
         currencyCode: currency.code,
       },
-      searchParams: new URLSearchParams(searchParamsString),
       sendCurrency,
     });
 
-    router.replace(nextUrl, { scroll: false });
     setPreferredTabStopCode(currency.code);
-    scrollConverterIntoViewIfNeeded();
   }
 
   return (

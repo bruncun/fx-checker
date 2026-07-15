@@ -23,13 +23,12 @@ import {
   removeOptimisticFavorite,
   useOptimisticFavorites,
 } from "@/features/favorites/stores/optimistic-favorites";
+import { useConverterPairSelection } from "@/features/home/hooks/use-converter-pair-selection";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
-import { getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import type { LiveRate } from "@/features/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   getAvailableCurrencyByCode,
   getFavoriteRateRow,
@@ -137,11 +136,9 @@ function FavoriteRates({
   liveRates,
   liveRateHistoryRates,
 }: FavoriteRatesProps) {
-  const pathname = usePathname() ?? "/";
   const router = useRouter();
+  const selectConverterPair = useConverterPairSelection();
   const showDataUnavailableError = useDataUnavailableError();
-  const searchParams = useSearchParams();
-  const searchParamsString = searchParams.toString();
   const favorites = useOptimisticFavorites(initialFavorites);
   const [preferredTabStopPair, setPreferredTabStopPair] = React.useState(
     favorites[0] ? `${favorites[0].fromCurrency}/${favorites[0].toCurrency}` : ""
@@ -180,15 +177,10 @@ function FavoriteRates({
     receiveCurrency: SelectedCurrency;
     sendCurrency: SelectedCurrency;
   }) {
-    const nextUrl = getCurrencyPairUrl({
-      pathname,
+    selectConverterPair({
       receiveCurrency: currencies.receiveCurrency,
-      searchParams: new URLSearchParams(searchParamsString),
       sendCurrency: currencies.sendCurrency,
     });
-
-    router.replace(nextUrl, { scroll: false });
-    scrollConverterIntoViewIfNeeded();
   }
 
   function toggleFavorite(pair: FavoriteCurrencyPair) {
