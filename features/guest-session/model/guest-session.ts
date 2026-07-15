@@ -17,7 +17,6 @@ export const GUEST_ALERT_DISMISSED_COOKIE = "fx_checker_guest_alert_dismissed";
 
 const MAX_GUEST_FAVORITES = 100;
 const MAX_GUEST_CONVERSIONS = 30;
-const GUEST_STARTER_CREATED_AT = "2026-07-01T00:00:00.000Z";
 
 type CookieReader = {
   get(name: string): { value: string } | undefined;
@@ -25,31 +24,6 @@ type CookieReader = {
 
 type GuestFavoriteRecord = [string, string, string, string];
 type GuestConversionRecord = [string, string, string, string, string, string];
-
-const guestStarterFavorites: Favorite[] = [
-  {
-    createdAt: GUEST_STARTER_CREATED_AT,
-    fromCurrency: "USD",
-    id: "guest-starter-favorite:USD/EUR",
-    toCurrency: "EUR",
-  },
-  {
-    createdAt: GUEST_STARTER_CREATED_AT,
-    fromCurrency: "GBP",
-    id: "guest-starter-favorite:GBP/USD",
-    toCurrency: "USD",
-  },
-  {
-    createdAt: GUEST_STARTER_CREATED_AT,
-    fromCurrency: "EUR",
-    id: "guest-starter-favorite:EUR/JPY",
-    toCurrency: "JPY",
-  },
-];
-
-function toRelativeIsoString(now: Date, elapsedMilliseconds: number) {
-  return new Date(now.getTime() - elapsedMilliseconds).toISOString();
-}
 
 function createGuestId(prefix: string) {
   return `${prefix}:${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
@@ -129,39 +103,6 @@ export function serializeGuestConversionsCookie(conversions: Conversion[]) {
     ]);
 
   return writeJsonCookie(records);
-}
-
-export function getGuestStarterFavorites(): Favorite[] {
-  return guestStarterFavorites.map((favorite) => ({ ...favorite }));
-}
-
-export function getGuestStarterConversions(now = new Date()): Conversion[] {
-  return [
-    {
-      createdAt: toRelativeIsoString(now, 8 * 60 * 1000),
-      fromCurrency: "USD",
-      id: "guest-starter-conversion:usd-eur-trip-budget",
-      receiveAmount: "138.23",
-      sendAmount: "150",
-      toCurrency: "EUR",
-    },
-    {
-      createdAt: toRelativeIsoString(now, 2 * 60 * 60 * 1000),
-      fromCurrency: "GBP",
-      id: "guest-starter-conversion:gbp-usd-invoice",
-      receiveAmount: "252.40",
-      sendAmount: "200",
-      toCurrency: "USD",
-    },
-    {
-      createdAt: toRelativeIsoString(now, 26 * 60 * 60 * 1000),
-      fromCurrency: "EUR",
-      id: "guest-starter-conversion:eur-jpy-hotel",
-      receiveAmount: "48510",
-      sendAmount: "300",
-      toCurrency: "JPY",
-    },
-  ];
 }
 
 export function addGuestFavorite(favorites: Favorite[], pair: FavoriteCurrencyPair): Favorite {

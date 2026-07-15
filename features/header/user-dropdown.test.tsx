@@ -4,7 +4,7 @@ import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { UserDropdown, getAccountInitials } from "./user-dropdown";
+import { UserDropdown } from "./user-dropdown";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 
 const setTheme = vi.fn();
@@ -39,22 +39,18 @@ afterEach(() => {
 });
 
 describe("UserDropdown", () => {
-  it("renders guest initials in a fixed circular account trigger", () => {
+  it("renders a neutral menu trigger for guest users", () => {
     render(<UserDropdown isGuest />);
 
     const trigger = screen.getByRole("button", { name: "Account menu" });
 
-    expect(trigger.textContent).toBe("G");
-    expect(trigger.className).toContain("size-400");
+    expect(trigger.textContent).toContain("Menu");
+    expect(trigger.className).toContain("h-400");
     expect(trigger.className).toContain("shrink-0");
     expect(trigger.className).toContain("items-center");
     expect(trigger.className).toContain("justify-center");
-    expect(trigger.className).toContain("rounded-full");
+    expect(trigger.className).toContain("rounded-8");
     expect(trigger.className).toContain("bg-neutral-500");
-  });
-
-  it("uses the first email letter for signed-in users", () => {
-    expect(getAccountInitials({ email: "mika@example.com" })).toBe("M");
   });
 
   it("opens an account dialog with a theme toggle and sign out button", () => {
@@ -66,6 +62,19 @@ describe("UserDropdown", () => {
     expect(screen.getByRole("radiogroup", { name: "Theme" })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "System" }).getAttribute("aria-checked")).toBe("true");
     expect(screen.getByRole("button", { name: "Sign out" })).toBeTruthy();
+  });
+
+  it("opens an account dialog with auth links for guest users", () => {
+    render(<UserDropdown isGuest />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+
+    expect(screen.getByRole("dialog", { name: "Account menu" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Log in" }).getAttribute("href")).toBe("/auth/login");
+    expect(screen.getByRole("link", { name: "Sign up" }).getAttribute("href")).toBe(
+      "/auth/sign-up"
+    );
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });
 
   it("opens keyboard shortcuts from the account dialog, closes the menu, and restores focus to the account trigger", async () => {
@@ -99,24 +108,21 @@ describe("UserDropdown", () => {
     expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
   });
 
-  it("shows a circular pending spinner in the account trigger while signing out", () => {
+  it("shows a transitional text label in the account trigger while signing out", () => {
     vi.mocked(fetch).mockReturnValue(new Promise(() => {}));
     render(<UserDropdown email="mika@example.com" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
-    const trigger = screen.getByRole("button", { name: "Signing out" });
-    const spinner = trigger.querySelector("[data-pending-spinner]");
-    const spinnerArc = spinner?.querySelector(".motion-safe\\:animate-spin");
+    const trigger = screen.getByRole("button", { name: "Signing out..." });
 
     expect(trigger).toHaveProperty("disabled", true);
     expect(trigger.getAttribute("aria-busy")).toBe("true");
-    expect(trigger.className).toContain("size-400");
-    expect(trigger.className).toContain("bg-transparent");
-    expect(spinner?.className).toContain("size-400");
-    expect(spinner?.className).toContain("inset-0");
-    expect(spinnerArc?.className).toContain("rounded-full");
+    expect(trigger.className).toContain("h-400");
+    expect(trigger.className).toContain("disabled:pointer-events-none");
+    expect(trigger.textContent).toBe("Signing out...");
+    expect(trigger.querySelector("[data-pending-spinner]")).toBeNull();
   });
 
   it("keeps the pending state during sign-out navigation and resets when shown again", async () => {
@@ -129,7 +135,7 @@ describe("UserDropdown", () => {
       expect(routerPush).toHaveBeenCalledWith("/auth/login");
     });
 
-    expect(screen.getByRole("button", { name: "Signing out" })).toHaveProperty("disabled", true);
+    expect(screen.getByRole("button", { name: "Signing out..." })).toHaveProperty("disabled", true);
 
     fireEvent(window, new Event("pageshow"));
 
@@ -193,6 +199,27 @@ describe("UserDropdown", () => {
     expect(document.activeElement).toBe(signOutButton);
 
     fireEvent.keyDown(signOutButton, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(systemTheme);
+  });
+
+  it("moves through guest auth links with vertical roving focus", () => {
+    render(<UserDropdown isGuest />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    const systemTheme = screen.getByRole("radio", { name: "System" });
+    const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
+    const loginLink = screen.getByRole("link", { name: "Log in" });
+    const signUpLink = screen.getByRole("link", { name: "Sign up" });
+
+    shortcutsButton.focus();
+    fireEvent.keyDown(shortcutsButton, { key: "ArrowDown" });
+
+    expect(document.activeElement).toBe(loginLink);
+
+    fireEvent.keyDown(loginLink, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(signUpLink);
+
+    fireEvent.keyDown(signUpLink, { key: "ArrowDown" });
     expect(document.activeElement).toBe(systemTheme);
   });
 

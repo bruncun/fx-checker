@@ -14,7 +14,7 @@ export function UnauthOnlyRoute() {
       const data = (await response.json()) as { authenticated?: boolean };
 
       if (isMounted && data.authenticated) {
-        router.replace("/app");
+        router.replace("/");
       }
     };
 

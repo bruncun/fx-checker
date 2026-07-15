@@ -63,7 +63,7 @@ describe("RateDetails", () => {
     const compareLink = screen.getByRole("link", { name: "Compare" });
     const historyLink = screen.getByRole("link", { name: "History" });
 
-    expect(historyLink.getAttribute("href")).toBe("/app?from=GBP&to=USD");
+    expect(historyLink.getAttribute("href")).toBe("/?from=GBP&to=USD");
     expect(compareLink.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
     expect(screen.getByRole("link", { name: "Favorites, 3" })).toBeTruthy();
   });
@@ -101,7 +101,7 @@ describe("RateDetails", () => {
     const favoritesTab = screen.getByRole("tab", { name: "Favorites, 4" });
     const tabPanel = screen.getByRole("tabpanel", { name: "Compare" });
 
-    expect(historyTab.getAttribute("href")).toBe("/app?from=GBP&to=USD");
+    expect(historyTab.getAttribute("href")).toBe("/?from=GBP&to=USD");
     expect(compareTab.getAttribute("href")).toBe("/rate/compare?from=GBP&to=USD");
     expect(favoritesTab.getAttribute("href")).toBe("/rate/favorites?from=GBP&to=USD");
     expect(compareTab.getAttribute("id")).toBe("rate-details-compare-tab");
@@ -143,7 +143,7 @@ describe("RateDetails", () => {
       };
     });
 
-    testPathname.current = "/app";
+    testPathname.current = "/";
 
     const { rerender } = render(
       <RateDetails navigationSlot={<div />}>

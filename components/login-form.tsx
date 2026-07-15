@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 type AuthActionState = {
@@ -14,16 +14,34 @@ type AuthActionState = {
   redirectTo?: string;
 };
 
+type LoginFormProps = React.ComponentPropsWithoutRef<"div"> & {
+  navigate?: (href: string) => void;
+};
+
 export function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/app";
+    return "/";
+  }
+
+  if (redirectTo.startsWith("/app?")) {
+    return `/${redirectTo.slice("/app".length)}`;
+  }
+
+  if (redirectTo === "/app") {
+    return "/";
   }
 
   return redirectTo;
 }
 
-export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const router = useRouter();
+export function LoginForm({
+  className,
+  // Auth mutates cookies in a fetch response; use a document navigation so the
+  // app shell is rendered from the updated session rather than cached guest UI.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  navigate = (href) => window.location.assign(new URL(href, window.location.href)),
+  ...props
+}: LoginFormProps) {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,7 +78,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     const state = (await response.json()) as AuthActionState;
 
     if (state.redirectTo) {
-      router.push(state.redirectTo);
+      navigate(state.redirectTo);
       return;
     }
 

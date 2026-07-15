@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/model/guest-session";
-import { DismissibleGuestModeAlert } from "./guest-mode-alert-client";
+import { DismissibleGuestPersistenceAlert } from "./guest-mode-alert-client";
 import { HomePageContent } from "./home-page-content";
 import { StaleExchangeRatesAlert } from "./stale-exchange-rates-alert";
 
@@ -75,20 +75,22 @@ describe("StaleExchangeRatesAlert", () => {
   });
 });
 
-describe("DismissibleGuestModeAlert", () => {
+describe("DismissibleGuestPersistenceAlert", () => {
   it("renders a dismissible alert and stores dismissal in a session cookie", () => {
     vi.useFakeTimers();
-    render(<DismissibleGuestModeAlert />);
+    render(<DismissibleGuestPersistenceAlert />);
 
-    expect(screen.getByRole("alert").textContent).toContain(
-      "Your data will not be stored to an account in guest mode"
+    expect(screen.getByRole("alert").textContent).toContain("Saved in this browser");
+    expect(screen.getByRole("link", { name: "Log in" }).getAttribute("href")).toBe("/auth/login");
+    expect(screen.getByRole("link", { name: "sign up" }).getAttribute("href")).toBe(
+      "/auth/sign-up"
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss guest mode alert" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss saved data alert" }));
 
     expect(screen.getByRole("alert").className).toContain("fx-list-row-out");
     expect(
-      screen.getByRole("button", { name: "Dismiss guest mode alert" }).getAttribute("disabled")
+      screen.getByRole("button", { name: "Dismiss saved data alert" }).getAttribute("disabled")
     ).toBe("");
     expect(document.cookie).toContain(`${GUEST_ALERT_DISMISSED_COOKIE}=1`);
 

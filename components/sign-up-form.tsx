@@ -7,7 +7,6 @@ import { GuestModeLink } from "@/components/guest-mode-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 type AuthActionState = {
@@ -15,8 +14,18 @@ type AuthActionState = {
   redirectTo?: string;
 };
 
-export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const router = useRouter();
+type SignUpFormProps = React.ComponentPropsWithoutRef<"div"> & {
+  navigate?: (href: string) => void;
+};
+
+export function SignUpForm({
+  className,
+  // Auth can mutate cookies in a fetch response; use a document navigation so
+  // account state is reflected immediately when signup returns an active session.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  navigate = (href) => window.location.assign(new URL(href, window.location.href)),
+  ...props
+}: SignUpFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -52,7 +61,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     const state = (await response.json()) as AuthActionState;
 
     if (state.redirectTo) {
-      router.push(state.redirectTo);
+      navigate(state.redirectTo);
       return;
     }
 
