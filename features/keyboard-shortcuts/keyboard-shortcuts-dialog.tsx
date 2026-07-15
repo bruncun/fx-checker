@@ -20,11 +20,7 @@ function ShortcutKey({ children }: { children: React.ReactNode }) {
 
 function KeyboardShortcutsDialog({ formatShortcut, onClose }: KeyboardShortcutsDialogProps) {
   return (
-    <AppModal
-      closeLabel="Close keyboard shortcuts"
-      onClose={onClose}
-      title="Keyboard Shortcuts"
-    >
+    <AppModal closeLabel="Close keyboard shortcuts" onClose={onClose} title="Keyboard Shortcuts">
       <section className="mt-300">
         <h3 className="text-preset-5-medium text-neutral-100 uppercase">Global</h3>
         <dl className="mt-150 grid grid-cols-[auto_1fr] items-center gap-x-200 gap-y-125">

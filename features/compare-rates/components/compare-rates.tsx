@@ -8,6 +8,7 @@ import {
   RateDetailsList,
   type RateDetailsRowActionProps,
   RateDetailsTreeGrid,
+  RateDetailsTreeGridCell,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
@@ -216,16 +217,20 @@ function CompareRateItem({
       <td aria-hidden="true" className="block" role="presentation">
         <Flag alt="" className="size-300" countryCode={currency.countryCode} />
       </td>
-      <td className="block max-w-[16ch] min-w-0 sm:max-w-none" role="cell">
+      <RateDetailsTreeGridCell
+        className="block max-w-[16ch] min-w-0 sm:max-w-none"
+        isPrimary
+        tabIndex={tabIndex}
+      >
         <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
         <span className="mt-075 block truncate text-preset-5 text-neutral-200">
           {currency.name}
         </span>
-      </td>
-      <td className="block max-w-[16ch] min-w-0 text-right sm:max-w-none" role="cell">
+      </RateDetailsTreeGridCell>
+      <RateDetailsTreeGridCell className="block max-w-[16ch] min-w-0 text-right sm:max-w-none">
         <span className="block truncate text-preset-3 text-neutral-50">{amount}</span>
         <span className="mt-075 block text-preset-6 text-neutral-200">@ {rate}</span>
-      </td>
+      </RateDetailsTreeGridCell>
     </RateDetailsTreeGridRow>
   );
 }

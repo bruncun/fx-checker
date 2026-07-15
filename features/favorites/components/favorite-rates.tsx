@@ -8,6 +8,7 @@ import { RateChange } from "@/components/ui/rate-change";
 import {
   RateDetailsList,
   RateDetailsTreeGrid,
+  RateDetailsTreeGridCell,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
@@ -99,14 +100,14 @@ function FavoriteRateItem({
       rowId={rate.pair}
       tabIndex={tabIndex}
     >
-      <td className="block min-w-0" role="cell">
+      <RateDetailsTreeGridCell className="block min-w-0" isPrimary tabIndex={tabIndex}>
         <span className="inline-flex min-w-0 items-center gap-100 text-preset-4 text-neutral-50 uppercase">
           <span>{fromCurrency.code}</span>
           <Icon decorative iconName="arrow-right" />
           <span>{toCurrency.code}</span>
         </span>
-      </td>
-      <td className="block min-w-[9ch] text-right leading-0" role="cell">
+      </RateDetailsTreeGridCell>
+      <RateDetailsTreeGridCell className="block min-w-[9ch] text-right leading-0">
         <span className="block text-preset-3 text-neutral-50">{rate.rate}</span>
         <RateChange
           className="mt-075 justify-end text-preset-6"
@@ -114,7 +115,7 @@ function FavoriteRateItem({
           direction={rate.direction}
           value={rate.change}
         />
-      </td>
+      </RateDetailsTreeGridCell>
     </RateDetailsTreeGridRow>
   );
 }

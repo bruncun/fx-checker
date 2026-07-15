@@ -12,10 +12,7 @@ import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import type { AvailableCurrency } from "../model/currencies";
-import {
-  getCurrencyGroups,
-  type CurrencyPickerItem,
-} from "../model/currency-groups";
+import { getCurrencyGroups, type CurrencyPickerItem } from "../model/currency-groups";
 
 const panelViewportGutter = 16;
 const mobilePanelGap = 20;

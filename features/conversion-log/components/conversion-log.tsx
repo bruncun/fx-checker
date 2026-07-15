@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icon";
 import {
   RateDetailsList,
   RateDetailsTreeGrid,
+  RateDetailsTreeGridCell,
   RateDetailsTreeGridRow,
 } from "@/components/ui/rate-details-list";
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
@@ -23,91 +24,17 @@ import {
   useOptimisticConversions,
 } from "@/features/conversion-log/stores/optimistic-conversions";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
-import { MoneyDecimal } from "@/features/converter/model/exchange";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { scrollConverterIntoViewIfNeeded } from "@/features/home/utils/scroll-converter-into-view";
 import { getCurrencyByCode, getCurrencyPairUrl } from "@/features/home/utils/url-state";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-function formatAmount(amount: string) {
-  try {
-    const decimal = new MoneyDecimal(amount);
-    const fractionDigits = Math.max(0, decimal.decimalPlaces());
-
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: fractionDigits,
-      minimumFractionDigits: fractionDigits,
-    }).format(decimal.toNumber());
-  } catch {
-    return amount;
-  }
-}
-
-function formatRelativeTime(createdAt: string, now = new Date()) {
-  const createdAtDate = new Date(createdAt);
-  const elapsedMilliseconds = now.getTime() - createdAtDate.getTime();
-
-  if (Number.isNaN(createdAtDate.getTime()) || elapsedMilliseconds < 0) {
-    return "Now";
-  }
-
-  const elapsedMinutes = Math.floor(elapsedMilliseconds / 60_000);
-
-  if (elapsedMinutes < 1) {
-    return "Now";
-  }
-
-  if (elapsedMinutes < 60) {
-    return `${elapsedMinutes}M`;
-  }
-
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-
-  if (elapsedHours < 24) {
-    return `${elapsedHours}H`;
-  }
-
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(createdAtDate);
-}
-
-function escapeCsvCell(value: string) {
-  if (!/[",\n\r]/.test(value)) {
-    return value;
-  }
-
-  return `"${value.replaceAll('"', '""')}"`;
-}
-
-function getConversionLogCsv(conversions: Conversion[]) {
-  const rows = [
-    ["created_at", "from_currency", "to_currency", "send_amount", "receive_amount"],
-    ...conversions.map((conversion) => [
-      conversion.createdAt,
-      conversion.fromCurrency,
-      conversion.toCurrency,
-      conversion.sendAmount,
-      conversion.receiveAmount,
-    ]),
-  ];
-
-  return rows.map((row) => row.map(escapeCsvCell).join(",")).join("\n");
-}
-
-function getConversionLogCsvFileName(now = new Date()) {
-  const date = new Intl.DateTimeFormat("en-CA", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(now);
-
-  return `conversion-log-${date}.csv`;
-}
+import {
+  formatAmount,
+  formatRelativeTime,
+  getConversionLogCsv,
+  getConversionLogCsvFileName,
+} from "../model/conversion-log-format";
 
 function downloadCsv({ csv, fileName }: { csv: string; fileName: string }) {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -227,34 +154,26 @@ function ConversionLogItem({
       rowId={conversion.id}
       tabIndex={tabIndex}
     >
-      <td
+      <RateDetailsTreeGridCell
         className="col-start-1 row-start-1 block min-w-0 text-preset-4 text-neutral-200 drop-shadow-[0_4px_4px_rgb(0_0_0_/_0.25)] sm:col-start-1 sm:row-start-auto sm:w-[64px]"
-        role="cell"
+        isPrimary
+        tabIndex={tabIndex}
       >
         {formatRelativeTime(conversion.createdAt)}
-      </td>
-      <td
-        className="col-start-1 row-start-2 block min-w-0 leading-0 sm:col-start-2 sm:row-start-auto"
-        role="cell"
-      >
+      </RateDetailsTreeGridCell>
+      <RateDetailsTreeGridCell className="col-start-1 row-start-2 block min-w-0 leading-0 sm:col-start-2 sm:row-start-auto">
         <span className="inline-flex min-w-0 items-center gap-100 text-preset-4 text-neutral-50 uppercase">
           <span>{conversion.fromCurrency}</span>
           <Icon decorative iconName="arrow-right" />
           <span>{conversion.toCurrency}</span>
         </span>
-      </td>
-      <td
-        className="col-start-2 row-start-1 block min-w-0 self-end text-right text-preset-3 sm:col-start-3 sm:row-start-auto sm:self-auto"
-        role="cell"
-      >
+      </RateDetailsTreeGridCell>
+      <RateDetailsTreeGridCell className="col-start-2 row-start-1 block min-w-0 self-end text-right text-preset-3 sm:col-start-3 sm:row-start-auto sm:self-auto">
         <span className="block truncate text-neutral-100">{sendAmount}</span>
-      </td>
-      <td
-        className="col-start-2 row-start-2 block min-w-0 self-start text-right text-preset-3 text-lime-500 sm:col-start-4 sm:row-start-auto sm:self-auto"
-        role="cell"
-      >
+      </RateDetailsTreeGridCell>
+      <RateDetailsTreeGridCell className="col-start-2 row-start-2 block min-w-0 self-start text-right text-preset-3 text-lime-500 sm:col-start-4 sm:row-start-auto sm:self-auto">
         <span className="block truncate">{receiveAmount}</span>
-      </td>
+      </RateDetailsTreeGridCell>
     </RateDetailsTreeGridRow>
   );
 }

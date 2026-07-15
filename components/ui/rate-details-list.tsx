@@ -176,6 +176,10 @@ type RateDetailsRowActionProps = {
   tabIndex: 0 | -1;
 };
 
+type RateDetailsTreeGridCellProps = React.TdHTMLAttributes<HTMLTableCellElement> & {
+  isPrimary?: boolean;
+};
+
 type RateDetailsTreeGridRowProps = {
   "aria-label": string;
   action: (props: RateDetailsRowActionProps) => React.ReactNode;
@@ -189,16 +193,24 @@ type RateDetailsTreeGridRowProps = {
   tabIndex: 0 | -1;
 };
 
-type RateDetailsCellProps = React.HTMLAttributes<HTMLTableCellElement> & {
-  "data-rate-details-cell"?: true;
-  "data-rate-details-primary-cell"?: true;
-};
-
-function isFocusableCell(child: React.ReactNode) {
+function RateDetailsTreeGridCell({
+  children,
+  className,
+  isPrimary = false,
+  tabIndex = -1,
+  ...props
+}: RateDetailsTreeGridCellProps) {
   return (
-    React.isValidElement<RateDetailsCellProps>(child) &&
-    child.props["aria-hidden"] !== "true" &&
-    child.props.role !== "presentation"
+    <td
+      {...props}
+      className={cn("outline-none", className)}
+      data-rate-details-cell
+      data-rate-details-primary-cell={isPrimary ? true : undefined}
+      role="cell"
+      tabIndex={tabIndex}
+    >
+      {children}
+    </td>
   );
 }
 
@@ -214,36 +226,11 @@ function RateDetailsTreeGridRow({
   rowId,
   tabIndex,
 }: RateDetailsTreeGridRowProps) {
-  const rowRef = React.useRef<HTMLTableRowElement>(null);
   const actionRef = React.useRef<HTMLButtonElement>(null);
-
-  void ariaLabel;
-
-  const childArray = React.Children.toArray(children);
-  const cells = childArray.map((child, index) => {
-    if (!React.isValidElement<RateDetailsCellProps>(child)) {
-      return child;
-    }
-
-    if (!isFocusableCell(child)) {
-      return child;
-    }
-
-    const focusableCellIndex = childArray.slice(0, index).filter(isFocusableCell).length;
-    const isPrimaryCell = focusableCellIndex === 0;
-
-    const cellProps: RateDetailsCellProps = {
-      className: cn("outline-none", child.props.className),
-      "data-rate-details-cell": true,
-      ...(isPrimaryCell ? { "data-rate-details-primary-cell": true } : {}),
-      tabIndex: isPrimaryCell ? tabIndex : -1,
-    };
-
-    return React.cloneElement(child, cellProps);
-  });
 
   return (
     <tr
+      aria-label={ariaLabel}
       aria-current={isSelected ? "true" : undefined}
       className={cn(
         "fx-transition-surface grid w-full cursor-pointer items-center gap-x-125 rounded-16 bg-neutral-600 px-150 py-150 text-left shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))] outline-none [--fx-list-row-padding-y:var(--spacing-150)] focus-within:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-300))] focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] sm:gap-x-250 sm:px-200 sm:[--fx-list-row-padding-y:var(--spacing-150)]",
@@ -253,10 +240,9 @@ function RateDetailsTreeGridRow({
       data-rate-details-row
       data-rate-details-row-id={rowId}
       onClick={onSelect}
-      ref={rowRef}
       role="row"
     >
-      {cells}
+      {children}
       <td className={cn("block", actionClassName)} role="cell">
         {action({
           "data-rate-details-action": true,
@@ -268,5 +254,5 @@ function RateDetailsTreeGridRow({
   );
 }
 
-export { RateDetailsList, RateDetailsTreeGrid, RateDetailsTreeGridRow };
+export { RateDetailsList, RateDetailsTreeGrid, RateDetailsTreeGridCell, RateDetailsTreeGridRow };
 export type { RateDetailsRowActionProps };
