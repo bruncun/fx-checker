@@ -327,15 +327,6 @@
 }
 
 @layer utilities {
-  @keyframes fx-page-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
   @keyframes fx-tab-panel-in {
     from {
       opacity: 0;
@@ -436,10 +427,6 @@
     50% {
       opacity: 0.8;
     }
-  }
-
-  .fx-page-in {
-    animation: fx-page-in var(--fx-motion-duration-base) var(--fx-motion-ease-snap) both;
   }
 
   .fx-tab-panel-in {
@@ -544,7 +531,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .fx-page-in,
     .fx-tab-panel-in,
     .fx-state-in,
     .fx-list-row-in,
