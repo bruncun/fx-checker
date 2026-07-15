@@ -4,7 +4,10 @@ import {
   getLatestRatesData,
   getLiveRatesDataForLatestRates,
 } from "@/features/exchange-rates/api/server";
-import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites/components/favorite-rates";
+import {
+  FavoriteRates,
+  FavoriteRatesFallback,
+} from "@/features/favorites/components/favorite-rates";
 import { getServerFavorites } from "@/features/favorites/api/server";
 import { getFavoriteRateRows } from "@/features/favorites/model/favorite-rate-rows";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";

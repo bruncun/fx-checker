@@ -11,7 +11,6 @@ import {
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
 import type { CreateConversionInput } from "@/features/conversion-log/model/conversion-log";
-import type { Favorite } from "@/features/favorites/model/favorites";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
@@ -19,7 +18,7 @@ import { usePersistedConverterAmount } from "../hooks/use-persisted-converter-am
 import type { AvailableCurrency } from "../model/currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
-import { ConverterFavoriteButton } from "./converter-favorite-button";
+import { ConverterFavoritePairProvider } from "./converter-favorite-button";
 import {
   CurrencyPicker,
   type CurrencyPickerHandle,
@@ -48,7 +47,7 @@ type DeferredCurrencyPickerProps = Omit<CurrencyPickerProps, "countryCode" | "cu
 type ConverterAmountControlsProps = {
   currencyReferencePromise: Promise<AvailableCurrency[]>;
   exchangeRateLabel: string;
-  favoritesPromise: Promise<Favorite[]>;
+  favoriteButtonSlot: React.ReactNode;
   focusTriggerRequests: Record<AmountSide, number>;
   initialAmount?: string;
   initialAmountSource?: AmountSide;
@@ -244,7 +243,7 @@ function FavoriteButtonFallback() {
 function ConverterAmountControls({
   currencyReferencePromise,
   exchangeRateLabel,
-  favoritesPromise,
+  favoriteButtonSlot,
   focusTriggerRequests,
   initialAmount,
   initialAmountSource,
@@ -410,15 +409,16 @@ function ConverterAmountControls({
           {exchangeRateLabel}
         </p>
         <ConverterActionGroup>
-          <React.Suspense fallback={<FavoriteButtonFallback />}>
-            <ConverterFavoriteButton
-              favoritesPromise={favoritesPromise}
-              pair={{
-                fromCurrency: sendCurrency.currencyCode,
-                toCurrency: receiveCurrency.currencyCode,
-              }}
-            />
-          </React.Suspense>
+          <ConverterFavoritePairProvider
+            pair={{
+              fromCurrency: sendCurrency.currencyCode,
+              toCurrency: receiveCurrency.currencyCode,
+            }}
+          >
+            <React.Suspense fallback={<FavoriteButtonFallback />}>
+              {favoriteButtonSlot}
+            </React.Suspense>
+          </ConverterFavoritePairProvider>
           <LogConversionButton
             aria-disabled={isLogAcknowledged ? true : undefined}
             aria-label={

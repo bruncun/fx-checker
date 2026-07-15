@@ -2,8 +2,10 @@
 
 import * as React from "react";
 
-import type { Conversion, CreateConversionInput } from "@/features/conversion-log/model/conversion-log";
-import type { Favorite } from "@/features/favorites/model/favorites";
+import type {
+  Conversion,
+  CreateConversionInput,
+} from "@/features/conversion-log/model/conversion-log";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { getCurrencyPairUrl, getSelectedCurrencyPairKey } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
@@ -16,7 +18,7 @@ import { ConverterAmountControls } from "./converter-amount-controls";
 
 type ConverterProps = {
   currencyReferencePromise: Promise<AvailableCurrency[]>;
-  favoritesPromise: Promise<Favorite[]>;
+  favoriteButtonSlot: React.ReactNode;
   initialConverterModel?: ReturnType<typeof getConverterModel>;
   rates: FrankfurterRate[];
 };
@@ -47,7 +49,7 @@ async function loadConversionLogDependencies() {
 
 function Converter({
   currencyReferencePromise,
-  favoritesPromise,
+  favoriteButtonSlot,
   initialConverterModel,
   rates,
 }: ConverterProps) {
@@ -168,11 +170,11 @@ function Converter({
         <ConverterAmountControls
           currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
+          favoriteButtonSlot={favoriteButtonSlot}
           focusTriggerRequests={focusTriggerRequests}
           initialAmount={converterAmount.amount}
           initialAmountSource={converterAmount.amountSource}
           initialReceiveAmount={converterAmount.receiveAmount}
-          favoritesPromise={favoritesPromise}
           rates={rates}
           receiveCurrency={receiveCurrency}
           sendCurrency={sendCurrency}

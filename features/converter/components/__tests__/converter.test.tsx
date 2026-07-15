@@ -5,10 +5,11 @@ import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Converter, type SelectedCurrency } from "../converter";
+import { ConverterFavoriteButton } from "../converter-favorite-button";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 import type { AvailableCurrency } from "../../model/currencies";
-import type { Favorite } from "@/features/favorites";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import { Favorite } from "@/features/favorites/model/favorites";
 
 const {
   createConversion,
@@ -71,6 +72,10 @@ function fulfilledPromise<T>(value: T) {
   });
 }
 
+function renderFavoriteButtonSlot(favorites: Favorite[]) {
+  return <ConverterFavoriteButton favoritesPromise={fulfilledPromise(favorites)} />;
+}
+
 function renderConverter({
   converterCurrencies = currencies,
   converterRates = rates,
@@ -97,7 +102,7 @@ function renderConverter({
     <KeyboardShortcutsProvider>
       <Converter
         currencyReferencePromise={fulfilledPromise(converterCurrencies)}
-        favoritesPromise={fulfilledPromise(favorites)}
+        favoriteButtonSlot={renderFavoriteButtonSlot(favorites)}
         rates={converterRates}
       />
     </KeyboardShortcutsProvider>
@@ -157,7 +162,7 @@ describe("Converter", () => {
       <KeyboardShortcutsProvider>
         <Converter
           currencyReferencePromise={fulfilledPromise(currencies)}
-          favoritesPromise={fulfilledPromise([])}
+          favoriteButtonSlot={renderFavoriteButtonSlot([])}
           rates={rates}
         />
       </KeyboardShortcutsProvider>
@@ -644,7 +649,7 @@ describe("Converter", () => {
       <KeyboardShortcutsProvider>
         <Converter
           currencyReferencePromise={fulfilledPromise(currencies)}
-          favoritesPromise={fulfilledPromise([])}
+          favoriteButtonSlot={renderFavoriteButtonSlot([])}
           rates={rates}
         />
       </KeyboardShortcutsProvider>

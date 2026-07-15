@@ -51,10 +51,7 @@ async function getHeaderAccount() {
 
 function AccountFallback() {
   return (
-    <span
-      aria-hidden="true"
-      className={accountTriggerFallbackClassName}
-    >
+    <span aria-hidden="true" className={accountTriggerFallbackClassName}>
       <span style={{ visibility: "hidden" }}>Menu</span>
       <span className="inline-block size-150" />
     </span>

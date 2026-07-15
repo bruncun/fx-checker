@@ -12,15 +12,13 @@ import {
 } from "@/features/exchange-rates/api/server";
 import { Suspense, type ReactNode } from "react";
 import { Converter } from "@/features/converter/components/converter";
+import { FavoriteButtonFallback } from "@/features/converter/components/converter-amount-controls";
+import { ConverterFavoriteButton } from "@/features/converter/components/converter-favorite-button";
 import { LiveRateList } from "@/features/live-rates/components/live-rate-list";
 import { RateDetails } from "@/features/rate-details";
 import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
-import {
-  ConverterFallback,
-  HeaderStatsFallback,
-  LiveRatesFallback,
-} from "./components/home-page-fallback";
+import { HeaderStatsFallback, LiveRatesFallback } from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
@@ -62,7 +60,6 @@ async function LiveRates() {
 }
 
 async function ConverterSlot() {
-  const favoritesPromise = getServerFavorites();
   const latestRatesData = await getLatestRatesData();
 
   assertDataAvailable(latestRatesData);
@@ -73,19 +70,25 @@ async function ConverterSlot() {
       {latestRatesData.freshness.dataStatus === "stale" ? (
         <StaleExchangeRatesAlert fetchedAt={latestRatesData.freshness.fetchedAt} />
       ) : null}
-      <Suspense fallback={<ConverterFallback />}>
-        <Converter
-          currencyReferencePromise={currencyReferencePromise}
-          favoritesPromise={favoritesPromise}
-          initialConverterModel={getConverterModel({
-            rates: latestRatesData.rates,
-            searchParams: new URLSearchParams(),
-          })}
-          rates={latestRatesData.rates}
-        />
-      </Suspense>
+      <Converter
+        currencyReferencePromise={currencyReferencePromise}
+        favoriteButtonSlot={
+          <Suspense fallback={<FavoriteButtonFallback />}>
+            <ConverterFavoriteButtonSlot />
+          </Suspense>
+        }
+        initialConverterModel={getConverterModel({
+          rates: latestRatesData.rates,
+          searchParams: new URLSearchParams(),
+        })}
+        rates={latestRatesData.rates}
+      />
     </>
   );
+}
+
+function ConverterFavoriteButtonSlot() {
+  return <ConverterFavoriteButton favoritesPromise={getServerFavorites()} />;
 }
 
 async function getConverterCurrencyReference(
@@ -112,11 +115,7 @@ async function RateDetailsNavigationSlot() {
 export function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
-      converterSlot={
-        <Suspense fallback={<ConverterFallback />}>
-          <ConverterSlot />
-        </Suspense>
-      }
+      converterSlot={<ConverterSlot />}
       headerStatsSlot={
         <Suspense fallback={<HeaderStatsFallback />}>
           <HeaderStats />

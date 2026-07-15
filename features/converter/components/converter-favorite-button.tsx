@@ -22,17 +22,41 @@ import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavaila
 
 type ConverterFavoriteButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   favoritesPromise: Promise<Favorite[]>;
-  pair: FavoriteCurrencyPair;
 };
 
-function ConverterFavoriteButton({
-  favoritesPromise,
+const ConverterFavoritePairContext = React.createContext<FavoriteCurrencyPair | null>(null);
+
+function ConverterFavoritePairProvider({
+  children,
   pair,
-  ...props
-}: ConverterFavoriteButtonProps) {
+}: {
+  children: React.ReactNode;
+  pair: FavoriteCurrencyPair;
+}) {
+  return (
+    <ConverterFavoritePairContext.Provider value={pair}>
+      {children}
+    </ConverterFavoritePairContext.Provider>
+  );
+}
+
+function useConverterFavoritePair() {
+  const pair = React.use(ConverterFavoritePairContext);
+
+  if (pair === null) {
+    throw new Error(
+      "ConverterFavoriteButton must be rendered inside ConverterFavoritePairProvider"
+    );
+  }
+
+  return pair;
+}
+
+function ConverterFavoriteButton({ favoritesPromise, ...props }: ConverterFavoriteButtonProps) {
   const router = useRouter();
   const showDataUnavailableError = useDataUnavailableError();
   const initialFavorites = React.use(favoritesPromise);
+  const pair = useConverterFavoritePair();
   const favorites = useOptimisticFavorites(initialFavorites);
   const normalizedPair = normalizeFavoritePair(pair);
   const existingFavorite = findFavorite(favorites, normalizedPair);
@@ -88,4 +112,4 @@ function ConverterFavoriteButton({
   );
 }
 
-export { ConverterFavoriteButton };
+export { ConverterFavoriteButton, ConverterFavoritePairProvider };

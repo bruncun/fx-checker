@@ -1,4 +1,7 @@
-import { CompareRates, CompareRatesFallback } from "@/features/compare-rates/components/compare-rates";
+import {
+  CompareRates,
+  CompareRatesFallback,
+} from "@/features/compare-rates/components/compare-rates";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import {
   getCurrencyReferenceDataForLatestRates,
