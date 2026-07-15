@@ -4,6 +4,7 @@ import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { FavoriteButtonFallback } from "@/features/converter";
+import { AccountFallback } from "@/features/header/header";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -59,11 +60,7 @@ function HeaderStatsFallback() {
           className: "hidden sm:list-item",
           content: "Central bank data",
         },
-        <span
-          aria-hidden="true"
-          className="fx-skeleton inline-flex size-400 shrink-0 rounded-full shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
-          key="account"
-        />,
+        <AccountFallback key="account" />,
       ]}
     />
   );

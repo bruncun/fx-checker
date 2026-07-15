@@ -7,6 +7,9 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { UserDropdown } from "./user-dropdown";
 
+const accountTriggerFallbackClassName =
+  "fx-skeleton relative inline-flex h-400 shrink-0 items-center justify-center gap-075 overflow-hidden rounded-8 bg-neutral-500 px-125 py-100 text-preset-5 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]";
+
 type ExchangeRateStatsProps = {
   currencyCount: number;
   email?: string | null;
@@ -50,8 +53,11 @@ function AccountFallback() {
   return (
     <span
       aria-hidden="true"
-      className="fx-skeleton inline-flex size-400 shrink-0 rounded-full shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]"
-    />
+      className={accountTriggerFallbackClassName}
+    >
+      <span style={{ visibility: "hidden" }}>Menu</span>
+      <span className="inline-block size-150" />
+    </span>
   );
 }
 
