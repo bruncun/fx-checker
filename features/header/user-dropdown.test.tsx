@@ -115,13 +115,13 @@ describe("UserDropdown", () => {
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
-    const trigger = screen.getByRole("button", { name: "Signing out..." });
+    const trigger = screen.getByRole("button", { name: "Exiting..." });
 
     expect(trigger).toHaveProperty("disabled", true);
     expect(trigger.getAttribute("aria-busy")).toBe("true");
     expect(trigger.className).toContain("h-400");
     expect(trigger.className).toContain("disabled:pointer-events-none");
-    expect(trigger.textContent).toBe("Signing out...");
+    expect(trigger.textContent).toBe("Exiting...");
     expect(trigger.querySelector("[data-pending-spinner]")).toBeNull();
   });
 
@@ -135,7 +135,7 @@ describe("UserDropdown", () => {
       expect(routerPush).toHaveBeenCalledWith("/auth/login");
     });
 
-    expect(screen.getByRole("button", { name: "Signing out..." })).toHaveProperty("disabled", true);
+    expect(screen.getByRole("button", { name: "Exiting..." })).toHaveProperty("disabled", true);
 
     fireEvent(window, new Event("pageshow"));
 

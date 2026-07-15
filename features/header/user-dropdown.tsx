@@ -197,7 +197,7 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
         }}
         type="button"
       >
-        <span>{isSigningOut ? "Signing out..." : "Menu"}</span>
+        <span>{isSigningOut ? "Exiting..." : "Menu"}</span>
         {!isSigningOut ? <Icon decorative height={12} iconName="chevron-down" width={12} /> : null}
       </button>
 
