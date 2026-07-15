@@ -7,9 +7,9 @@ import {
   RateHistoryChartPanel,
   RateHistoryEmptyState,
   RateHistoryStats,
-  deriveRateHistoryData,
-  type RateHistoryRangeModel,
-} from "@/features/rate-history";
+} from "@/features/rate-history/components/rate-history";
+import { deriveRateHistoryData } from "@/features/rate-history/model/rate-history";
+import type { RateHistoryRangeModel } from "@/features/rate-history/model/rate-history";
 import { deriveRateHistoryRangeViewModel } from "@/features/rate-history/model/rate-history-chart-model";
 import { RateHistoryRangePicker } from "@/features/rate-history/components/rate-history-range-viewer";
 import { getHistoryPageData, type HistoryPageData } from "@/features/rate-history/api/server";

@@ -10,7 +10,7 @@ import {
   normalizeFavoritePair,
   type Favorite,
   type FavoriteCurrencyPair,
-} from "@/features/favorites";
+} from "@/features/favorites/model/favorites";
 import { createFavorite, deleteFavorite } from "@/features/favorites/api/client";
 import {
   addOptimisticFavorite,

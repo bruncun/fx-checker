@@ -3,20 +3,20 @@ import { Icon } from "@/components/ui/icon";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
-import { FavoriteButtonFallback } from "@/features/converter";
+import { FavoriteButtonFallback } from "@/features/converter/components/converter-amount-controls";
 import { AccountFallback } from "@/features/header/header";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 import type { ReactNode } from "react";
 
 function SkeletonBlock({ className }: { className: string }) {
-  return <span aria-hidden className={cn("fx-skeleton block", className)} />;
+  return <span aria-hidden className={cx("fx-skeleton block", className)} />;
 }
 
 function FallbackAmountInput({ className }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
-      className={cn(
+      className={cx(
         "fx-skeleton h-[40px] w-[112px] max-w-[42vw] rounded-6 sm:w-[132px] lg:h-[41px]",
         className
       )}
@@ -28,7 +28,7 @@ function FallbackCurrencyButton() {
   return (
     <button
       aria-label="Loading currency"
-      className={cn(
+      className={cx(
         interactiveSurfaceClassName,
         "h-500 w-1200 p-125 text-preset-4 text-neutral-50 uppercase"
       )}
@@ -78,7 +78,7 @@ const liveRateFallbackItems = [
 
 function LiveRateFallbackText({ children, className }: { children: ReactNode; className: string }) {
   return (
-    <span aria-hidden="true" className={cn("fx-skeleton inline-block rounded-4", className)}>
+    <span aria-hidden="true" className={cx("fx-skeleton inline-block rounded-4", className)}>
       <span className="text-transparent" style={{ visibility: "hidden" }}>
         {children}
       </span>
@@ -90,7 +90,7 @@ function LiveRateChangeFallback({ value }: { value: string }) {
   return (
     <span
       aria-hidden="true"
-      className={cn(
+      className={cx(
         "fx-skeleton inline-flex items-center rounded-4 text-transparent",
         "text-preset-6 sm:text-preset-5 [&>span:first-child]:w-075 [&>span:first-child]:text-[6.5px] sm:[&>span:first-child]:w-100 sm:[&>span:first-child]:text-[8.5px]"
       )}
@@ -107,7 +107,7 @@ function LiveRatesFallback() {
   return (
     <aside aria-labelledby="Market snapshot" className="relative flex w-full bg-neutral-700">
       <div
-        className={cn(
+        className={cx(
           "flex shrink-0 items-center gap-100 bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
           "sm:h-500 sm:px-200 sm:text-preset-5-medium"
         )}

@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { hasEnvVars } from "../utils";
+import { hasEnvVars } from "../env";
 import {
   GUEST_MODE_COOKIE,
   isGuestCookieValue,

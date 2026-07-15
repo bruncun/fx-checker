@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 type InlineMetaListItem = ReactNode | { className?: string; content: ReactNode };
 
@@ -40,12 +40,12 @@ function InlineMetaList({
       aria-atomic={ariaAtomic}
       aria-label={ariaLabel}
       aria-live={ariaLive}
-      className={cn("flex items-center", className)}
+      className={cx("flex items-center", className)}
     >
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 ? (
-            <li aria-hidden="true" className={cn(separatorClassName, getItemClassName(item))}>
+            <li aria-hidden="true" className={cx(separatorClassName, getItemClassName(item))}>
               &nbsp;·&nbsp;
             </li>
           ) : null}

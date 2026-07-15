@@ -15,14 +15,14 @@ import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import type { AmountSide } from "@/features/converter/model/exchange";
-import type { SelectedCurrency } from "@/features/converter";
+import type { SelectedCurrency } from "@/features/converter/model/selected-currency";
 import {
   findFavorite,
   getFavoritePairKey,
   normalizeFavoritePair,
   type Favorite,
   type FavoriteCurrencyPair,
-} from "@/features/favorites";
+} from "@/features/favorites/model/favorites";
 import { createFavorite, deleteFavorite } from "@/features/favorites/api/client";
 import {
   addOptimisticFavorite,

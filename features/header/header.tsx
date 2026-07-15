@@ -1,8 +1,8 @@
 import { Logo } from "@/components/logo";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
+import { hasEnvVars } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { hasEnvVars } from "@/lib/utils";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { UserDropdown } from "./user-dropdown";

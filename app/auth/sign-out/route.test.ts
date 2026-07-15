@@ -22,7 +22,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/env", () => ({
   hasEnvVars: true,
 }));
 

@@ -1,5 +1,5 @@
 import { LiveRateItem, type LiveRate } from "./live-rate-item";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 type LiveRateListProps = {
   rates: LiveRate[];
@@ -10,7 +10,7 @@ export function LiveRateList({ rates }: LiveRateListProps) {
     <div className="w-full overflow-x-clip">
       <aside aria-label="Market snapshot" className="relative flex w-full bg-neutral-700">
         <div
-          className={cn(
+          className={cx(
             "flex shrink-0 items-center bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
             "sm:h-500 sm:px-200 sm:text-preset-5-medium"
           )}

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 type IconVariant = {
   body: React.ReactNode;
@@ -404,7 +404,7 @@ function IconSvg({
   return (
     <svg
       aria-hidden="true"
-      className={cn("h-full w-full", className)}
+      className={cx("h-full w-full", className)}
       fill="none"
       focusable="false"
       height={variant.height}
@@ -435,7 +435,7 @@ function Icon({
     <span
       aria-hidden={decorative ? true : undefined}
       aria-label={accessibleAlt}
-      className={cn("inline-flex shrink-0", className)}
+      className={cx("inline-flex shrink-0", className)}
       role={decorative ? undefined : "img"}
       style={{
         ...style,

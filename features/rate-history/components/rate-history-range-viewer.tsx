@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { RangePicker, type RangePickerOption } from "@/components/ui/range-picker";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
-import { historyRanges, type HistoryRange } from "@/features/rate-history/model/rate-history";
+import { historyRanges, type HistoryRange } from "@/features/rate-history/model/ranges";
 
 const ranges: RangePickerOption[] = historyRanges.map((range) => ({
   label: range,

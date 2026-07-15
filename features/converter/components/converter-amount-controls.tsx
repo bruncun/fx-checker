@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
-import type { CreateConversionInput } from "@/features/conversion-log";
-import type { Favorite } from "@/features/favorites";
+import type { CreateConversionInput } from "@/features/conversion-log/model/conversion-log";
+import type { Favorite } from "@/features/favorites/model/favorites";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";

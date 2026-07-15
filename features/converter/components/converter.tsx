@@ -2,8 +2,8 @@
 
 import * as React from "react";
 
-import type { Conversion, CreateConversionInput } from "@/features/conversion-log";
-import type { Favorite } from "@/features/favorites";
+import type { Conversion, CreateConversionInput } from "@/features/conversion-log/model/conversion-log";
+import type { Favorite } from "@/features/favorites/model/favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { getCurrencyPairUrl, getSelectedCurrencyPairKey } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";

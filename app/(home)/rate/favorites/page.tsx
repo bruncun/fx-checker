@@ -4,11 +4,11 @@ import {
   getLatestRatesData,
   getLiveRatesDataForLatestRates,
 } from "@/features/exchange-rates/api/server";
-import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites";
+import { FavoriteRates, FavoriteRatesFallback } from "@/features/favorites/components/favorite-rates";
 import { getServerFavorites } from "@/features/favorites/api/server";
 import { getFavoriteRateRows } from "@/features/favorites/model/favorite-rate-rows";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
-import { deriveLiveRateForPair } from "@/features/live-rates";
+import { deriveLiveRateForPair } from "@/features/live-rates/model/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { Metadata } from "next";
 import { Suspense } from "react";

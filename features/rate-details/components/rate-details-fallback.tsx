@@ -1,6 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { TabButton } from "@/components/ui/tab-button";
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 import type { CSSProperties } from "react";
 import {
   getRateDetailsPanelId,
@@ -17,7 +17,7 @@ const fallbackHistoryStats = [
 ];
 
 function SkeletonBlock({ className, style }: { className: string; style?: CSSProperties }) {
-  return <span aria-hidden className={cn("fx-skeleton block", className)} style={style} />;
+  return <span aria-hidden className={cx("fx-skeleton block", className)} style={style} />;
 }
 
 function RateHistoryFallback() {
@@ -116,7 +116,7 @@ function ChartFallback() {
             { className: "", width: 36 },
           ].map((label, index) => (
             <SkeletonBlock
-              className={cn("h-125 rounded-4", label.className)}
+              className={cx("h-125 rounded-4", label.className)}
               key={`${label.width}-${index}`}
               style={{ width: label.width }}
             />
@@ -139,7 +139,7 @@ function RangePickerFallback() {
       {fallbackHistoryRanges.map((range) => (
         <button
           aria-checked={range === "1M"}
-          className={cn(
+          className={cx(
             "fx-transition-surface relative block cursor-default rounded-8 px-200 py-150 text-preset-5 text-neutral-200",
             "disabled:opacity-100"
           )}
@@ -164,7 +164,7 @@ function RateDetailsNavigationFallback() {
       <button
         aria-label="Sections: History"
         aria-hidden={true}
-        className={cn(
+        className={cx(
           "flex h-500 w-full items-center justify-between gap-200 rounded-8 bg-neutral-700 px-150 py-125 text-preset-3 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:hidden",
           "hover:bg-neutral-600 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none"
         )}

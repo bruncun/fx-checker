@@ -15,7 +15,7 @@ import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { TabPendingState } from "@/components/ui/tab-pending-state";
 import { useTransitioningList } from "@/hooks/use-transitioning-list";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
-import type { Conversion } from "@/features/conversion-log";
+import type { Conversion } from "@/features/conversion-log/model/conversion-log";
 import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/api/client";
 import {
   clearOptimisticConversions,

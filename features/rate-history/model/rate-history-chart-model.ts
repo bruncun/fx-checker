@@ -4,13 +4,13 @@ import { area, line } from "d3-shape";
 import {
   getRateHistoryRangePoints,
   getRateHistoryStats,
-  historyRanges,
   type RateHistoryChartModel,
   type RateHistoryData,
   type RateHistoryPoint,
   type RateHistoryRangeModel,
   type RateHistoryViewModel,
 } from "@/features/rate-history/model/rate-history";
+import { historyRanges } from "@/features/rate-history/model/ranges";
 
 type ChartPoint = {
   date: Date;

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 export type LogoProps = Omit<React.HTMLAttributes<HTMLSpanElement>, "children"> & {
   alt?: string;
@@ -44,7 +44,7 @@ function LogoSvg({
   return (
     <svg
       aria-hidden="true"
-      className={cn("h-full w-auto", className)}
+      className={cx("h-full w-auto", className)}
       fill="none"
       focusable="false"
       height={logo.height}
@@ -64,7 +64,7 @@ function Logo({ alt = "FX Checker", className, variant = "full", ...props }: Log
   return (
     <span
       aria-label={alt}
-      className={cn("inline-flex shrink-0", logo.className, className)}
+      className={cx("inline-flex shrink-0", logo.className, className)}
       role="img"
       {...props}
     >

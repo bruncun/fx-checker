@@ -1,4 +1,7 @@
-import { ConversionLog, ConversionLogFallback } from "@/features/conversion-log";
+import {
+  ConversionLog,
+  ConversionLogFallback,
+} from "@/features/conversion-log/components/conversion-log";
 import { getServerConversions } from "@/features/conversion-log/api/server";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { getCurrencyReferenceData } from "@/features/exchange-rates/api/server";

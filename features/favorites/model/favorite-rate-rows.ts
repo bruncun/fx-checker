@@ -1,6 +1,7 @@
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import type { SelectedCurrency } from "@/features/converter/model/selected-currency";
-import { deriveLiveRateForPair, type LiveRate } from "@/features/live-rates";
+import type { LiveRate } from "@/features/live-rates/components/live-rate-item";
+import { deriveLiveRateForPair } from "@/features/live-rates/model/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { Favorite } from "./favorites";
 

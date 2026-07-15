@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 
 export type LiveRate = {
   pair: string;
@@ -28,7 +28,7 @@ export function LiveRateItem({ rate }: LiveRateItemProps) {
       </span>
       <span
         aria-hidden="true"
-        className={cn(
+        className={cx(
           "inline-flex items-center text-preset-6 sm:text-preset-5",
           rate.direction === "up" && "text-green-500",
           rate.direction === "down" && "text-red-500",

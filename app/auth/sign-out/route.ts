@@ -5,7 +5,7 @@ import {
   GUEST_MODE_COOKIE,
 } from "@/features/guest-session/model/guest-session";
 import { createClient } from "@/lib/supabase/server";
-import { hasEnvVars } from "@/lib/utils";
+import { hasEnvVars } from "@/lib/env";
 import { NextResponse, type NextRequest } from "next/server";
 
 const guestSessionCookies = [

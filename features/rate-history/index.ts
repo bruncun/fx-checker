@@ -10,8 +10,6 @@ export {
   getRateHistoryRangeStartDate,
   getRateHistoryRangePoints,
   getRateHistoryStats,
-  historyRanges,
-  type HistoryRange,
   type RateHistoryChartModel,
   type RateHistoryData,
   type RateHistoryPoint,
@@ -19,3 +17,4 @@ export {
   type RateHistoryStat,
   type RateHistoryViewModel,
 } from "./model/rate-history";
+export { historyRanges, type HistoryRange } from "./model/ranges";

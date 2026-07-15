@@ -14,9 +14,13 @@ import {
 import { TabEmptyState } from "@/components/ui/tab-empty-state";
 import { TabPendingState } from "@/components/ui/tab-pending-state";
 import { useTransitioningList } from "@/hooks/use-transitioning-list";
-import type { SelectedCurrency } from "@/features/converter";
+import type { SelectedCurrency } from "@/features/converter/model/selected-currency";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
-import { getFavoritePairKey, type Favorite, type FavoriteCurrencyPair } from "@/features/favorites";
+import {
+  getFavoritePairKey,
+  type Favorite,
+  type FavoriteCurrencyPair,
+} from "@/features/favorites/model/favorites";
 import { deleteFavorite } from "@/features/favorites/api/client";
 import {
   addOptimisticFavorite,
@@ -25,7 +29,7 @@ import {
 } from "@/features/favorites/stores/optimistic-favorites";
 import { useConverterPairSelection } from "@/features/home/hooks/use-converter-pair-selection";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import type { LiveRate } from "@/features/live-rates";
+import type { LiveRate } from "@/features/live-rates/components/live-rate-item";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";

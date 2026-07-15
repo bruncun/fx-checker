@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 import Image from "next/image";
 
 export const flagCountryNames = {
@@ -80,7 +80,7 @@ function Flag({ alt, className, countryCode, loading = "lazy", ...props }: FlagP
   return (
     <Image
       alt={alt ?? flagCountryNames[countryCode]}
-      className={cn("size-6 rounded-full object-cover", className)}
+      className={cx("size-6 rounded-full object-cover", className)}
       decoding="async"
       height={24}
       loading={loading}

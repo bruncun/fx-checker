@@ -4,7 +4,8 @@ import {
   deriveAvailableCurrencies,
   type AvailableCurrency,
 } from "@/features/converter/model/currencies";
-import { deriveLiveRates, type LiveRate } from "@/features/live-rates";
+import type { LiveRate } from "@/features/live-rates/components/live-rate-item";
+import { deriveLiveRates } from "@/features/live-rates/model/live-rates";
 import {
   EXCHANGE_RATES_CACHE_TAG,
   getCurrencies,

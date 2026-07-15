@@ -11,8 +11,8 @@ import {
   getLiveRatesData,
 } from "@/features/exchange-rates/api/server";
 import { Suspense, type ReactNode } from "react";
-import { Converter } from "@/features/converter";
-import { LiveRateList } from "@/features/live-rates";
+import { Converter } from "@/features/converter/components/converter";
+import { LiveRateList } from "@/features/live-rates/components/live-rate-list";
 import { RateDetails } from "@/features/rate-details";
 import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";

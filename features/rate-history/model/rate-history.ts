@@ -1,8 +1,9 @@
 import Decimal from "decimal.js-light";
 
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import type { HistoryRange } from "./ranges";
 
-export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "1Y" | "5Y";
+export type { HistoryRange } from "./ranges";
 
 export type RateHistoryPoint = {
   date: string;
@@ -59,8 +60,6 @@ export type RateHistoryViewModel = {
 };
 
 const RateHistoryDecimal = Decimal.clone({ precision: 40 });
-
-export const historyRanges: HistoryRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y"];
 
 function parseIsoDate(date: string) {
   const [year, month, day] = date.split("-").map(Number);

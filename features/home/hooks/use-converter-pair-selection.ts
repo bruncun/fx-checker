@@ -1,6 +1,6 @@
 "use client";
 
-import type { SelectedCurrency } from "@/features/converter";
+import type { SelectedCurrency } from "@/features/converter/model/selected-currency";
 import type { AmountSide } from "@/features/converter/model/exchange";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";

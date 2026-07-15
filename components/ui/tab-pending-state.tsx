@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cx } from "@/lib/cx";
 import { PendingSpinner } from "./pending-spinner";
 
 type TabPendingStateProps = {
@@ -11,7 +11,7 @@ function TabPendingState({ className, label }: TabPendingStateProps) {
     <div
       aria-label={label}
       aria-live="polite"
-      className={cn("py-600 text-center", className)}
+      className={cx("py-600 text-center", className)}
       data-tab-pending-state
       role="status"
     >

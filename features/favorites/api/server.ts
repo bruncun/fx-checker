@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
-import { hasEnvVars } from "@/lib/utils";
+import { hasEnvVars } from "@/lib/env";
 import { cacheLife, cacheTag } from "next/cache";
 import { cookies } from "next/headers";
 import type { Favorite } from "../model/favorites";
