@@ -76,11 +76,7 @@ describe("AppModal", () => {
             Invoker
           </button>
           {isOpen ? (
-            <AppModal
-              closeLabel="Close modal"
-              onClose={() => setIsOpen(false)}
-              title="Modal title"
-            >
+            <AppModal closeLabel="Close modal" onClose={() => setIsOpen(false)} title="Modal title">
               Content
             </AppModal>
           ) : null}
