@@ -591,6 +591,7 @@ describe("Converter", () => {
   });
 
   it("persists amount updates into the URL without an app router navigation", () => {
+    vi.useFakeTimers();
     const replaceState = vi.spyOn(window.history, "replaceState");
 
     renderConverter();
@@ -603,6 +604,7 @@ describe("Converter", () => {
     fireEvent.change(getAmountInput("Send"), {
       target: { value: "100" },
     });
+    vi.runOnlyPendingTimers();
 
     expect(replaceState).toHaveBeenCalledWith(
       null,
@@ -611,9 +613,11 @@ describe("Converter", () => {
     );
     expect(routerReplace).not.toHaveBeenCalled();
     expect(routerRefresh).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it("keeps the focused amount input mounted when its URL amount params update", () => {
+    vi.useFakeTimers();
     const view = renderConverter();
     const replaceState = vi
       .spyOn(window.history, "replaceState")
@@ -628,6 +632,7 @@ describe("Converter", () => {
     fireEvent.change(sendAmount, {
       target: { value: "1" },
     });
+    vi.runOnlyPendingTimers();
 
     expect(replaceState).toHaveBeenCalledWith(
       null,
@@ -647,6 +652,7 @@ describe("Converter", () => {
 
     expect(getAmountInput("Send")).toBe(sendAmount);
     expect(document.activeElement).toBe(sendAmount);
+    vi.useRealTimers();
   });
 
   it("does not update search params for formatting-only amount input changes", () => {

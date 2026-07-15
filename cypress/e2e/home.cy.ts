@@ -174,6 +174,7 @@ describe("home page", () => {
     cy.visit("/guest");
 
     cy.location("pathname").should("eq", "/");
+    cy.location("search", { timeout: 10000 }).should("include", "amount=1000");
     cy.findByRole("tab", { name: "Compare" }).click();
     cy.location("pathname", { timeout: 10000 }).should("eq", "/rate/compare");
 
@@ -182,6 +183,22 @@ describe("home page", () => {
     cy.location("pathname", { timeout: 10000 }).should("eq", "/");
     cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the rate before money moves." }).should("not.exist");
+  });
+
+  it("preserves section tab focus when keyboard navigation returns to history", () => {
+    cy.visit("/guest");
+    cy.location("search", { timeout: 10000 }).should("include", "amount=1000");
+
+    cy.findByRole("tab", { name: "History" }).focus().should("be.focused");
+    cy.press(Cypress.Keyboard.Keys.RIGHT);
+
+    cy.findByRole("tab", { name: "Compare" }).should("be.focused");
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/rate/compare");
+
+    cy.press(Cypress.Keyboard.Keys.LEFT);
+
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/");
+    cy.findByRole("tab", { name: "History" }).should("be.focused");
   });
 
   it("renders the home shell without redirecting to login", () => {

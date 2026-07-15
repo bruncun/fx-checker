@@ -228,7 +228,7 @@ describe("SectionNavigation", () => {
     expect(screen.getByRole("tab", { name: "Compare" }).getAttribute("href")).toBe("#compare");
   });
 
-  it("activates a tablet tab when the tab receives focus", () => {
+  it("activates a tablet tab when it receives keyboard focus", () => {
     const onTabActivate = vi.fn();
 
     render(
@@ -244,6 +244,26 @@ describe("SectionNavigation", () => {
 
     expect(onTabActivate).toHaveBeenCalledWith(sections[1]);
     expect(onTabActivate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not activate a tablet tab when pointer focus precedes link activation", () => {
+    const onTabActivate = vi.fn();
+
+    render(
+      <SectionNavigation
+        aria-label="Rate details sections"
+        items={sections}
+        onTabActivate={onTabActivate}
+        value="history"
+      />
+    );
+
+    const compareTab = screen.getByRole("tab", { name: "Compare" });
+
+    fireEvent.pointerDown(compareTab);
+    compareTab.focus();
+
+    expect(onTabActivate).not.toHaveBeenCalled();
   });
 
   it("activates the next tablet tab when focus moves with arrow keys", () => {
