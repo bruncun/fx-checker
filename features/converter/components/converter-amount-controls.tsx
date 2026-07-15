@@ -225,7 +225,13 @@ function usePersistedConverterAmount({
     const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
 
     if (nextUrl !== currentUrl) {
-      window.history.replaceState(null, "", nextUrl);
+      const timeoutId = window.setTimeout(() => {
+        if (window.location.pathname === pathname) {
+          window.history.replaceState(null, "", nextUrl);
+        }
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     }
   }, [amountState, pathname, searchParamsString]);
 

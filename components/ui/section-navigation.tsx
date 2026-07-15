@@ -56,6 +56,7 @@ function SectionNavigation({
   const panelRef = React.useRef<HTMLDivElement>(null);
   const tabListRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const isPointerTabFocusRef = React.useRef(false);
   const activeItem = items.find((item) => item.value === value) ?? items[0];
   const activeLabel = activeItem?.label ?? "";
   const activeCount = activeItem?.count;
@@ -297,9 +298,23 @@ function SectionNavigation({
               id={item.tabId}
               label={item.label}
               onFocus={() => {
-                if (!isCurrent) {
-                  onTabActivate?.(item);
+                if (isCurrent) {
+                  return;
                 }
+
+                if (isPointerTabFocusRef.current) {
+                  return;
+                }
+
+                onTabActivate?.(item);
+              }}
+              onPointerDown={() => {
+                isPointerTabFocusRef.current = true;
+              }}
+              onPointerUp={() => {
+                window.setTimeout(() => {
+                  isPointerTabFocusRef.current = false;
+                }, 0);
               }}
               scroll={false}
               tabIndex={isCurrent ? 0 : -1}
