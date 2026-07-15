@@ -18,7 +18,7 @@ import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import type { AvailableCurrency } from "../model/currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
-import type { SelectedCurrency } from "./converter";
+import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterFavoriteButton } from "./converter-favorite-button";
 import {
   CurrencyPicker,

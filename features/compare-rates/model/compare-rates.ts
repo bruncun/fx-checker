@@ -6,7 +6,7 @@ import {
   MoneyDecimal,
   type AmountSide,
 } from "@/features/converter/model/exchange";
-import type { SelectedCurrency } from "@/features/converter";
+import type { SelectedCurrency } from "@/features/converter/model/selected-currency";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
 const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];

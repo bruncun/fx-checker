@@ -3,6 +3,7 @@ import { getServerFavorites } from "@/features/favorites/api/server";
 import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
+import { getConverterModel } from "@/features/converter/model/converter";
 import {
   getCurrencyReferenceData,
   getCurrencyReferenceDataForLatestRates,
@@ -76,6 +77,10 @@ async function ConverterSlot() {
         <Converter
           currencyReferencePromise={currencyReferencePromise}
           favoritesPromise={favoritesPromise}
+          initialConverterModel={getConverterModel({
+            rates: latestRatesData.rates,
+            searchParams: new URLSearchParams(),
+          })}
           rates={latestRatesData.rates}
         />
       </Suspense>

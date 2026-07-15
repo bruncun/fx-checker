@@ -1,6 +1,6 @@
-import type { SelectedCurrency } from "@/features/converter";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import type { AmountSide } from "@/features/converter/model/exchange";
+import type { SelectedCurrency } from "@/features/converter/model/selected-currency";
 import { historyRanges, type HistoryRange } from "@/features/rate-history";
 
 const DEFAULT_CONVERTER_AMOUNT = "1000";

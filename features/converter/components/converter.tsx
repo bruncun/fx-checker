@@ -2,30 +2,22 @@
 
 import * as React from "react";
 
-import type { FlagCountryCode } from "@/components/ui/flag";
 import type { Conversion, CreateConversionInput } from "@/features/conversion-log";
 import type { Favorite } from "@/features/favorites";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import {
-  getConverterAmountFromParams,
-  getCurrencyCodePairFromParams,
-  getCurrencyPairUrl,
-  getSelectedCurrencyPairKey,
-} from "@/features/home/utils/url-state";
+import { getCurrencyPairUrl, getSelectedCurrencyPairKey } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AvailableCurrency } from "../model/currencies";
-import { getExchangeRate, formatExchangeRate, type AmountSide } from "../model/exchange";
+import { getConverterModel, getExchangeRateLabel } from "../model/converter";
+import type { AmountSide } from "../model/exchange";
+import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterAmountControls } from "./converter-amount-controls";
-
-export type SelectedCurrency = {
-  countryCode?: FlagCountryCode;
-  currencyCode: string;
-};
 
 type ConverterProps = {
   currencyReferencePromise: Promise<AvailableCurrency[]>;
   favoritesPromise: Promise<Favorite[]>;
+  initialConverterModel?: ReturnType<typeof getConverterModel>;
   rates: FrankfurterRate[];
 };
 
@@ -33,60 +25,31 @@ function getOptimisticId() {
   return `optimistic:${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
 }
 
-const defaultSelectedCurrencies = {
-  receiveCurrency: { currencyCode: "EUR" },
-  sendCurrency: { currencyCode: "USD" },
-} satisfies { receiveCurrency: SelectedCurrency; sendCurrency: SelectedCurrency };
-
-function getSelectableCurrencyCodes(rates: FrankfurterRate[]) {
-  const sharedBase = rates[0]?.base;
-
-  if (!sharedBase || rates.some((rate) => rate.base !== sharedBase)) {
-    return new Set<string>();
-  }
-
-  return new Set([sharedBase, ...rates.map((rate) => rate.quote)]);
-}
-
-function getSelectedCurrencyPairFromCodes(rates: FrankfurterRate[], searchParams: URLSearchParams) {
-  const selectableCurrencyCodes = getSelectableCurrencyCodes(rates);
-  const { receiveCurrencyCode, sendCurrencyCode } = getCurrencyCodePairFromParams(searchParams);
-  const fallbackSendCurrencyCode = selectableCurrencyCodes.has("USD")
-    ? "USD"
-    : (selectableCurrencyCodes.values().next().value ??
-      defaultSelectedCurrencies.sendCurrency.currencyCode);
-  const fallbackReceiveCurrencyCode = selectableCurrencyCodes.has("EUR")
-    ? "EUR"
-    : ([...selectableCurrencyCodes].find((code) => code !== fallbackSendCurrencyCode) ??
-      fallbackSendCurrencyCode);
-
-  return {
-    receiveCurrency: {
-      currencyCode: selectableCurrencyCodes.has(receiveCurrencyCode)
-        ? receiveCurrencyCode
-        : fallbackReceiveCurrencyCode,
-    },
-    sendCurrency: {
-      currencyCode: selectableCurrencyCodes.has(sendCurrencyCode)
-        ? sendCurrencyCode
-        : fallbackSendCurrencyCode,
-    },
-  };
-}
-
-function Converter({ currencyReferencePromise, favoritesPromise, rates }: ConverterProps) {
+function Converter({
+  currencyReferencePromise,
+  favoritesPromise,
+  initialConverterModel,
+  rates,
+}: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
   const [, startTransition] = React.useTransition();
   const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
-  const selectedCurrencyPairFromUrl = getSelectedCurrencyPairFromCodes(
-    rates,
-    new URLSearchParams(searchParamsString)
-  );
+  const canUseInitialModel = initialConverterModel !== undefined && searchParamsString === "";
+  const liveConverterModel = canUseInitialModel
+    ? initialConverterModel
+    : getConverterModel({
+        rates,
+        searchParams: new URLSearchParams(searchParamsString),
+      });
+  const selectedCurrencyPairFromUrl = {
+    receiveCurrency: liveConverterModel.receiveCurrency,
+    sendCurrency: liveConverterModel.sendCurrency,
+  };
   const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
-  const converterAmount = getConverterAmountFromParams(new URLSearchParams(searchParamsString));
+  const converterAmount = liveConverterModel.converterAmount;
   const [localSelectedCurrencies, setLocalSelectedCurrencies] = React.useState(() => ({
     currencies: selectedCurrencyPairFromUrl,
     serverUrlKey: selectedCurrencyPairUrlKey,
@@ -102,15 +65,11 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
       ? localSelectedCurrencies.currencies
       : selectedCurrencyPairFromUrl;
   const { receiveCurrency, sendCurrency } = selectedCurrencies;
-  const exchangeRate = getExchangeRate(
-    rates,
-    sendCurrency.currencyCode,
-    receiveCurrency.currencyCode
-  );
   const exchangeRateLabel =
-    exchangeRate === null
-      ? `Rate unavailable for ${sendCurrency.currencyCode}/${receiveCurrency.currencyCode}`
-      : `1 ${sendCurrency.currencyCode} = ${formatExchangeRate(exchangeRate)} ${receiveCurrency.currencyCode}`;
+    sendCurrency.currencyCode === liveConverterModel.sendCurrency.currencyCode &&
+    receiveCurrency.currencyCode === liveConverterModel.receiveCurrency.currencyCode
+      ? liveConverterModel.exchangeRateLabel
+      : getExchangeRateLabel({ rates, receiveCurrency, sendCurrency });
 
   function updateSelectedCurrencies(
     currencies: {
@@ -208,3 +167,4 @@ function Converter({ currencyReferencePromise, favoritesPromise, rates }: Conver
 }
 
 export { Converter };
+export type { SelectedCurrency };
