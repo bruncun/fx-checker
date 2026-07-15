@@ -36,13 +36,17 @@ export function getSafeRedirectPath(redirectTo: string | null) {
   return redirectTo;
 }
 
+function replaceWithDocumentNavigation(href: string) {
+  window.location.replace(new URL(href, window.location.href));
+}
+
 export function LoginForm({
   className,
   layout = "page",
   // Auth mutates cookies in a fetch response; use a document navigation so the
   // app shell is rendered from the updated session rather than cached guest UI,
   // and replace so Back cannot reopen stale authenticated-only auth state.
-  navigate = (href) => window.location.replace(new URL(href, window.location.href)),
+  navigate = replaceWithDocumentNavigation,
   ...props
 }: LoginFormProps) {
   const searchParams = useSearchParams();

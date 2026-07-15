@@ -19,14 +19,16 @@ type ForgotPasswordFormProps = React.ComponentPropsWithoutRef<"div"> & {
   navigate?: (href: string) => void;
 };
 
+function navigateToForgotPasswordResult(href: string) {
+  // Standalone auth pages use document navigation after mutation responses.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.assign(href);
+}
+
 export function ForgotPasswordForm({
   className,
   layout = "page",
-  navigate = (href) => {
-    // Standalone auth pages use document navigation after mutation responses.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign(href);
-  },
+  navigate = navigateToForgotPasswordResult,
   ...props
 }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("");

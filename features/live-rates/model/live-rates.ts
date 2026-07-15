@@ -78,11 +78,13 @@ function formatChangePercent(currentRate: Decimal, previousRate: Decimal) {
 }
 
 function getBaselineRatesByDate(latestDate: string, historicalRates: FrankfurterRate[]) {
-  const baselineDate = historicalRates
-    .map((rate) => rate.date)
-    .filter((date) => date < latestDate)
-    .sort()
-    .at(0);
+  const baselineDate = historicalRates.reduce<string | null>((earliestDate, rate) => {
+    if (rate.date >= latestDate) {
+      return earliestDate;
+    }
+
+    return earliestDate === null || rate.date < earliestDate ? rate.date : earliestDate;
+  }, null);
 
   return baselineDate ? historicalRates.filter((rate) => rate.date === baselineDate) : [];
 }

@@ -119,13 +119,16 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
     try {
       const response = await fetch("/auth/sign-out", { method: "POST" });
 
-      if (!response.ok) {
-        throw new Error("Failed to sign out");
+      if (response.ok) {
+        router.replace("/auth/login");
+        router.refresh();
+        setIsSigningOut(false);
+        return;
       }
 
-      router.replace("/auth/login");
-      router.refresh();
+      console.error("Failed to sign out", new Error("Failed to sign out"));
       setIsSigningOut(false);
+      showDataUnavailableError();
     } catch (error) {
       console.error("Failed to sign out", error);
       setIsSigningOut(false);

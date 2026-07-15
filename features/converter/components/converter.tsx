@@ -25,6 +25,26 @@ function getOptimisticId() {
   return `optimistic:${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
 }
 
+async function loadConversionLogDependencies() {
+  const [
+    { normalizeConversionInput },
+    { createConversion },
+    { addOptimisticConversion, removeOptimisticConversion, replaceOptimisticConversion },
+  ] = await Promise.all([
+    import("@/features/conversion-log/model/conversion-log"),
+    import("@/features/conversion-log/api/client"),
+    import("@/features/conversion-log/stores/optimistic-conversions"),
+  ]);
+
+  return {
+    addOptimisticConversion,
+    createConversion,
+    normalizeConversionInput,
+    removeOptimisticConversion,
+    replaceOptimisticConversion,
+  };
+}
+
 function Converter({
   currencyReferencePromise,
   favoritesPromise,
@@ -108,15 +128,13 @@ function Converter({
 
   function logConversion(input: CreateConversionInput) {
     React.startTransition(async () => {
-      const [
-        { normalizeConversionInput },
-        { createConversion },
-        { addOptimisticConversion, removeOptimisticConversion, replaceOptimisticConversion },
-      ] = await Promise.all([
-        import("@/features/conversion-log/model/conversion-log"),
-        import("@/features/conversion-log/api/client"),
-        import("@/features/conversion-log/stores/optimistic-conversions"),
-      ]);
+      const {
+        addOptimisticConversion,
+        createConversion,
+        normalizeConversionInput,
+        removeOptimisticConversion,
+        replaceOptimisticConversion,
+      } = await loadConversionLogDependencies();
       const normalizedInput = normalizeConversionInput(input);
 
       if (!normalizedInput.sendAmount || !normalizedInput.receiveAmount) {

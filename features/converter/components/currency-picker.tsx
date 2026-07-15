@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { flushSync } from "react-dom";
 
 import { cn } from "@/lib/utils";
 import { CurrencyButton } from "@/components/ui/currency-button";
@@ -85,17 +84,20 @@ function CurrencyPicker({
       .flatMap((group) => group.currencies)
       .find((currency) => currency.code === currencyCode) ?? null;
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
-  const filteredCurrencyGroups = currencyGroups
-    .map((group) => ({
-      ...group,
-      currencies: group.currencies.filter((currency) => {
-        return (
-          currency.code.toLocaleLowerCase().includes(normalizedQuery) ||
-          currency.name.toLocaleLowerCase().includes(normalizedQuery)
-        );
-      }),
-    }))
-    .filter((group) => group.currencies.length > 0);
+  const filteredCurrencyGroups = currencyGroups.reduce<typeof currencyGroups>((groups, group) => {
+    const matchingCurrencies = group.currencies.filter((currency) => {
+      return (
+        currency.code.toLocaleLowerCase().includes(normalizedQuery) ||
+        currency.name.toLocaleLowerCase().includes(normalizedQuery)
+      );
+    });
+
+    if (matchingCurrencies.length > 0) {
+      groups.push({ ...group, currencies: matchingCurrencies });
+    }
+
+    return groups;
+  }, []);
   const showCurrencyGroupHeaders = normalizedQuery.length === 0;
   const visibleCurrencies = filteredCurrencyGroups.flatMap((group) => group.currencies);
   const activeCurrency =
@@ -117,7 +119,7 @@ function CurrencyPicker({
   }
 
   function finishOpeningPicker() {
-    flushSync(openPicker);
+    openPicker();
     focusSearchInput();
   }
 

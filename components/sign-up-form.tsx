@@ -20,13 +20,17 @@ type SignUpFormProps = React.ComponentPropsWithoutRef<"div"> & {
   navigate?: (href: string) => void;
 };
 
+function replaceWithDocumentNavigation(href: string) {
+  window.location.replace(new URL(href, window.location.href));
+}
+
 export function SignUpForm({
   className,
   layout = "page",
   // Auth can mutate cookies in a fetch response; use a document navigation so
   // account state is reflected immediately when signup returns an active session,
   // and replace so Back cannot reopen stale authenticated-only auth state.
-  navigate = (href) => window.location.replace(new URL(href, window.location.href)),
+  navigate = replaceWithDocumentNavigation,
   ...props
 }: SignUpFormProps) {
   const [email, setEmail] = useState("");

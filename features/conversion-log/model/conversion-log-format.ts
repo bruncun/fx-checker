@@ -1,15 +1,34 @@
 import { MoneyDecimal } from "@/features/converter/model/exchange";
 import type { Conversion } from "./conversion-log";
 
+const amountFormattersByFractionDigits = new Map<number, Intl.NumberFormat>();
+const relativeDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+const csvFileDateFormatter = new Intl.DateTimeFormat("en-CA", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "UTC",
+  year: "numeric",
+});
+
 export function formatAmount(amount: string) {
   try {
     const decimal = new MoneyDecimal(amount);
     const fractionDigits = Math.max(0, decimal.decimalPlaces());
+    let formatter = amountFormattersByFractionDigits.get(fractionDigits);
 
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: fractionDigits,
-      minimumFractionDigits: fractionDigits,
-    }).format(decimal.toNumber());
+    if (!formatter) {
+      formatter = new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: fractionDigits,
+        minimumFractionDigits: fractionDigits,
+      });
+      amountFormattersByFractionDigits.set(fractionDigits, formatter);
+    }
+
+    return formatter.format(decimal.toNumber());
   } catch {
     return amount;
   }
@@ -39,11 +58,7 @@ export function formatRelativeTime(createdAt: string, now = new Date()) {
     return `${elapsedHours}H`;
   }
 
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(createdAtDate);
+  return relativeDateFormatter.format(createdAtDate);
 }
 
 function escapeCsvCell(value: string) {
@@ -70,12 +85,7 @@ export function getConversionLogCsv(conversions: Conversion[]) {
 }
 
 export function getConversionLogCsvFileName(now = new Date()) {
-  const date = new Intl.DateTimeFormat("en-CA", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(now);
+  const date = csvFileDateFormatter.format(now);
 
   return `conversion-log-${date}.csv`;
 }

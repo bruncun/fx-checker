@@ -2,6 +2,13 @@ type StaleExchangeRatesAlertProps = {
   fetchedAt: string;
 };
 
+const fetchedAtFormatter = new Intl.DateTimeFormat("en", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+  year: "numeric",
+});
+
 function formatFetchedAt(fetchedAt: string) {
   const date = new Date(fetchedAt);
 
@@ -9,12 +16,7 @@ function formatFetchedAt(fetchedAt: string) {
     return fetchedAt;
   }
 
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(date);
+  return fetchedAtFormatter.format(date);
 }
 
 export function StaleExchangeRatesAlert({ fetchedAt }: StaleExchangeRatesAlertProps) {

@@ -56,11 +56,13 @@ function createSnapshotWriteClient() {
 }
 
 function getSourceUpdatedAt(rates: FrankfurterRate[]) {
-  const latestSourceDate = rates
-    .map((rate) => rate.date)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
+  const latestSourceDate = rates.reduce<string | null>((latestDate, rate) => {
+    if (!rate.date) {
+      return latestDate;
+    }
+
+    return latestDate === null || rate.date > latestDate ? rate.date : latestDate;
+  }, null);
 
   return latestSourceDate ? `${latestSourceDate}T00:00:00.000Z` : null;
 }

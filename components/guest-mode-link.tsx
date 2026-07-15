@@ -1,7 +1,6 @@
 "use client";
 
-import { type AnchorHTMLAttributes, type MouseEvent, useState } from "react";
-import { flushSync } from "react-dom";
+import { type AnchorHTMLAttributes, type MouseEvent, useReducer } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +13,16 @@ type GuestModeLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" |
 };
 
 const GUEST_NAVIGATION_DELAY_MS = 75;
+
+function pendingReducer() {
+  return true;
+}
+
+function navigateToGuestMode(nextHref: string) {
+  // Guest mode enters through a cookie-setting route handler; use a document visit.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.assign(new URL(nextHref, window.location.href));
+}
 
 function shouldShowPendingState(event: MouseEvent<HTMLAnchorElement>) {
   return (
@@ -31,18 +40,16 @@ export function GuestModeLink({
   className,
   href = "/guest",
   loadingLabel = "Entering guest mode...",
-  // Guest mode enters through a cookie-setting route handler; use a document visit.
-  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-  navigate = (nextHref) => window.location.assign(new URL(nextHref, window.location.href)),
+  navigate = navigateToGuestMode,
   onClick,
   size = "default",
   ...props
 }: GuestModeLinkProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, showPendingState] = useReducer(pendingReducer, false);
 
   return (
     <a
-      aria-disabled={isLoading}
+      aria-disabled={isPending}
       className={cn(buttonVariants({ variant: "outline", size }), className)}
       href={href}
       onClick={(event) => {
@@ -50,13 +57,11 @@ export function GuestModeLink({
 
         if (shouldShowPendingState(event)) {
           event.preventDefault();
-          if (isLoading) {
+          if (isPending) {
             return;
           }
 
-          flushSync(() => {
-            setIsLoading(true);
-          });
+          showPendingState();
           window.setTimeout(() => {
             navigate(href);
           }, GUEST_NAVIGATION_DELAY_MS);
@@ -64,7 +69,7 @@ export function GuestModeLink({
       }}
       {...props}
     >
-      {isLoading ? loadingLabel : "Try as guest"}
+      {isPending ? loadingLabel : "Try as guest"}
     </a>
   );
 }

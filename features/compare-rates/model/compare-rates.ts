@@ -10,6 +10,7 @@ import type { SelectedCurrency } from "@/features/converter/model/selected-curre
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
 const COMPARE_CURRENCY_PRESETS = ["GBP", "JPY", "CHF", "CAD", "AUD", "INR", "CNY", "BDT"];
+const moneyFormattersByFractionDigits = new Map<number, Intl.NumberFormat>();
 
 export type CompareRateItemData = {
   amount: string;
@@ -34,11 +35,17 @@ export function formatMoneyValue(value: string, fallback = "0") {
   try {
     const decimal = new MoneyDecimal(value);
     const fractionDigits = Math.max(0, decimal.decimalPlaces());
+    let formatter = moneyFormattersByFractionDigits.get(fractionDigits);
 
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: fractionDigits,
-      minimumFractionDigits: fractionDigits,
-    }).format(decimal.toNumber());
+    if (!formatter) {
+      formatter = new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: fractionDigits,
+        minimumFractionDigits: fractionDigits,
+      });
+      moneyFormattersByFractionDigits.set(fractionDigits, formatter);
+    }
+
+    return formatter.format(decimal.toNumber());
   } catch {
     return fallback;
   }
