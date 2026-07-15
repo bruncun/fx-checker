@@ -46,7 +46,7 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
     const state = (await response.json()) as AuthActionState;
 
     if (state.redirectTo) {
-      router.push(state.redirectTo);
+      router.replace(state.redirectTo);
       return;
     }
 

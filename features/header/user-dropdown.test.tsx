@@ -9,6 +9,7 @@ import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 
 const setTheme = vi.fn();
 const routerPush = vi.fn();
+const routerReplace = vi.fn();
 const routerRefresh = vi.fn();
 
 vi.mock("next-themes", () => ({
@@ -16,7 +17,7 @@ vi.mock("next-themes", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: routerPush, refresh: routerRefresh }),
+  useRouter: () => ({ push: routerPush, refresh: routerRefresh, replace: routerReplace }),
 }));
 
 vi.mock("@/features/home/hooks/use-data-unavailable-error", () => ({
@@ -34,6 +35,7 @@ afterEach(() => {
   cleanup();
   setTheme.mockClear();
   routerPush.mockClear();
+  routerReplace.mockClear();
   routerRefresh.mockClear();
   vi.unstubAllGlobals();
 });
@@ -125,19 +127,15 @@ describe("UserDropdown", () => {
     expect(trigger.querySelector("[data-pending-spinner]")).toBeNull();
   });
 
-  it("keeps the pending state during sign-out navigation and resets when shown again", async () => {
+  it("resets the pending state when sign-out navigation completes", async () => {
     render(<UserDropdown email="mika@example.com" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
     await waitFor(() => {
-      expect(routerPush).toHaveBeenCalledWith("/auth/login");
+      expect(routerReplace).toHaveBeenCalledWith("/auth/login");
     });
-
-    expect(screen.getByRole("button", { name: "Exiting..." })).toHaveProperty("disabled", true);
-
-    fireEvent(window, new Event("pageshow"));
 
     expect(screen.getByRole("button", { name: "Account menu" })).toHaveProperty("disabled", false);
   });
@@ -158,7 +156,7 @@ describe("UserDropdown", () => {
       );
     });
 
-    expect(routerPush).not.toHaveBeenCalled();
+    expect(routerReplace).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 

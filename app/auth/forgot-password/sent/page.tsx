@@ -1,12 +1,12 @@
 import { AuthShell } from "@/components/auth-shell";
-import { SignUpSuccess } from "@/components/sign-up-success";
+import { ForgotPasswordSent } from "@/components/forgot-password-sent";
 import { UnauthOnlyRoute } from "@/components/unauth-only-route";
 
 export default function Page() {
   return (
     <AuthShell>
       <UnauthOnlyRoute />
-      <SignUpSuccess />
+      <ForgotPasswordSent />
     </AuthShell>
   );
 }

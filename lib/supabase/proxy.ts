@@ -9,6 +9,7 @@ import {
 const publicRoutes = new Set(["/guest"]);
 const unauthOnlyRoutes = new Set([
   "/auth/forgot-password",
+  "/auth/forgot-password/sent",
   "/auth/login",
   "/auth/sign-up",
   "/auth/sign-up-success",

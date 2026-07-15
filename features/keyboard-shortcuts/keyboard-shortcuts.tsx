@@ -99,23 +99,6 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
   }, []);
 
   React.useEffect(() => {
-    if (!isShortcutsDialogOpen) {
-      return;
-    }
-
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-    };
-  }, [isShortcutsDialogOpen]);
-
-  React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented) {
         return;
