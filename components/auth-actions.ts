@@ -1,11 +1,6 @@
-import {
-  GUEST_ALERT_DISMISSED_COOKIE,
-  GUEST_CONVERSIONS_COOKIE,
-  GUEST_FAVORITES_COOKIE,
-  GUEST_MODE_COOKIE,
-} from "@/features/guest-session/model/guest-session";
+import { adoptGuestSessionData } from "@/features/guest-session/api/adoption";
 import { createClient } from "@/lib/supabase/server";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 
 export type AuthActionState = {
   error: string | null;
@@ -13,16 +8,17 @@ export type AuthActionState = {
   success?: boolean;
 };
 
-const guestSessionCookies = [
-  GUEST_MODE_COOKIE,
-  GUEST_FAVORITES_COOKIE,
-  GUEST_CONVERSIONS_COOKIE,
-  GUEST_ALERT_DISMISSED_COOKIE,
-];
-
 function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/app";
+    return "/";
+  }
+
+  if (redirectTo.startsWith("/app?")) {
+    return `/${redirectTo.slice("/app".length)}`;
+  }
+
+  if (redirectTo === "/app") {
+    return "/";
   }
 
   return redirectTo;
@@ -54,18 +50,6 @@ async function getOrigin() {
   return host ? `${protocol}://${host}` : "";
 }
 
-async function clearGuestSessionCookies() {
-  const cookieStore = await cookies();
-
-  guestSessionCookies.forEach((name) => {
-    cookieStore.set(name, "", {
-      maxAge: 0,
-      path: "/",
-      sameSite: "lax",
-    });
-  });
-}
-
 function getString(formData: FormData, name: string) {
   const value = formData.get(name);
 
@@ -86,13 +70,15 @@ export async function loginAction(
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       throw error;
     }
 
-    await clearGuestSessionCookies();
+    if (data.user) {
+      await adoptGuestSessionData({ supabase, userId: data.user.id });
+    }
 
     return { error: null, redirectTo };
   } catch (error) {
@@ -114,7 +100,7 @@ export async function signUpAction(
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -124,6 +110,11 @@ export async function signUpAction(
 
     if (error) {
       throw error;
+    }
+
+    if (data.session && data.user) {
+      await adoptGuestSessionData({ supabase, userId: data.user.id });
+      return { error: null, redirectTo: "/" };
     }
 
     return { error: null, redirectTo: "/auth/sign-up-success" };
@@ -168,7 +159,7 @@ export async function updatePasswordAction(
       throw error;
     }
 
-    return { error: null, redirectTo: "/app" };
+    return { error: null, redirectTo: "/" };
   } catch (error) {
     return { error: getErrorMessage(error) };
   }

@@ -1,3 +1,4 @@
+import { adoptGuestSessionData } from "@/features/guest-session/api/adoption";
 import { createClient } from "@/lib/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
@@ -5,6 +6,14 @@ import { type NextRequest } from "next/server";
 
 function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
+    return "/";
+  }
+
+  if (redirectTo.startsWith("/app?")) {
+    return `/${redirectTo.slice("/app".length)}`;
+  }
+
+  if (redirectTo === "/app") {
     return "/";
   }
 
@@ -25,6 +34,14 @@ export async function GET(request: NextRequest) {
       token_hash,
     });
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await adoptGuestSessionData({ supabase, userId: user.id });
+      }
+
       // redirect user to specified redirect URL or root of app
       redirect(next);
     } else {

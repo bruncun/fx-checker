@@ -43,43 +43,42 @@ afterEach(() => {
 });
 
 describe("updateSession", () => {
-  it("shows the root landing page to anonymous users", async () => {
+  it("bootstraps guest mode for anonymous root visits", async () => {
     const response = await updateSessionFor("/");
 
-    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("location")).toBe("https://fx-checker.test/");
+    expect(response.headers.getSetCookie().join("\n")).toContain(`${GUEST_MODE_COOKIE}=1`);
   });
 
-  it("redirects authenticated root visits to the app and preserves query params", async () => {
+  it("shows root app visits to authenticated users", async () => {
     getClaims.mockResolvedValue({ data: { claims: { sub: "user-1" } } });
 
     const response = await updateSessionFor("/?from=USD&to=EUR");
 
-    expect(response.headers.get("location")).toBe("https://fx-checker.test/app?from=USD&to=EUR");
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it.each(["/auth/login", "/auth/forgot-password", "/auth/sign-up", "/auth/sign-up-success"])(
-    "redirects authenticated %s visits to the app",
+    "redirects authenticated %s visits to the root app",
     async (path) => {
       getClaims.mockResolvedValue({ data: { claims: { sub: "user-1" } } });
 
       const response = await updateSessionFor(`${path}?redirectTo=%2Frate%2Flog`);
 
-      expect(response.headers.get("location")).toBe("https://fx-checker.test/app");
+      expect(response.headers.get("location")).toBe("https://fx-checker.test/");
     }
   );
 
-  it("shows the root landing page to visitors with a stale guest cookie", async () => {
+  it("shows the root app to visitors with a guest cookie", async () => {
     const response = await updateSessionFor("/", `${GUEST_MODE_COOKIE}=1`);
 
     expect(response.headers.get("location")).toBeNull();
     expect(createServerClient).not.toHaveBeenCalled();
   });
 
-  it("redirects anonymous app visits to login", async () => {
+  it("redirects legacy app visits to root while preserving search params", async () => {
     const response = await updateSessionFor("/app?from=USD");
 
-    expect(response.headers.get("location")).toBe(
-      "https://fx-checker.test/auth/login?from=USD&redirectTo=%2Fapp%3Ffrom%3DUSD"
-    );
+    expect(response.headers.get("location")).toBe("https://fx-checker.test/?from=USD");
   });
 });

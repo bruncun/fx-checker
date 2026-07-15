@@ -5,15 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SignUpForm } from "./sign-up-form";
 
-const { fetchMock, routerPush } = vi.hoisted(() => ({
+const { fetchMock } = vi.hoisted(() => ({
   fetchMock: vi.fn(),
-  routerPush: vi.fn(),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: routerPush,
-  }),
 }));
 
 afterEach(() => {
@@ -34,8 +27,9 @@ describe("SignUpForm", () => {
       json: async () => ({ error: null, redirectTo: "/auth/sign-up-success" }),
     });
     vi.stubGlobal("fetch", fetchMock);
+    const navigate = vi.fn();
 
-    render(<SignUpForm />);
+    render(<SignUpForm navigate={navigate} />);
 
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "user@example.test" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password" } });
@@ -45,7 +39,7 @@ describe("SignUpForm", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Sign up" }));
 
     await waitFor(() => {
-      expect(routerPush).toHaveBeenCalledWith("/auth/sign-up-success");
+      expect(navigate).toHaveBeenCalledWith("/auth/sign-up-success");
     });
 
     expect(screen.getByLabelText("Email")).toHaveProperty("value", "user@example.test");

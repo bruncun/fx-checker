@@ -5,15 +5,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getSafeRedirectPath, LoginForm } from "./login-form";
 
-const { fetchMock, routerPush } = vi.hoisted(() => ({
+const { fetchMock } = vi.hoisted(() => ({
   fetchMock: vi.fn(),
-  routerPush: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: routerPush,
-  }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -25,25 +21,27 @@ afterEach(() => {
 
 describe("login form redirects", () => {
   it("defaults auth-page sign-ins to the dashboard", () => {
-    expect(getSafeRedirectPath(null)).toBe("/app");
-    expect(getSafeRedirectPath("https://example.test/app")).toBe("/app");
-    expect(getSafeRedirectPath("//example.test/app")).toBe("/app");
+    expect(getSafeRedirectPath(null)).toBe("/");
+    expect(getSafeRedirectPath("https://example.test/app")).toBe("/");
+    expect(getSafeRedirectPath("//example.test/app")).toBe("/");
+    expect(getSafeRedirectPath("/app?amount=1000")).toBe("/?amount=1000");
   });
 
   it("keeps the pending state during sign-in navigation and resets when shown again", async () => {
     fetchMock.mockResolvedValue({
-      json: async () => ({ error: null, redirectTo: "/app" }),
+      json: async () => ({ error: null, redirectTo: "/" }),
     });
     vi.stubGlobal("fetch", fetchMock);
+    const navigate = vi.fn();
 
-    render(<LoginForm />);
+    render(<LoginForm navigate={navigate} />);
 
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "user@example.test" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password" } });
     fireEvent.submit(screen.getByRole("button", { name: "Login" }));
 
     await waitFor(() => {
-      expect(routerPush).toHaveBeenCalledWith("/app");
+      expect(navigate).toHaveBeenCalledWith("/");
     });
 
     expect(screen.getByLabelText("Email")).toHaveProperty("value", "user@example.test");

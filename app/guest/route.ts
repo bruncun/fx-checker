@@ -1,18 +1,12 @@
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
-  GUEST_CONVERSIONS_COOKIE,
-  GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
-  getGuestStarterConversions,
-  getGuestStarterFavorites,
-  serializeGuestConversionsCookie,
-  serializeGuestFavoritesCookie,
 } from "@/features/guest-session/model/guest-session";
 import { NextResponse, type NextRequest } from "next/server";
 
 function getSafeRedirectPath(redirectTo: string | null) {
   if (!redirectTo?.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/app";
+    return "/";
   }
 
   return redirectTo;
@@ -20,7 +14,7 @@ function getSafeRedirectPath(redirectTo: string | null) {
 
 function getGuestRedirectPath(redirectPath: string) {
   if (redirectPath === "/" || redirectPath.startsWith("/auth")) {
-    return "/app";
+    return "/";
   }
 
   return redirectPath;
@@ -41,28 +35,6 @@ export function GET(request: NextRequest) {
     path: "/",
     sameSite: "lax",
   });
-
-  if (!request.cookies.has(GUEST_FAVORITES_COOKIE)) {
-    response.cookies.set(
-      GUEST_FAVORITES_COOKIE,
-      serializeGuestFavoritesCookie(getGuestStarterFavorites()),
-      {
-        path: "/",
-        sameSite: "lax",
-      }
-    );
-  }
-
-  if (!request.cookies.has(GUEST_CONVERSIONS_COOKIE)) {
-    response.cookies.set(
-      GUEST_CONVERSIONS_COOKIE,
-      serializeGuestConversionsCookie(getGuestStarterConversions()),
-      {
-        path: "/",
-        sameSite: "lax",
-      }
-    );
-  }
 
   response.cookies.set(GUEST_ALERT_DISMISSED_COOKIE, "", {
     maxAge: 0,

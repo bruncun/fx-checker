@@ -8,7 +8,6 @@ import {
 
 const publicRoutes = new Set(["/guest"]);
 const unauthOnlyRoutes = new Set([
-  "/",
   "/auth/forgot-password",
   "/auth/login",
   "/auth/sign-up",
@@ -21,7 +20,7 @@ function redirectToApp(
   { preserveSearch = false }: { preserveSearch?: boolean } = {}
 ) {
   const url = request.nextUrl.clone();
-  url.pathname = "/app";
+  url.pathname = "/";
   if (!preserveSearch) {
     url.search = "";
   }
@@ -30,6 +29,34 @@ function redirectToApp(
 
   responseToCopy?.cookies.getAll().forEach((cookie) => {
     response.cookies.set(cookie);
+  });
+
+  return response;
+}
+
+function redirectToRoot(request: NextRequest, responseToCopy?: NextResponse) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/";
+
+  const response = NextResponse.redirect(url);
+
+  responseToCopy?.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+
+  return response;
+}
+
+function startGuestSession(request: NextRequest, responseToCopy?: NextResponse) {
+  const response = NextResponse.redirect(request.nextUrl);
+
+  responseToCopy?.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+
+  response.cookies.set(GUEST_MODE_COOKIE, "1", {
+    path: "/",
+    sameSite: "lax",
   });
 
   return response;
@@ -49,6 +76,10 @@ export async function updateSession(request: NextRequest) {
 
   if (process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1") {
     return supabaseResponse;
+  }
+
+  if (pathname === "/app") {
+    return redirectToRoot(request, supabaseResponse);
   }
 
   if (publicRoutes.has(pathname)) {
@@ -94,11 +125,11 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   if (user && unauthOnlyRoutes.has(pathname)) {
-    return redirectToApp(request, supabaseResponse, { preserveSearch: pathname === "/" });
+    return redirectToApp(request, supabaseResponse);
   }
 
   if (!user && pathname === "/") {
-    return supabaseResponse;
+    return startGuestSession(request, supabaseResponse);
   }
 
   if (!user && !pathname.startsWith("/auth")) {

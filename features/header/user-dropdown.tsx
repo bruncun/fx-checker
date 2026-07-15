@@ -3,11 +3,11 @@
 import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { PendingSpinner } from "@/components/ui/pending-spinner";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -24,15 +24,7 @@ const themeOptions: { iconName: IconName; label: string; value: ThemeValue }[] =
   { iconName: "sun", label: "Light", value: "light" },
 ];
 
-function getAccountInitials({ email, isGuest }: UserDropdownProps) {
-  if (isGuest) {
-    return "G";
-  }
-
-  return email?.trim().charAt(0).toLocaleUpperCase() || "";
-}
-
-export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
+export function UserDropdown({ isGuest = false }: UserDropdownProps) {
   const shortcuts = useOptionalKeyboardShortcuts();
   const router = useRouter();
   const { setTheme, theme } = useTheme();
@@ -46,8 +38,7 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
   const activeTheme = themeOptions.some((option) => option.value === theme)
     ? (theme as ThemeValue)
     : "system";
-  const initials = getAccountInitials({ email, isGuest });
-  const menuFocus = useRovingTabIndex<HTMLButtonElement>({
+  const menuFocus = useRovingTabIndex<HTMLElement>({
     containerRef: panelRef,
     itemSelector: "[data-user-menu-option]",
     onCurrentElementChange: (button) => {
@@ -184,11 +175,11 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
         aria-controls={isOpen ? panelId : undefined}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        aria-label={isSigningOut ? "Signing out" : "Account menu"}
+        aria-label={isSigningOut ? undefined : "Account menu"}
         className={cn(
-          "fx-transition-surface relative inline-flex size-400 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-500 text-preset-6 text-neutral-50",
-          "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none",
-          isSigningOut && "cursor-wait bg-transparent shadow-none hover:bg-transparent"
+          "fx-transition-surface relative inline-flex h-400 shrink-0 items-center justify-center gap-075 overflow-hidden rounded-8 bg-neutral-500 px-125 py-100 text-preset-5 text-neutral-50 uppercase",
+          "shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] hover:bg-neutral-400 focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-600)),0_0_0_4px_hsl(var(--lime-500))] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-80",
+          isSigningOut && "cursor-wait"
         )}
         disabled={isSigningOut}
         onClick={() => {
@@ -206,18 +197,8 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
         }}
         type="button"
       >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "fx-transition-icon",
-            isSigningOut ? "scale-75 opacity-0" : "scale-100 opacity-100"
-          )}
-        >
-          {initials}
-        </span>
-        {isSigningOut ? (
-          <PendingSpinner aria-hidden="true" className="absolute inset-0 size-400" />
-        ) : null}
+        <span>{isSigningOut ? "Signing out..." : "Menu"}</span>
+        {!isSigningOut ? <Icon decorative height={12} iconName="chevron-down" width={12} /> : null}
       </button>
 
       {isOpen ? (
@@ -288,19 +269,40 @@ export function UserDropdown({ email, isGuest = false }: UserDropdownProps) {
             </kbd>
           </button>
 
-          <button
-            className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
-            data-user-menu-option
-            onClick={signOut}
-            tabIndex={-1}
-            type="button"
-          >
-            Sign out
-          </button>
+          {isGuest ? (
+            <>
+              <Link
+                className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+                data-user-menu-option
+                href="/auth/login"
+                onClick={() => closeMenu({ restoreFocus: false })}
+                tabIndex={-1}
+              >
+                Log in
+              </Link>
+              <Link
+                className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+                data-user-menu-option
+                href="/auth/sign-up"
+                onClick={() => closeMenu({ restoreFocus: false })}
+                tabIndex={-1}
+              >
+                Sign up
+              </Link>
+            </>
+          ) : (
+            <button
+              className="fx-transition-surface flex h-500 w-full items-center rounded-4 px-100 py-125 text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
+              data-user-menu-option
+              onClick={signOut}
+              tabIndex={-1}
+              type="button"
+            >
+              Sign out
+            </button>
+          )}
         </div>
       ) : null}
     </div>
   );
 }
-
-export { getAccountInitials };

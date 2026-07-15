@@ -3,7 +3,7 @@ type CurrenciesFixture = Array<{
   name: string;
 }>;
 
-const defaultAppUrl = "/app?amount=1000&amountSource=send";
+const defaultAppUrl = "/?amount=1000&amountSource=send";
 
 function openSendCurrencyPickerWithKeyboard(currencyCode = "USD") {
   cy.findByRole("button", { name: currencyCode })
@@ -26,14 +26,13 @@ describe("home page", () => {
     cy.task("resetFrankfurterMock");
   });
 
-  it("renders the landing page with auth and guest paths", () => {
+  it("renders the converter-first app at the root", () => {
     cy.visit("/");
 
     cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
-    cy.findByRole("heading", { name: "Check the rate before money moves." }).should("be.visible");
-    cy.findByRole("link", { name: "Log in" }).should("have.attr", "href", "/auth/login");
-    cy.findByRole("link", { name: "Get started" }).should("have.attr", "href", "/auth/sign-up");
-    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest");
+    cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
+    cy.findByRole("textbox", { name: "Email" }).should("not.exist");
+    cy.findByRole("heading", { name: "Check the rate before money moves." }).should("not.exist");
   });
 
   it("offers guest mode from sign-up and starts the guest app at the top on mobile", () => {
@@ -43,7 +42,7 @@ describe("home page", () => {
     cy.findByRole("button", { name: "Sign up" }).should("be.visible");
     cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest").click();
 
-    cy.location("pathname").should("eq", "/app");
+    cy.location("pathname").should("eq", "/");
     cy.window().its("scrollY").should("eq", 0);
     cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
   });
@@ -51,38 +50,15 @@ describe("home page", () => {
   it("keeps guest users in the app shell when returning from compare to history", () => {
     cy.visit("/guest");
 
-    cy.location("pathname").should("eq", "/app");
-    cy.location("search").should("include", "amount=1000");
+    cy.location("pathname").should("eq", "/");
     cy.findByRole("tab", { name: "Compare" }).click();
     cy.location("pathname", { timeout: 10000 }).should("eq", "/rate/compare");
 
     cy.findByRole("tab", { name: "History" }).click();
 
-    cy.location("pathname", { timeout: 10000 }).should("eq", "/app");
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/");
     cy.findByRole("heading", { name: "Check the Rate" }).should("be.visible");
     cy.findByRole("heading", { name: "Check the rate before money moves." }).should("not.exist");
-  });
-
-  it("renders the home shell without redirecting to login", () => {
-    cy.visit("/");
-
-    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
-    cy.findByRole("heading", { name: "Check the rate before money moves." }).should("be.visible");
-    cy.findByRole("link", { name: "Log in" }).should("have.attr", "href", "/auth/login");
-    cy.findByRole("link", { name: "Get started" }).should("have.attr", "href", "/auth/sign-up");
-    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest");
-  });
-
-  it("offers guest mode from sign-up and starts the guest app at the top on mobile", () => {
-    cy.viewport(375, 667);
-    cy.visit("/auth/sign-up");
-
-    cy.findByRole("button", { name: "Sign up" }).should("be.visible");
-    cy.findByRole("link", { name: "Try as guest" }).should("have.attr", "href", "/guest").click();
-
-    cy.location("pathname").should("eq", "/app");
-    cy.window().its("scrollY").should("eq", 0);
-    cy.findByRole("img", { name: "FX Checker" }).should("be.visible");
   });
 
   it("renders the home shell without redirecting to login", () => {

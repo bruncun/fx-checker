@@ -6,8 +6,6 @@ import {
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
-  readGuestConversionsCookie,
-  readGuestFavoritesCookie,
 } from "@/features/guest-session/model/guest-session";
 
 import { GET } from "./route";
@@ -31,14 +29,8 @@ describe("guest route", () => {
     expect(setCookie.find((value) => value.startsWith(`${GUEST_MODE_COOKIE}=1`))).toContain(
       "Path=/"
     );
-    expect(readGuestFavoritesCookie(getSetCookieValue(setCookie, GUEST_FAVORITES_COOKIE))).toEqual([
-      expect.objectContaining({ fromCurrency: "USD", toCurrency: "EUR" }),
-      expect.objectContaining({ fromCurrency: "GBP", toCurrency: "USD" }),
-      expect.objectContaining({ fromCurrency: "EUR", toCurrency: "JPY" }),
-    ]);
-    expect(
-      readGuestConversionsCookie(getSetCookieValue(setCookie, GUEST_CONVERSIONS_COOKIE))
-    ).toHaveLength(3);
+    expect(getSetCookieValue(setCookie, GUEST_FAVORITES_COOKIE)).toBeUndefined();
+    expect(getSetCookieValue(setCookie, GUEST_CONVERSIONS_COOKIE)).toBeUndefined();
     expect(
       setCookie.find((value) => value.startsWith(`${GUEST_ALERT_DISMISSED_COOKIE}=`))
     ).toContain("Max-Age=0");
@@ -67,11 +59,11 @@ describe("guest route", () => {
       GET(
         new NextRequest("https://fx-checker.test/guest?redirectTo=https://evil.test")
       ).headers.get("location")
-    ).toBe("https://fx-checker.test/app");
+    ).toBe("https://fx-checker.test/");
     expect(
       GET(new NextRequest("https://fx-checker.test/guest?redirectTo=%2Fauth%2Flogin")).headers.get(
         "location"
       )
-    ).toBe("https://fx-checker.test/app");
+    ).toBe("https://fx-checker.test/");
   });
 });
