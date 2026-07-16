@@ -26,4 +26,15 @@ describe("ExchangeButton", () => {
       "focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))]"
     );
   });
+
+  it("shows only the vertical exchange icon below the small breakpoint", () => {
+    render(<ExchangeButton />);
+
+    const button = screen.getByRole("button", { name: "Exchange currencies" });
+    const [horizontalIconWrapper, verticalIcon] = Array.from(button.children);
+
+    expect(horizontalIconWrapper.className).toContain("hidden");
+    expect(horizontalIconWrapper.className).toContain("sm:block");
+    expect(verticalIcon.className).toContain("sm:hidden");
+  });
 });

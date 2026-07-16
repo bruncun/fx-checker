@@ -27,7 +27,9 @@ function ExchangeButton({
       type={type}
       {...props}
     >
-      <Icon className="hidden size-250 sm:block" decorative iconName="exchange" />
+      <span className="hidden leading-0 sm:block">
+        <Icon className="size-250" decorative iconName="exchange" />
+      </span>
       <Icon className="size-250 sm:hidden" decorative iconName="exchange-vertical" />
     </button>
   );
