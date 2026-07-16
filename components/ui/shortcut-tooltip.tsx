@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { ShortcutBadge } from "@/components/ui/shortcut-badge";
 import { cn } from "@/lib/utils";
 
 type ShortcutTooltipProps = {
@@ -31,7 +32,9 @@ function ShortcutTooltip({
           role="tooltip"
         >
           <span>{label}</span>
-          <kbd className="font-inherit ml-125 text-neutral-100">{shortcut}</kbd>
+          <ShortcutBadge aria-hidden="true" className="ml-125">
+            {shortcut}
+          </ShortcutBadge>
         </span>
       )}
     </span>

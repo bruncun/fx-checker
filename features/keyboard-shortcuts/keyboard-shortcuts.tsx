@@ -6,7 +6,6 @@ type ShortcutAction = () => void;
 
 type KeyboardShortcutContextValue = {
   formatShortcut: (shortcut: ShortcutDefinition) => string;
-  openShortcutsDialog: (invoker?: HTMLElement | null) => void;
   registerFocusCurrencySearch: (action: ShortcutAction | null) => void;
   registerHistoryRangeNavigation: (
     actions: {
@@ -23,13 +22,9 @@ type KeyboardShortcutsProviderProps = {
 
 type ShortcutDefinition =
   | { key: "ArrowLeft" | "ArrowRight" | "X" }
-  | { key: "K" | "/"; modifier: "primary" };
+  | { key: "K"; modifier: "primary" };
 
 const KeyboardShortcutContext = React.createContext<KeyboardShortcutContextValue | null>(null);
-
-const LazyKeyboardShortcutsDialog = React.lazy(async () => ({
-  default: (await import("./keyboard-shortcuts-dialog")).KeyboardShortcutsDialog,
-}));
 
 function isEditableElement(element: EventTarget | null) {
   if (!(element instanceof HTMLElement)) {
@@ -82,34 +77,10 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
     nextRange: ShortcutAction;
     previousRange: ShortcutAction;
   } | null>(null);
-  const [isShortcutsDialogOpen, setIsShortcutsDialogOpen] = React.useState(false);
-  const dialogInvokerRef = React.useRef<HTMLElement | null>(null);
-
-  const openShortcutsDialog = React.useCallback((invoker?: HTMLElement | null) => {
-    dialogInvokerRef.current =
-      invoker ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
-    setIsShortcutsDialogOpen(true);
-  }, []);
-
-  const closeShortcutsDialog = React.useCallback(() => {
-    setIsShortcutsDialogOpen(false);
-    requestAnimationFrame(() => {
-      dialogInvokerRef.current?.focus({ preventScroll: true });
-    });
-  }, []);
 
   React.useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented) {
-        return;
-      }
-
-      if (isShortcutsDialogOpen) {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          closeShortcutsDialog();
-        }
-
         return;
       }
 
@@ -119,12 +90,6 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
       if (isPrimaryModified && key === "k") {
         event.preventDefault();
         focusCurrencySearchRef.current?.();
-        return;
-      }
-
-      if (isPrimaryModified && event.key === "/") {
-        event.preventDefault();
-        openShortcutsDialog();
         return;
       }
 
@@ -171,12 +136,11 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [closeShortcutsDialog, isShortcutsDialogOpen, openShortcutsDialog]);
+  }, []);
 
   const contextValue = React.useMemo<KeyboardShortcutContextValue>(
     () => ({
       formatShortcut,
-      openShortcutsDialog,
       registerFocusCurrencySearch: (action) => {
         focusCurrencySearchRef.current = action;
       },
@@ -187,20 +151,12 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
         swapCurrenciesRef.current = action;
       },
     }),
-    [openShortcutsDialog]
+    []
   );
 
   return (
     <KeyboardShortcutContext value={contextValue}>
       {children}
-      {isShortcutsDialogOpen ? (
-        <React.Suspense fallback={null}>
-          <LazyKeyboardShortcutsDialog
-            formatShortcut={formatShortcut}
-            onClose={closeShortcutsDialog}
-          />
-        </React.Suspense>
-      ) : null}
     </KeyboardShortcutContext>
   );
 }

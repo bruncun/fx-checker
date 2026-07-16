@@ -4,7 +4,6 @@ import { usePointerDownOutside } from "@/hooks/use-pointer-down-outside";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
-import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -25,7 +24,6 @@ const themeOptions: { iconName: IconName; label: string; value: ThemeValue }[] =
 ];
 
 export function UserDropdown({ isGuest = false }: UserDropdownProps) {
-  const shortcuts = useOptionalKeyboardShortcuts();
   const router = useRouter();
   const { setTheme, theme } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
@@ -253,25 +251,6 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
               );
             })}
           </div>
-
-          <button
-            className="fx-transition-surface flex h-500 w-full items-center justify-between gap-150 rounded-4 px-100 py-125 text-left text-preset-5 text-neutral-50 uppercase hover:shadow-[inset_0_0_0_1px_hsl(var(--neutral-200))] focus:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus:outline-none"
-            data-user-menu-option
-            onClick={(event) => {
-              closeMenu({ restoreFocus: false });
-              shortcuts?.openShortcutsDialog(triggerRef.current ?? event.currentTarget);
-            }}
-            tabIndex={-1}
-            type="button"
-          >
-            <span>Keyboard Shortcuts</span>
-            <kbd
-              aria-hidden="true"
-              className="pointer-events-none ml-auto shrink-0 rounded-4 px-100 py-050 text-preset-6 text-neutral-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]"
-            >
-              {shortcuts?.formatShortcut({ key: "/", modifier: "primary" }) ?? "Ctrl /"}
-            </kbd>
-          </button>
 
           {isGuest ? (
             <>

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from ".";
@@ -114,78 +114,13 @@ describe("KeyboardShortcutsProvider", () => {
     expect(onPreviousRange).not.toHaveBeenCalled();
   });
 
-  it("opens the keyboard shortcuts dialog as a modal and closes with the close button", async () => {
-    const onFocusSearch = vi.fn();
-    const onSwap = vi.fn();
-
+  it("does not handle the former keyboard shortcuts dialog shortcut", () => {
     render(
       <KeyboardShortcutsProvider>
-        <RegisteredActions onFocusSearch={onFocusSearch} onSwap={onSwap} />
-        <RegisteredHistoryRangeActions onNextRange={vi.fn()} onPreviousRange={vi.fn()} />
-        <button type="button">Invoker</button>
+        <RegisteredActions onFocusSearch={vi.fn()} onSwap={vi.fn()} />
       </KeyboardShortcutsProvider>
     );
 
-    screen.getByRole("button", { name: "Invoker" }).focus();
-    fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
-
-    expect(await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
-    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" }).className).toContain(
-      "max-w-[420px]"
-    );
-    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" }).className).not.toContain(
-      "max-w-none"
-    );
-    expect(screen.getByText("Focus currency search")).toBeTruthy();
-    expect(document.activeElement).toBe(
-      screen.getByRole("button", { name: "Close keyboard shortcuts" })
-    );
-    expect(document.body.style.overflow).toBe("hidden");
-    expect(document.documentElement.style.overflow).toBe("hidden");
-
-    fireEvent.keyDown(window, { key: "x" });
-    fireEvent.keyDown(window, { key: "k", ...getPrimaryModifier() });
-
-    expect(onSwap).not.toHaveBeenCalled();
-    expect(onFocusSearch).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole("button", { name: "Close keyboard shortcuts" }));
-
-    expect(screen.queryByRole("dialog", { name: "Keyboard Shortcuts" })).toBeNull();
-    expect(document.body.style.overflow).toBe("");
-    expect(document.documentElement.style.overflow).toBe("");
-    await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Invoker" }));
-    });
-  });
-
-  it("traps focus and supports Escape and backdrop dismissal", async () => {
-    render(
-      <KeyboardShortcutsProvider>
-        <button type="button">Invoker</button>
-      </KeyboardShortcutsProvider>
-    );
-
-    screen.getByRole("button", { name: "Invoker" }).focus();
-    fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
-
-    const dialog = await screen.findByRole("dialog", { name: "Keyboard Shortcuts" });
-    const closeButton = screen.getByRole("button", { name: "Close keyboard shortcuts" });
-
-    fireEvent.keyDown(dialog, { key: "Tab" });
-    expect(document.activeElement).toBe(closeButton);
-
-    fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });
-    expect(document.activeElement).toBe(closeButton);
-
-    fireEvent.keyDown(dialog, { key: "Escape" });
-    expect(screen.queryByRole("dialog", { name: "Keyboard Shortcuts" })).toBeNull();
-
-    fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() });
-    fireEvent.mouseDown(
-      (await screen.findByRole("dialog", { name: "Keyboard Shortcuts" })).parentElement!
-    );
-
-    expect(screen.queryByRole("dialog", { name: "Keyboard Shortcuts" })).toBeNull();
+    expect(fireEvent.keyDown(window, { key: "/", ...getPrimaryModifier() })).toBe(true);
   });
 });

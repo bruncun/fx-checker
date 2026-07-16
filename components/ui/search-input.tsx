@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/ui/icon";
+import { ShortcutBadge } from "@/components/ui/shortcut-badge";
 
 export interface SearchInputProps extends Omit<React.ComponentProps<"input">, "type"> {
   inputClassName?: string;
@@ -41,12 +42,9 @@ function SearchInput({
         {...props}
       />
       {showShortcutBadge ? (
-        <kbd
-          aria-hidden="true"
-          className="pointer-events-none ml-auto shrink-0 rounded-4 px-100 py-050 text-preset-6 text-neutral-100 shadow-[inset_0_0_0_1px_hsl(var(--neutral-500))]"
-        >
+        <ShortcutBadge aria-hidden="true" className="ml-auto">
           {shortcutBadge}
-        </kbd>
+        </ShortcutBadge>
       ) : null}
     </div>
   );

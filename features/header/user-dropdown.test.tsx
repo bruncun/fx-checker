@@ -5,7 +5,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserDropdown } from "./user-dropdown";
-import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 
 const setTheme = vi.fn();
 const routerPush = vi.fn();
@@ -77,28 +76,6 @@ describe("UserDropdown", () => {
       "/auth/sign-up"
     );
     expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
-  });
-
-  it("opens keyboard shortcuts from the account dialog, closes the menu, and restores focus to the account trigger", async () => {
-    render(
-      <KeyboardShortcutsProvider>
-        <UserDropdown email="mika@example.com" />
-      </KeyboardShortcutsProvider>
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
-    fireEvent.click(screen.getByRole("button", { name: "Keyboard Shortcuts" }));
-
-    expect(screen.queryByRole("dialog", { name: "Account menu" })).toBeNull();
-    await waitFor(() => {
-      expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeTruthy();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Close keyboard shortcuts" }));
-
-    await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Account menu" }));
-    });
   });
 
   it("closes the account dialog when signing out", () => {
@@ -178,7 +155,6 @@ describe("UserDropdown", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
-    const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
     const signOutButton = screen.getByRole("button", { name: "Sign out" });
 
     systemTheme.focus();
@@ -189,12 +165,9 @@ describe("UserDropdown", () => {
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
 
-    expect(document.activeElement).toBe(shortcutsButton);
-    expect(shortcutsButton.tabIndex).toBe(0);
-    expect(systemTheme.tabIndex).toBe(-1);
-
-    fireEvent.keyDown(shortcutsButton, { key: "ArrowDown" });
     expect(document.activeElement).toBe(signOutButton);
+    expect(signOutButton.tabIndex).toBe(0);
+    expect(systemTheme.tabIndex).toBe(-1);
 
     fireEvent.keyDown(signOutButton, { key: "ArrowDown" });
     expect(document.activeElement).toBe(systemTheme);
@@ -205,12 +178,12 @@ describe("UserDropdown", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
-    const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
+    const lightTheme = screen.getByRole("radio", { name: "Light" });
     const loginLink = screen.getByRole("link", { name: "Log in" });
     const signUpLink = screen.getByRole("link", { name: "Sign up" });
 
-    shortcutsButton.focus();
-    fireEvent.keyDown(shortcutsButton, { key: "ArrowDown" });
+    lightTheme.focus();
+    fireEvent.keyDown(lightTheme, { key: "ArrowDown" });
 
     expect(document.activeElement).toBe(loginLink);
 
@@ -226,7 +199,6 @@ describe("UserDropdown", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getByRole("radio", { name: "System" });
-    const shortcutsButton = screen.getByRole("button", { name: "Keyboard Shortcuts" });
     const signOutButton = screen.getByRole("button", { name: "Sign out" });
 
     await waitFor(() => {
@@ -237,9 +209,6 @@ describe("UserDropdown", () => {
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Tab" });
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Tab" });
 
-    expect(document.activeElement).toBe(shortcutsButton);
-
-    fireEvent.keyDown(shortcutsButton, { key: "Tab" });
     expect(document.activeElement).toBe(signOutButton);
 
     fireEvent.keyDown(signOutButton, { key: "Tab" });
