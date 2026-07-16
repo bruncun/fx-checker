@@ -27,11 +27,18 @@ export interface CurrencyPickerProps {
   currencyCode: string;
   flagFetchPriority?: React.ComponentProps<typeof CurrencyButton>["flagFetchPriority"];
   flagLoading?: React.ComponentProps<typeof CurrencyButton>["flagLoading"];
+  focusSearchRequest?: number;
+  focusTriggerRequest?: number;
+  openRequest?: number;
   ref?: React.Ref<CurrencyPickerHandle>;
   onPickerOpen?: () => void;
   onCurrencySelect?: (currency: CurrencyPickerItem) => void;
   left?: boolean;
 }
+
+export type CurrencyPickerWithDataProps = Omit<CurrencyPickerProps, "currencies"> & {
+  currenciesPromise: Promise<AvailableCurrency[]>;
+};
 
 export type CurrencyPickerHandle = {
   focusSearch: () => void;
@@ -45,6 +52,9 @@ function CurrencyPicker({
   currencyCode,
   flagFetchPriority,
   flagLoading,
+  focusSearchRequest = 0,
+  focusTriggerRequest = 0,
+  openRequest = 0,
   ref,
   onPickerOpen,
   onCurrencySelect,
@@ -144,6 +154,58 @@ function CurrencyPicker({
   }
 
   React.useImperativeHandle(ref, () => ({ focusSearch, focusTrigger }));
+
+  const openPickerFromTriggerRef = React.useRef(openPickerFromTrigger);
+  const focusSearchRef = React.useRef(focusSearch);
+  const focusTriggerRef = React.useRef(focusTrigger);
+
+  React.useEffect(() => {
+    openPickerFromTriggerRef.current = openPickerFromTrigger;
+    focusSearchRef.current = focusSearch;
+    focusTriggerRef.current = focusTrigger;
+  });
+
+  React.useEffect(() => {
+    if (openRequest === 0) {
+      return;
+    }
+
+    const animationFrameId = requestAnimationFrame(() => {
+      openPickerFromTriggerRef.current();
+    });
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [openRequest]);
+
+  React.useEffect(() => {
+    if (focusSearchRequest === 0) {
+      return;
+    }
+
+    const animationFrameId = requestAnimationFrame(() => {
+      focusSearchRef.current();
+    });
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [focusSearchRequest]);
+
+  React.useEffect(() => {
+    if (focusTriggerRequest === 0) {
+      return;
+    }
+
+    const animationFrameId = requestAnimationFrame(() => {
+      focusTriggerRef.current();
+    });
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [focusTriggerRequest]);
 
   function closePicker(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);
@@ -388,4 +450,10 @@ function CurrencyPicker({
   );
 }
 
-export { CurrencyPicker, getCurrencyGroups };
+function CurrencyPickerWithData({ currenciesPromise, ...props }: CurrencyPickerWithDataProps) {
+  const currencies = React.use(currenciesPromise);
+
+  return <CurrencyPicker {...props} currencies={currencies} />;
+}
+
+export { CurrencyPicker, CurrencyPickerWithData, getCurrencyGroups };

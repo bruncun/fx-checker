@@ -12,11 +12,12 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - api/cron/warm-frankfurter-cache (protected by CRON_SECRET)
+     * - api/currencies (public exchange metadata)
      * - favicon.ico (favicon file)
      * - manifest files (PWA metadata files)
      * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
      * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|api/cron/warm-frankfurter-cache|favicon.ico|manifest\\.(?:json|webmanifest)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|api/cron/warm-frankfurter-cache|api/currencies|favicon.ico|manifest\\.(?:json|webmanifest)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

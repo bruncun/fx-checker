@@ -19,15 +19,12 @@ import type { AvailableCurrency } from "../model/currencies";
 import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterFavoritePairProvider } from "./converter-favorite-button";
-import {
-  CurrencyPicker,
-  type CurrencyPickerHandle,
-  type CurrencyPickerProps,
-} from "./currency-picker";
+import { CurrencyPickerWithData, type CurrencyPickerWithDataProps } from "./currency-picker";
 
 type ConverterAmountPanelProps = {
   amount: string;
   amountSide: AmountSide;
+  countryCode?: SelectedCurrency["countryCode"];
   currencyReferencePromise: Promise<AvailableCurrency[]>;
   currencyCode: string;
   focusSearchRequest: number;
@@ -38,7 +35,10 @@ type ConverterAmountPanelProps = {
   onInteraction: (side: AmountSide) => void;
 };
 
-type DeferredCurrencyPickerProps = Omit<CurrencyPickerProps, "countryCode" | "currencies"> & {
+type DeferredCurrencyPickerProps = Omit<
+  CurrencyPickerWithDataProps,
+  "currenciesPromise" | "openRequest"
+> & {
   currenciesPromise: Promise<AvailableCurrency[]>;
   focusSearchRequest: number;
   focusTriggerRequest: number;
@@ -68,56 +68,32 @@ type ConverterAmountControlsProps = {
 const logConversionAcknowledgementMs = 700;
 
 function DeferredCurrencyPicker({
+  className,
   currenciesPromise,
+  countryCode,
+  currencyCode,
+  flagFetchPriority,
+  flagLoading,
   focusSearchRequest,
   focusTriggerRequest,
   onPickerOpen,
-  ...props
+  onCurrencySelect,
+  left,
 }: DeferredCurrencyPickerProps) {
-  const currencies = React.use(currenciesPromise);
-  const pickerRef = React.useRef<CurrencyPickerHandle>(null);
-
-  React.useEffect(() => {
-    if (focusSearchRequest === 0) {
-      return;
-    }
-
-    const animationFrameId = requestAnimationFrame(() => {
-      pickerRef.current?.focusSearch();
-    });
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [focusSearchRequest]);
-
-  React.useEffect(() => {
-    if (focusTriggerRequest === 0) {
-      return;
-    }
-
-    const animationFrameId = requestAnimationFrame(() => {
-      pickerRef.current?.focusTrigger();
-    });
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [focusTriggerRequest]);
-
-  const selectedCurrency =
-    currencies.find((currency) => currency.code === props.currencyCode) ?? currencies[0];
-
-  return selectedCurrency ? (
-    <CurrencyPicker
-      {...props}
-      countryCode={selectedCurrency.countryCode}
-      currencies={currencies}
-      ref={pickerRef}
+  return (
+    <CurrencyPickerWithData
+      className={className}
+      countryCode={countryCode}
+      currenciesPromise={currenciesPromise}
+      currencyCode={currencyCode}
+      flagFetchPriority={flagFetchPriority}
+      flagLoading={flagLoading}
+      focusSearchRequest={focusSearchRequest}
+      focusTriggerRequest={focusTriggerRequest}
+      left={left}
+      onCurrencySelect={onCurrencySelect}
       onPickerOpen={onPickerOpen}
     />
-  ) : (
-    <CurrencyPickerFallback currencyCode={props.currencyCode} />
   );
 }
 
@@ -132,6 +108,7 @@ function isPositiveAmount(amount: string) {
 function ConverterAmountPanel({
   amount,
   amountSide,
+  countryCode,
   currencyReferencePromise,
   currencyCode,
   focusSearchRequest,
@@ -167,26 +144,31 @@ function ConverterAmountPanel({
           value={amount}
           className={label === "Receive" ? "text-lime-500" : ""}
         />
-        <React.Suspense fallback={<CurrencyPickerFallback currencyCode={currencyCode} />}>
-          <DeferredCurrencyPicker
-            currenciesPromise={currencyReferencePromise}
-            currencyCode={currencyCode}
-            flagFetchPriority="high"
-            flagLoading="eager"
-            focusSearchRequest={focusSearchRequest}
-            focusTriggerRequest={focusTriggerRequest}
-            onPickerOpen={() => {
-              onInteraction(amountSide);
-            }}
-            onCurrencySelect={(currency) => {
-              onCurrencyChange({
-                countryCode: currency.countryCode,
-                currencyCode: currency.code,
-              });
-            }}
-            left={label === "Send"}
-          />
-        </React.Suspense>
+        {countryCode ? (
+          <React.Suspense fallback={<CurrencyPickerFallback currencyCode={currencyCode} />}>
+            <DeferredCurrencyPicker
+              countryCode={countryCode}
+              currenciesPromise={currencyReferencePromise}
+              currencyCode={currencyCode}
+              flagFetchPriority="high"
+              flagLoading="eager"
+              focusSearchRequest={focusSearchRequest}
+              focusTriggerRequest={focusTriggerRequest}
+              onPickerOpen={() => {
+                onInteraction(amountSide);
+              }}
+              onCurrencySelect={(currency) => {
+                onCurrencyChange({
+                  countryCode: currency.countryCode,
+                  currencyCode: currency.code,
+                });
+              }}
+              left={label === "Send"}
+            />
+          </React.Suspense>
+        ) : (
+          <CurrencyPickerFallback currencyCode={currencyCode} />
+        )}
       </div>
     </fieldset>
   );

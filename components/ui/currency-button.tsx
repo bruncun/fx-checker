@@ -19,11 +19,13 @@ function CurrencyButton({
   flagLoading,
   countryCode,
   currencyCode,
+  ref,
   type = "button",
   ...props
 }: CurrencyButtonProps) {
   return (
     <button
+      ref={ref}
       aria-label={ariaLabel}
       className={cn(
         interactiveSurfaceClassName,

@@ -69,6 +69,10 @@ const currencyFlagCountryCodes: Partial<Record<string, FlagCountryCode>> = {
   ZAR: "za",
 };
 
+export function getCurrencyFlagCountryCode(currencyCode: string) {
+  return currencyFlagCountryCodes[currencyCode];
+}
+
 export function deriveAvailableCurrencies(
   currencies: FrankfurterCurrency[],
   rates: FrankfurterRate[]

@@ -3,6 +3,7 @@ import {
   getCurrencyCodePairFromParams,
 } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
+import { getCurrencyFlagCountryCode } from "./currencies";
 import { formatExchangeRate, getExchangeRate } from "./exchange";
 import type { SelectedCurrency } from "./selected-currency";
 
@@ -38,11 +39,19 @@ export function getSelectedCurrencyPairFromCodes(
 
   return {
     receiveCurrency: {
+      countryCode: getCurrencyFlagCountryCode(
+        selectableCurrencyCodes.has(receiveCurrencyCode)
+          ? receiveCurrencyCode
+          : fallbackReceiveCurrencyCode
+      ),
       currencyCode: selectableCurrencyCodes.has(receiveCurrencyCode)
         ? receiveCurrencyCode
         : fallbackReceiveCurrencyCode,
     },
     sendCurrency: {
+      countryCode: getCurrencyFlagCountryCode(
+        selectableCurrencyCodes.has(sendCurrencyCode) ? sendCurrencyCode : fallbackSendCurrencyCode
+      ),
       currencyCode: selectableCurrencyCodes.has(sendCurrencyCode)
         ? sendCurrencyCode
         : fallbackSendCurrencyCode,

@@ -72,7 +72,13 @@ function Converter({
   };
   const selectedCurrencyPairUrlKey = getSelectedCurrencyPairKey(selectedCurrencyPairFromUrl);
   const converterAmount = liveConverterModel.converterAmount;
-  const [localSelectedCurrencies, setLocalSelectedCurrencies] = React.useState(() => ({
+  const [localSelectedCurrencies, setLocalSelectedCurrencies] = React.useState<{
+    currencies: {
+      receiveCurrency: SelectedCurrency;
+      sendCurrency: SelectedCurrency;
+    };
+    serverUrlKey: string;
+  }>(() => ({
     currencies: selectedCurrencyPairFromUrl,
     serverUrlKey: selectedCurrencyPairUrlKey,
   }));
