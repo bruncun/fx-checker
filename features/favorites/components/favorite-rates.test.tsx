@@ -167,7 +167,7 @@ describe("FavoriteRates", () => {
     expect(screen.getByText("0.8000")).toBeTruthy();
     expect(screen.getByText("-0.80%")).toBeTruthy();
     expect(getFavoriteAction("USD/EUR").getAttribute("aria-label")).toBe("Remove");
-    expect(document.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
+    expect(getFavoriteAction("USD/EUR").querySelectorAll("svg")).toHaveLength(1);
   });
 
   it("selects a favorite pair and removes it from the star action", () => {

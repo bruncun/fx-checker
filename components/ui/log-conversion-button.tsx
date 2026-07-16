@@ -18,16 +18,14 @@ function LogConversionButton({
     <button
       aria-pressed={pressed}
       className={cn(
-        buttonVariants({ variant: "default", size: "default" }),
+        buttonVariants({ variant: "default" }),
         pressed && "!bg-lime-500 text-neutral-900 shadow-none hover:!bg-lime-500 hover:opacity-80",
         className
       )}
       type={type}
       {...props}
     >
-      {pressed ? (
-        <Icon className="fx-log-conversion-check size-200" decorative iconName="check" />
-      ) : null}
+      {pressed ? <Icon className="size-200" decorative iconName="check" /> : null}
       <span>{pressed ? "Logged" : "Log conversion"}</span>
     </button>
   );

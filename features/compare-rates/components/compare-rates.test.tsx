@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { Favorite } from "@/features/favorites";
+import type { Favorite } from "@/features/favorites/model/favorites";
 import { CompareRates, getCompareCurrencies } from "./compare-rates";
 
 const { createFavorite, routerRefresh, routerReplace, showDataUnavailableError, testSearchParams } =

@@ -18,11 +18,14 @@ import { LiveRateList } from "@/features/live-rates/components/live-rate-list";
 import { RateDetails } from "@/features/rate-details";
 import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
-import { HeaderStatsFallback, LiveRatesFallback } from "./components/home-page-fallback";
+import {
+  ConverterFallback,
+  HeaderStatsFallback,
+  LiveRatesFallback,
+} from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
-import { connection } from "next/server";
 
 type HomePageShellProps = {
   children: ReactNode;
@@ -44,8 +47,6 @@ async function HeaderStats() {
 }
 
 async function HeaderAccount() {
-  await connection();
-
   const account = await getHeaderAccount();
 
   return <UserDropdown email={account.email} isGuest={account.isGuest} />;
@@ -115,7 +116,11 @@ async function RateDetailsNavigationSlot() {
 export function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
-      converterSlot={<ConverterSlot />}
+      converterSlot={
+        <Suspense fallback={<ConverterFallback />}>
+          <ConverterSlot />
+        </Suspense>
+      }
       headerStatsSlot={
         <Suspense fallback={<HeaderStatsFallback />}>
           <HeaderStats />

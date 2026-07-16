@@ -28,23 +28,13 @@ const logoVariants = {
   },
 } as const;
 
-function LogoSvg({
-  className,
-  markFill,
-  textFill,
-  variant,
-}: {
-  className: string;
-  markFill: string;
-  textFill?: string;
-  variant: "full" | "mark";
-}) {
+function LogoSvg({ variant }: { variant: "full" | "mark" }) {
   const logo = logoVariants[variant];
 
   return (
     <svg
       aria-hidden="true"
-      className={cx("h-full w-auto", className)}
+      className="h-full w-auto"
       fill="none"
       focusable="false"
       height={logo.height}
@@ -52,8 +42,8 @@ function LogoSvg({
       width={logo.width}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path clipRule="evenodd" d={logoMarkPath} fill={markFill} fillRule="evenodd" />
-      {variant === "full" && textFill ? <path d={logoTextPath} fill={textFill} /> : null}
+      <path clipRule="evenodd" d={logoMarkPath} fill="var(--fx-logo-mark)" fillRule="evenodd" />
+      {variant === "full" ? <path d={logoTextPath} fill="var(--fx-logo-text)" /> : null}
     </svg>
   );
 }
@@ -68,8 +58,7 @@ function Logo({ alt = "FX Checker", className, variant = "full", ...props }: Log
       role="img"
       {...props}
     >
-      <LogoSvg className="fx-logo-dark" markFill="#cef739" textFill="#fff" variant={variant} />
-      <LogoSvg className="fx-logo-light" markFill="#0611dd" textFill="#050a2f" variant={variant} />
+      <LogoSvg variant={variant} />
     </span>
   );
 }

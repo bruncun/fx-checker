@@ -11,21 +11,20 @@ afterEach(() => {
 });
 
 describe("FavoriteButton", () => {
-  it("marks unpinned outline icons for light-mode darkening", () => {
+  it("renders an unpinned outline icon", () => {
     render(<FavoriteButton />);
 
     const button = screen.getByRole("button", { name: "Favorite" });
 
-    expect(button.querySelector("span")?.className).toContain("fx-favorite-unpinned");
+    expect(button.querySelectorAll("svg")).toHaveLength(1);
   });
 
-  it("marks the unpinned icon variant outline icon for light-mode darkening", () => {
+  it("renders one unpinned icon for the icon variant", () => {
     render(<FavoriteButton variant="icon" />);
 
     const button = screen.getByRole("button", { name: "Favorite" });
 
-    expect(button.querySelector("span")?.className).toContain("fx-favorite-unpinned");
-    expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
+    expect(button.querySelectorAll("svg")).toHaveLength(1);
   });
 
   it("restores the original pinned styling for the default variant", () => {
@@ -38,7 +37,6 @@ describe("FavoriteButton", () => {
     expect(button.className).toContain("shadow-none");
     expect(button.className).toContain("hover:!bg-lime-500");
     expect(button.className).toContain("hover:opacity-80");
-    expect(button.querySelector("span")?.className).toContain("fx-favorite-default-pinned");
   });
 
   it("uses the neutral 700 focus gap for the default converter action", () => {
@@ -59,8 +57,8 @@ describe("FavoriteButton", () => {
     expect(button.className).toContain("shadow-[inset_0_0_0_1px_hsl(var(--lime-500))]");
     expect(button.className).not.toContain("!bg-lime-500");
     expect(button.className).not.toContain("text-neutral-900");
-    expect(button.querySelector("span")?.className).toContain("fx-favorite-icon-pinned");
-    expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
+    expect(button.querySelector("span")?.className).toContain("text-lime-500");
+    expect(button.querySelectorAll("svg")).toHaveLength(1);
   });
 
   it("keeps the neutral 600 focus gap for icon row actions", () => {

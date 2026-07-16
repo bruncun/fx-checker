@@ -11,15 +11,12 @@ afterEach(() => {
 });
 
 describe("LogConversionButton", () => {
-  it("marks the pressed check icon for theme-aware filtering", () => {
+  it("renders a single pressed check icon", () => {
     render(<LogConversionButton pressed />);
 
     const button = screen.getByRole("button", { name: "Logged" });
 
     expect(button.getAttribute("aria-pressed")).toBe("true");
-    expect(button.querySelector("span")?.className).toContain("fx-log-conversion-check");
-    expect(button.querySelector("span")?.className).not.toContain("brightness-0");
-    expect(button.querySelector("svg.fx-themed-icon-dark")).toBeTruthy();
-    expect(button.querySelector("svg.fx-themed-icon-light")).toBeTruthy();
+    expect(button.querySelectorAll("svg")).toHaveLength(1);
   });
 });

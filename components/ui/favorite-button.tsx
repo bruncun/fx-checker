@@ -51,11 +51,8 @@ function FavoriteButton({
       <Icon
         className={cn(
           "fx-transition-icon size-200 self-center",
-          !pinned && !disabled && "fx-favorite-unpinned",
-          pinned &&
-            !disabled &&
-            (isIconVariant ? "fx-favorite-icon-pinned" : "fx-favorite-default-pinned"),
-          disabled && "brightness-0 invert-[62%]"
+          pinned && !disabled && isIconVariant && "text-lime-500",
+          disabled && "text-neutral-200"
         )}
         decorative
         iconName={iconName}

@@ -9,7 +9,6 @@ type GuestModeLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" |
   href?: string;
   loadingLabel?: string;
   navigate?: (href: string) => void;
-  size?: "default" | "sm" | "lg" | "icon";
 };
 
 const GUEST_NAVIGATION_DELAY_MS = 75;
@@ -42,7 +41,6 @@ export function GuestModeLink({
   loadingLabel = "Entering guest mode...",
   navigate = navigateToGuestMode,
   onClick,
-  size = "default",
   ...props
 }: GuestModeLinkProps) {
   const [isPending, showPendingState] = useReducer(pendingReducer, false);
@@ -50,7 +48,7 @@ export function GuestModeLink({
   return (
     <a
       aria-disabled={isPending}
-      className={cn(buttonVariants({ variant: "outline", size }), className)}
+      className={cn(buttonVariants({ variant: "outline" }), className)}
       href={href}
       onClick={(event) => {
         onClick?.(event);
