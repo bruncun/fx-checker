@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/utils";
 
 type RateDetailsListProps = {
   children: ReactNode;
@@ -25,21 +25,21 @@ function RateDetailsList({
 }: RateDetailsListProps) {
   return (
     <div
-      className={cx(
+      className={cn(
         "rounded-20 bg-neutral-700 p-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:p-250",
         className
       )}
     >
       <header
-        className={cx(
+        className={cn(
           "flex items-center justify-between gap-200 pb-200 uppercase sm:pb-250",
           headerClassName
         )}
       >
-        <h2 id={headingId} className={cx("min-w-0", headingClassName)}>
+        <h2 id={headingId} className={cn("min-w-0", headingClassName)}>
           {headingSlot}
         </h2>
-        {countSlot ? <div className={cx("shrink-0", countClassName)}>{countSlot}</div> : null}
+        {countSlot ? <div className={cn("shrink-0", countClassName)}>{countSlot}</div> : null}
       </header>
       {children}
     </div>
