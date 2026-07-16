@@ -169,7 +169,7 @@ function ConversionLogItem({
         </span>
       </RateDetailsTreeGridCell>
       <RateDetailsTreeGridCell className="col-start-2 row-start-1 block min-w-0 self-end text-right text-preset-3 sm:col-start-3 sm:row-start-auto sm:self-auto">
-        <span className="block truncate text-neutral-100">{sendAmount}</span>
+        <span className="mb-[2px] block truncate text-neutral-100 sm:mb-0">{sendAmount}</span>
       </RateDetailsTreeGridCell>
       <RateDetailsTreeGridCell className="col-start-2 row-start-2 block min-w-0 self-start text-right text-preset-3 text-lime-500 sm:col-start-4 sm:row-start-auto sm:self-auto">
         <span className="block truncate">{receiveAmount}</span>

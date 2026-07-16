@@ -72,7 +72,7 @@ function ExchangeRateDataStats({ currencyCount }: ExchangeRateDataStatsProps) {
 
 export function Header({ statsSlot }: HeaderProps) {
   return (
-    <header className="relative z-[80] flex w-full items-center justify-between p-200 sm:px-300 sm:py-[17px]">
+    <header className="relative z-[80] flex w-full items-center justify-between px-200 py-150 py-[10px] sm:px-300 sm:py-[17px]">
       <Logo />
       {statsSlot}
     </header>
