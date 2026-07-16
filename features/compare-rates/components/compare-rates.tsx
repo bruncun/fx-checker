@@ -223,9 +223,7 @@ function CompareRateItem({
         tabIndex={tabIndex}
       >
         <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
-        <span className="mt-075 block truncate text-preset-5 text-neutral-200">
-          {currency.name}
-        </span>
+        <span className="mt-075 block text-preset-5 text-neutral-200">{currency.name}</span>
       </RateDetailsTreeGridCell>
       <RateDetailsTreeGridCell className="block max-w-[16ch] min-w-0 text-right sm:max-w-none">
         <span className="block truncate text-preset-3 text-neutral-50">{amount}</span>
@@ -449,9 +447,7 @@ function CompareRatesFallback() {
             <Flag className="size-300" countryCode={currency.countryCode} />
             <div className="max-w-[16ch] min-w-0 sm:max-w-none">
               <span className="block text-preset-4 text-neutral-50">{currency.code}</span>
-              <span className="mt-075 block truncate text-preset-5 text-neutral-200">
-                {currency.name}
-              </span>
+              <span className="mt-075 block text-preset-5 text-neutral-200">{currency.name}</span>
             </div>
             <div className="min-w-0 justify-self-end">
               <SkeletonBlock
