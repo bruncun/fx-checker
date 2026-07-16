@@ -39,6 +39,7 @@ async function HeaderStats() {
   return (
     <div className="flex items-center gap-200">
       <ExchangeRateDataStats currencyCount={currencyReferenceData.currencyCount} />
+      <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
       <Suspense fallback={<AccountFallback />}>
         <HeaderAccount />
       </Suspense>

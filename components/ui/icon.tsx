@@ -140,6 +140,22 @@ export const iconAssets = {
     viewBox: "0 0 16 16",
     width: 16,
   },
+  user: {
+    alt: "User",
+    body: (
+      <path
+        d="M12.67 14v-1.33a2.67 2.67 0 0 0-2.67-2.67H6a2.67 2.67 0 0 0-2.67 2.67V14M10.67 4.67a2.67 2.67 0 1 1-5.34 0 2.67 2.67 0 0 1 5.34 0Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    ),
+    height: 16,
+    viewBox: "0 0 16 16",
+    width: 16,
+  },
   sun: {
     alt: "Sun",
     body: (

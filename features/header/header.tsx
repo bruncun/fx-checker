@@ -8,13 +8,7 @@ import type { ReactNode } from "react";
 import { UserDropdown } from "./user-dropdown";
 
 const accountTriggerFallbackClassName =
-  "fx-skeleton relative inline-flex h-400 shrink-0 items-center justify-center gap-075 overflow-hidden rounded-8 bg-neutral-500 px-125 py-100 text-preset-5 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]";
-
-type ExchangeRateStatsProps = {
-  currencyCount: number;
-  email?: string | null;
-  isGuest?: boolean;
-};
+  "fx-skeleton relative inline-flex h-400 shrink-0 items-center justify-center overflow-hidden rounded-8 bg-neutral-500 p-100 text-preset-5 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]";
 
 type ExchangeRateDataStatsProps = {
   currencyCount: number;
@@ -52,8 +46,7 @@ async function getHeaderAccount() {
 function AccountFallback() {
   return (
     <span aria-hidden="true" className={accountTriggerFallbackClassName}>
-      <span style={{ visibility: "hidden" }}>Menu</span>
-      <span className="inline-block size-150" />
+      <span className="inline-block size-200" />
     </span>
   );
 }
@@ -77,15 +70,6 @@ function ExchangeRateDataStats({ currencyCount }: ExchangeRateDataStatsProps) {
   );
 }
 
-function ExchangeRateStats({ currencyCount, email, isGuest = false }: ExchangeRateStatsProps) {
-  return (
-    <div className="flex items-center gap-200">
-      <ExchangeRateDataStats currencyCount={currencyCount} />
-      <UserDropdown email={email} isGuest={isGuest} />
-    </div>
-  );
-}
-
 export function Header({ statsSlot }: HeaderProps) {
   return (
     <header className="relative z-[80] flex w-full items-center justify-between p-200 sm:px-300 sm:py-[17px]">
@@ -95,4 +79,4 @@ export function Header({ statsSlot }: HeaderProps) {
   );
 }
 
-export { AccountFallback, ExchangeRateDataStats, ExchangeRateStats, getHeaderAccount };
+export { AccountFallback, ExchangeRateDataStats, getHeaderAccount };
