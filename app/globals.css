@@ -147,7 +147,7 @@
     --text-preset-3-bold-letter-spacing: 1px;
     --text-preset-3-bold-font-weight: var(--font-weight-bold);
     --text-preset-4-font-size: 14px;
-    --text-preset-4-line-height: 1.21428571;
+    --text-preset-4-line-height: 120%;
     --text-preset-4-letter-spacing: 1px;
     --text-preset-4-font-weight: var(--font-weight-regular);
     --text-preset-5-font-size: 12px;
