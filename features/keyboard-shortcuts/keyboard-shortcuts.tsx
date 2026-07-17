@@ -154,11 +154,7 @@ function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps)
     []
   );
 
-  return (
-    <KeyboardShortcutContext value={contextValue}>
-      {children}
-    </KeyboardShortcutContext>
-  );
+  return <KeyboardShortcutContext value={contextValue}>{children}</KeyboardShortcutContext>;
 }
 
 function useKeyboardShortcuts() {

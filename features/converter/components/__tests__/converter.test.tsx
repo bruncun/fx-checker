@@ -58,6 +58,7 @@ const currencies: AvailableCurrency[] = [
   { code: "USD", countryCode: "us" as const, name: "United States Dollar" },
   { code: "EUR", countryCode: "eu" as const, name: "Euro" },
   { code: "JPY", countryCode: "jp" as const, name: "Japanese Yen" },
+  { code: "VND", countryCode: "vn" as const, name: "Vietnamese Dong" },
 ];
 
 const defaultSelectedCurrencies = {
@@ -77,13 +78,11 @@ function renderFavoriteButtonSlot(favorites: Favorite[]) {
 }
 
 function renderConverter({
-  converterCurrencies = currencies,
   converterRates = rates,
   favorites = [],
   initialSelectedCurrencies = defaultSelectedCurrencies,
   searchParams,
 }: {
-  converterCurrencies?: AvailableCurrency[];
   converterRates?: FrankfurterRate[];
   favorites?: Favorite[];
   initialSelectedCurrencies?: {
@@ -92,6 +91,14 @@ function renderConverter({
   };
   searchParams?: string;
 } = {}) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      json: async () => ({ availableCurrencies: currencies }),
+      ok: true,
+    })
+  );
+
   if (searchParams !== undefined) {
     testSearchParams.current = searchParams;
   } else {
@@ -100,11 +107,7 @@ function renderConverter({
 
   return render(
     <KeyboardShortcutsProvider>
-      <Converter
-        currencyReferencePromise={fulfilledPromise(converterCurrencies)}
-        favoriteButtonSlot={renderFavoriteButtonSlot(favorites)}
-        rates={converterRates}
-      />
+      <Converter favoriteButtonSlot={renderFavoriteButtonSlot(favorites)} rates={converterRates} />
     </KeyboardShortcutsProvider>
   );
 }
@@ -160,11 +163,7 @@ describe("Converter", () => {
       "from=USD&to=EUR&amount=1000.00&amountSource=send&receiveAmount=853.02";
     view.rerender(
       <KeyboardShortcutsProvider>
-        <Converter
-          currencyReferencePromise={fulfilledPromise(currencies)}
-          favoriteButtonSlot={renderFavoriteButtonSlot([])}
-          rates={rates}
-        />
+        <Converter favoriteButtonSlot={renderFavoriteButtonSlot([])} rates={rates} />
       </KeyboardShortcutsProvider>
     );
 
@@ -201,10 +200,6 @@ describe("Converter", () => {
 
   it("caps calculated amount precision at eight decimal places", () => {
     renderConverter({
-      converterCurrencies: [
-        currencies[0],
-        { code: "XCD", countryCode: "lc", name: "Tiny Currency" },
-      ],
       converterRates: [
         rates[0],
         { date: "2026-06-19", base: "EUR", quote: "XCD", rate: 0.0000001 },
@@ -224,10 +219,6 @@ describe("Converter", () => {
 
   it("keeps large calculated amounts editable without changing their magnitude", () => {
     renderConverter({
-      converterCurrencies: [
-        currencies[0],
-        { code: "VND", countryCode: "vn", name: "Vietnamese Dong" },
-      ],
       converterRates: [rates[0], { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }],
       initialSelectedCurrencies: {
         sendCurrency: { countryCode: "us", currencyCode: "USD" },
@@ -453,10 +444,6 @@ describe("Converter", () => {
     const replaceState = vi.spyOn(window.history, "replaceState");
 
     renderConverter({
-      converterCurrencies: [
-        ...currencies,
-        { code: "VND", countryCode: "vn", name: "Vietnamese Dong" },
-      ],
       converterRates: [...rates, { date: "2026-06-19", base: "EUR", quote: "VND", rate: 30_000 }],
     });
 
@@ -649,11 +636,7 @@ describe("Converter", () => {
 
     view.rerender(
       <KeyboardShortcutsProvider>
-        <Converter
-          currencyReferencePromise={fulfilledPromise(currencies)}
-          favoriteButtonSlot={renderFavoriteButtonSlot([])}
-          rates={rates}
-        />
+        <Converter favoriteButtonSlot={renderFavoriteButtonSlot([])} rates={rates} />
       </KeyboardShortcutsProvider>
     );
 

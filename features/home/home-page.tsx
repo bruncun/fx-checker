@@ -2,11 +2,9 @@ import { getServerConversions } from "@/features/conversion-log/api/server";
 import { getServerFavorites } from "@/features/favorites/api/server";
 import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
-import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { getConverterModel } from "@/features/converter/model/converter";
 import {
   getCurrencyReferenceData,
-  getCurrencyReferenceDataForLatestRates,
   getLatestRatesData,
   getLiveRatesData,
 } from "@/features/exchange-rates/api/server";
@@ -65,7 +63,6 @@ async function ConverterSlot() {
   const latestRatesData = await getLatestRatesData();
 
   assertDataAvailable(latestRatesData);
-  const currencyReferencePromise = getConverterCurrencyReference(latestRatesData.rates);
 
   return (
     <>
@@ -73,7 +70,6 @@ async function ConverterSlot() {
         <StaleExchangeRatesAlert fetchedAt={latestRatesData.freshness.fetchedAt} />
       ) : null}
       <Converter
-        currencyReferencePromise={currencyReferencePromise}
         favoriteButtonSlot={
           <Suspense fallback={<FavoriteButtonFallback />}>
             <ConverterFavoriteButtonSlot />
@@ -91,16 +87,6 @@ async function ConverterSlot() {
 
 function ConverterFavoriteButtonSlot() {
   return <ConverterFavoriteButton favoritesPromise={getServerFavorites()} />;
-}
-
-async function getConverterCurrencyReference(
-  latestRates: Parameters<typeof getCurrencyReferenceDataForLatestRates>[0]
-): Promise<AvailableCurrency[]> {
-  const currencyReferenceData = await getCurrencyReferenceDataForLatestRates(latestRates);
-
-  assertDataAvailable(currencyReferenceData);
-
-  return currencyReferenceData.availableCurrencies;
 }
 
 async function RateDetailsNavigationSlot() {
