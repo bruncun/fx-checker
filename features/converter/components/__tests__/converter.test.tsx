@@ -279,9 +279,7 @@ describe("Converter", () => {
     expect(sendAmount).toHaveProperty("value", "12");
   });
 
-  it("swaps the active currencies, updates the URL, and refreshes the server tree", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
+  it("swaps the active currencies and navigates without resetting scroll", () => {
     renderConverter();
 
     fireEvent.click(screen.getByRole("button", { name: "Exchange currencies" }));
@@ -289,8 +287,8 @@ describe("Converter", () => {
     expect(screen.getByRole("button", { name: "EUR" }).textContent).toContain("EUR");
     expect(screen.getByRole("button", { name: "USD" }).textContent).toContain("USD");
     expect(screen.getByText("1 EUR = 1.1710 USD")).toBeTruthy();
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=EUR&to=USD");
-    expect(routerRefresh).toHaveBeenCalled();
+    expect(routerReplace).toHaveBeenCalledWith("/?from=EUR&to=USD", { scroll: false });
+    expect(routerRefresh).not.toHaveBeenCalled();
   });
 
   it("opens send currency search with the primary K shortcut", async () => {
@@ -354,20 +352,18 @@ describe("Converter", () => {
   });
 
   it("swaps currencies with X unless a text field is active", () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     renderConverter();
 
     fireEvent.keyDown(window, { key: "x" });
 
     expect(screen.getByRole("button", { name: "EUR" }).textContent).toContain("EUR");
     expect(screen.getByRole("button", { name: "USD" }).textContent).toContain("USD");
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=EUR&to=USD");
+    expect(routerReplace).toHaveBeenCalledWith("/?from=EUR&to=USD", { scroll: false });
 
     getAmountInput("Send").focus();
     fireEvent.keyDown(getAmountInput("Send"), { key: "x" });
 
-    expect(replaceState).toHaveBeenCalledTimes(1);
+    expect(routerReplace).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the send amount in place when currencies are swapped", () => {
@@ -410,17 +406,15 @@ describe("Converter", () => {
     expect(receiveAmount).toHaveProperty("value", "100");
   });
 
-  it("selects a receive currency, updates the URL, and refreshes the server tree", async () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
+  it("selects a receive currency and navigates without resetting scroll", async () => {
     renderConverter();
 
     fireEvent.click(screen.getByRole("button", { name: "EUR" }));
     fireEvent.click(await screen.findByRole("button", { name: "JPY, Japanese Yen" }));
 
     expect(screen.getByText("1 USD = 156.4816 JPY")).toBeTruthy();
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=USD&to=JPY");
-    expect(routerRefresh).toHaveBeenCalled();
+    expect(routerReplace).toHaveBeenCalledWith("/?from=USD&to=JPY", { scroll: false });
+    expect(routerRefresh).not.toHaveBeenCalled();
   });
 
   it("recalculates the receive amount when a receive currency is selected", async () => {
@@ -436,8 +430,6 @@ describe("Converter", () => {
   });
 
   it("keeps the most recently edited amount as the source when a send currency is selected", async () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     renderConverter();
 
     fireEvent.change(getAmountInput("Receive"), {
@@ -448,15 +440,13 @@ describe("Converter", () => {
 
     expect(getAmountInput("Send")).toHaveProperty("value", "18,324");
     expect(getAmountInput("Receive")).toHaveProperty("value", "100");
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=JPY&to=EUR");
+    expect(routerReplace).toHaveBeenCalledWith("/?from=JPY&to=EUR", { scroll: false });
     await waitFor(() => {
       expect(document.activeElement).toBe(screen.getByRole("button", { name: "JPY" }));
     });
   });
 
   it("renders a very small rate immediately when a send currency is selected", async () => {
-    const replaceState = vi.spyOn(window.history, "replaceState");
-
     renderConverter({
       converterCurrencies: [
         ...currencies,
@@ -472,7 +462,7 @@ describe("Converter", () => {
     fireEvent.click(await screen.findByRole("button", { name: "VND, Vietnamese Dong" }));
 
     expect(screen.getByText("1 VND = 0.00003333 EUR")).toBeTruthy();
-    expect(replaceState).toHaveBeenCalledWith(null, "", "/?from=VND&to=EUR");
+    expect(routerReplace).toHaveBeenCalledWith("/?from=VND&to=EUR", { scroll: false });
   });
 
   it("optimistically favorites the selected pair", async () => {

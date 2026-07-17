@@ -267,6 +267,51 @@ describe("home page", () => {
     cy.findByRole("dialog", { name: "Currency picker" }).should("not.exist");
   });
 
+  it("keeps scroll and trigger focus when a currency is selected", () => {
+    cy.visit(defaultAppUrl);
+    cy.scrollTo(0, 120);
+
+    cy.findByRole("button", { name: "USD" }).click({ scrollBehavior: false });
+    cy.findByRole("searchbox", { name: "Search currencies" }).should("be.focused");
+
+    cy.wait(300);
+    cy.get("body").then(($body) => {
+      const body = $body[0]!;
+      const bodyTop = Number.parseFloat(body.style.top);
+      const visualScrollY =
+        body.style.position === "fixed" && Number.isFinite(bodyTop)
+          ? Math.abs(bodyTop)
+          : body.ownerDocument.defaultView!.scrollY;
+
+      cy.findByRole("searchbox", { name: "Search currencies" }).type("jpy{enter}", {
+        scrollBehavior: false,
+      });
+
+      cy.location("search").should("include", "from=JPY");
+      cy.window().its("scrollY").should("eq", visualScrollY);
+      cy.findByRole("button", { name: "JPY" }).should("be.focused");
+    });
+  });
+
+  it("keeps scroll and button focus when currencies are swapped", () => {
+    cy.visit(defaultAppUrl);
+    cy.scrollTo(0, 120);
+
+    cy.window().then((win) => {
+      const scrollY = win.scrollY;
+
+      cy.findByRole("button", { name: "Exchange currencies" })
+        .focus()
+        .should("be.focused")
+        .click({ scrollBehavior: false });
+
+      cy.location("search").should("include", "from=EUR");
+      cy.location("search").should("include", "to=USD");
+      cy.window().its("scrollY").should("eq", scrollY);
+      cy.findByRole("button", { name: "Exchange currencies" }).should("be.focused");
+    });
+  });
+
   it("supports keyboard navigation after focus enters the picker with a mouse", () => {
     cy.visit(defaultAppUrl);
 
