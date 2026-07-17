@@ -12,10 +12,15 @@ import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip";
 import type { CreateConversionInput } from "@/features/conversion-log/model/conversion-log";
 import { useOptionalKeyboardShortcuts } from "@/features/keyboard-shortcuts";
-import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
 import { usePersistedConverterAmount } from "../hooks/use-persisted-converter-amount";
-import { convertAmount, getExchangeRate, MoneyDecimal, type AmountSide } from "../model/exchange";
+import {
+  convertAmount,
+  getConverterExchangeRate,
+  MoneyDecimal,
+  type AmountSide,
+  type ConverterRates,
+} from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterFavoritePairProvider } from "./converter-favorite-button";
 import { DeferredCurrencyPicker } from "./deferred-currency-picker";
@@ -40,7 +45,7 @@ type ConverterAmountControlsProps = {
   initialAmount?: string;
   initialAmountSource?: AmountSide;
   initialReceiveAmount?: string;
-  rates: FrankfurterRate[];
+  rates: ConverterRates;
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
   onConversionLogCreate?: (conversion: CreateConversionInput) => void;
@@ -203,7 +208,7 @@ function ConverterAmountControls({
   const { amount, amountSource } = amountState;
   const [isLogAcknowledged, setIsLogAcknowledged] = React.useState(false);
   const logAcknowledgementTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const exchangeRate = getExchangeRate(
+  const exchangeRate = getConverterExchangeRate(
     rates,
     sendCurrency.currencyCode,
     receiveCurrency.currencyCode

@@ -2,9 +2,8 @@ import {
   getConverterAmountFromParams,
   getCurrencyCodePairFromParams,
 } from "@/features/home/utils/url-state";
-import type { FrankfurterRate } from "@/lib/frankfurter";
 import { getCurrencyFlagCountryCode } from "./currencies";
-import { formatExchangeRate, getExchangeRate } from "./exchange";
+import { formatExchangeRate, getConverterExchangeRate, type ConverterRates } from "./exchange";
 import type { SelectedCurrency } from "./selected-currency";
 
 const defaultSelectedCurrencies = {
@@ -12,18 +11,12 @@ const defaultSelectedCurrencies = {
   sendCurrency: { currencyCode: "USD" },
 } satisfies { receiveCurrency: SelectedCurrency; sendCurrency: SelectedCurrency };
 
-function getSelectableCurrencyCodes(rates: FrankfurterRate[]) {
-  const sharedBase = rates[0]?.base;
-
-  if (!sharedBase || rates.some((rate) => rate.base !== sharedBase)) {
-    return new Set<string>();
-  }
-
-  return new Set([sharedBase, ...rates.map((rate) => rate.quote)]);
+function getSelectableCurrencyCodes(rates: ConverterRates) {
+  return rates.base ? new Set([rates.base, ...Object.keys(rates.rates)]) : new Set<string>();
 }
 
 export function getSelectedCurrencyPairFromCodes(
-  rates: FrankfurterRate[],
+  rates: ConverterRates,
   searchParams: URLSearchParams
 ) {
   const selectableCurrencyCodes = getSelectableCurrencyCodes(rates);
@@ -64,11 +57,11 @@ export function getExchangeRateLabel({
   receiveCurrency,
   sendCurrency,
 }: {
-  rates: FrankfurterRate[];
+  rates: ConverterRates;
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
 }) {
-  const exchangeRate = getExchangeRate(
+  const exchangeRate = getConverterExchangeRate(
     rates,
     sendCurrency.currencyCode,
     receiveCurrency.currencyCode
@@ -83,7 +76,7 @@ export function getConverterModel({
   rates,
   searchParams,
 }: {
-  rates: FrankfurterRate[];
+  rates: ConverterRates;
   searchParams: URLSearchParams;
 }) {
   const selectedCurrencies = getSelectedCurrencyPairFromCodes(rates, searchParams);

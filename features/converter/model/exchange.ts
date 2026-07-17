@@ -3,8 +3,37 @@ import Decimal from "decimal.js-light";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 
 export type AmountSide = "send" | "receive";
+export type ConverterRates = {
+  base: string;
+  rates: Record<string, number>;
+};
 
 export const MoneyDecimal = Decimal.clone({ precision: 40 });
+
+export function normalizeConverterRates(
+  rates: FrankfurterRate[],
+  selectableCurrencyCodes?: Iterable<string>
+): ConverterRates {
+  const sharedBase = rates[0]?.base;
+  const selectableCurrencyCodeSet = selectableCurrencyCodes
+    ? new Set(selectableCurrencyCodes)
+    : null;
+
+  if (!sharedBase || rates.some((rate) => rate.base !== sharedBase)) {
+    return { base: "", rates: {} };
+  }
+
+  return {
+    base: sharedBase,
+    rates: Object.fromEntries(
+      rates.flatMap((rate) =>
+        selectableCurrencyCodeSet === null || selectableCurrencyCodeSet.has(rate.quote)
+          ? [[rate.quote, rate.rate]]
+          : []
+      )
+    ),
+  };
+}
 
 export function getExchangeRate(rates: FrankfurterRate[], base: string, quote: string) {
   if (base === quote) {
@@ -25,6 +54,25 @@ export function getExchangeRate(rates: FrankfurterRate[], base: string, quote: s
   }
 
   return quoteRate.div(baseRate);
+}
+
+export function getConverterExchangeRate(rates: ConverterRates, base: string, quote: string) {
+  if (base === quote) {
+    return new MoneyDecimal(1);
+  }
+
+  if (!rates.base) {
+    return null;
+  }
+
+  const baseRate = base === rates.base ? new MoneyDecimal(1) : rates.rates[base];
+  const quoteRate = quote === rates.base ? new MoneyDecimal(1) : rates.rates[quote];
+
+  if (baseRate === undefined || quoteRate === undefined) {
+    return null;
+  }
+
+  return new MoneyDecimal(quoteRate).div(baseRate);
 }
 
 export function formatExchangeRate(rate: Decimal) {

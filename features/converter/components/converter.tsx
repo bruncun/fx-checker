@@ -8,17 +8,16 @@ import type {
 } from "@/features/conversion-log/model/conversion-log";
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { getCurrencyPairUrl, getSelectedCurrencyPairKey } from "@/features/home/utils/url-state";
-import type { FrankfurterRate } from "@/lib/frankfurter";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getConverterModel, getExchangeRateLabel } from "../model/converter";
-import type { AmountSide } from "../model/exchange";
+import type { AmountSide, ConverterRates } from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
 type ConverterProps = {
   favoriteButtonSlot: React.ReactNode;
   initialConverterModel?: ReturnType<typeof getConverterModel>;
-  rates: FrankfurterRate[];
+  rates: ConverterRates;
 };
 
 function getOptimisticId() {

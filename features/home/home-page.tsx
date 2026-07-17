@@ -3,8 +3,10 @@ import { getServerFavorites } from "@/features/favorites/api/server";
 import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
 import { getConverterModel } from "@/features/converter/model/converter";
+import { normalizeConverterRates } from "@/features/converter/model/exchange";
 import {
   getCurrencyReferenceData,
+  getCurrencyReferenceDataForLatestRates,
   getLatestRatesData,
   getLiveRatesData,
 } from "@/features/exchange-rates/api/server";
@@ -64,6 +66,15 @@ async function ConverterSlot() {
 
   assertDataAvailable(latestRatesData);
 
+  const currencyReferenceData = await getCurrencyReferenceDataForLatestRates(latestRatesData.rates);
+
+  assertDataAvailable(currencyReferenceData);
+
+  const converterRates = normalizeConverterRates(
+    latestRatesData.rates,
+    currencyReferenceData.availableCurrencies.map((currency) => currency.code)
+  );
+
   return (
     <>
       {latestRatesData.freshness.dataStatus === "stale" ? (
@@ -76,10 +87,10 @@ async function ConverterSlot() {
           </Suspense>
         }
         initialConverterModel={getConverterModel({
-          rates: latestRatesData.rates,
+          rates: converterRates,
           searchParams: new URLSearchParams(),
         })}
-        rates={latestRatesData.rates}
+        rates={converterRates}
       />
     </>
   );
