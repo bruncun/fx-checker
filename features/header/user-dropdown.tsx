@@ -13,7 +13,6 @@ import * as React from "react";
 type ThemeValue = "system" | "dark" | "light";
 
 type UserDropdownProps = {
-  email?: string | null;
   isGuest?: boolean;
 };
 

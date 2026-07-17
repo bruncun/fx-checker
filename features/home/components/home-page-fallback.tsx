@@ -4,7 +4,7 @@ import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import { interactiveSurfaceClassName } from "@/components/ui/interactive-surface";
 import { LogConversionButton } from "@/components/ui/log-conversion-button";
 import { FavoriteButtonFallback } from "@/features/converter/components/converter-amount-controls";
-import { AccountFallback } from "@/features/header/header";
+import { UserDropdown } from "@/features/header/user-dropdown";
 import { cx } from "@/lib/cx";
 import type { ReactNode } from "react";
 
@@ -74,7 +74,7 @@ function HeaderStatsFallback() {
         ]}
       />
       <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
-      <AccountFallback />
+      <UserDropdown isGuest />
     </div>
   );
 }

@@ -81,7 +81,7 @@ describe("UserDropdown", () => {
   });
 
   it("opens an account dialog with a theme toggle and sign out button", () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
 
@@ -109,7 +109,7 @@ describe("UserDropdown", () => {
   });
 
   it("closes the account dialog when signing out", () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Sign out" })[0]);
@@ -119,7 +119,7 @@ describe("UserDropdown", () => {
 
   it("shows a transitional text label in the account trigger while signing out", () => {
     vi.mocked(fetch).mockReturnValue(new Promise(() => {}));
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Sign out" })[0]);
@@ -135,7 +135,7 @@ describe("UserDropdown", () => {
   });
 
   it("resets the pending state when sign-out navigation completes", async () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Sign out" })[0]);
@@ -151,7 +151,7 @@ describe("UserDropdown", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 500 }));
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Sign out" })[0]);
@@ -168,7 +168,7 @@ describe("UserDropdown", () => {
   });
 
   it("moves through theme options with roving focus and switches theme on focus", () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getAllByRole("radio", { name: "System" })[0];
@@ -187,7 +187,7 @@ describe("UserDropdown", () => {
   });
 
   it("moves through account menu options with vertical roving focus", () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getAllByRole("radio", { name: "System" })[0];
@@ -225,7 +225,7 @@ describe("UserDropdown", () => {
   });
 
   it("traps tab focus inside the account dialog until dismissed", async () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
     const systemTheme = screen.getAllByRole("radio", { name: "System" })[0];
@@ -247,7 +247,7 @@ describe("UserDropdown", () => {
   });
 
   it("closes the account dialog with Escape and restores trigger focus", async () => {
-    render(<UserDropdown email="mika@example.com" />);
+    render(<UserDropdown />);
 
     const trigger = screen.getByRole("button", { name: "Account menu" });
 

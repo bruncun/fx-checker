@@ -2,12 +2,8 @@ import { Logo } from "@/components/logo";
 import { InlineMetaList } from "@/components/ui/inline-meta-list";
 import { isGuestModeFromCookies } from "@/features/guest-session/model/guest-session";
 import { hasEnvVars } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
-
-const accountTriggerFallbackClassName =
-  "fx-skeleton relative inline-flex h-400 w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-8 bg-neutral-500 p-100 text-preset-5 text-neutral-50 uppercase shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] sm:w-[105px] lg:w-[114px]";
 
 type ExchangeRateDataStatsProps = {
   currencyCount: number;
@@ -17,36 +13,12 @@ type HeaderProps = {
   statsSlot?: ReactNode;
 };
 
-async function getHeaderAccount() {
+async function getHeaderIsGuest() {
   const cookieStore = await cookies();
-  const isGuest = isGuestModeFromCookies(cookieStore);
-
-  if (isGuest || !hasEnvVars || process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1") {
-    return { email: null, isGuest: true };
-  }
-
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getClaims();
-
-    if (error || !data?.claims) {
-      return { email: null, isGuest: false };
-    }
-
-    return {
-      email: typeof data.claims.email === "string" ? data.claims.email : null,
-      isGuest: false,
-    };
-  } catch {
-    return { email: null, isGuest: false };
-  }
-}
-
-function AccountFallback() {
   return (
-    <span aria-hidden="true" className={accountTriggerFallbackClassName}>
-      <span className="inline-block size-200" />
-    </span>
+    isGuestModeFromCookies(cookieStore) ||
+    !hasEnvVars ||
+    process.env.FX_CHECKER_E2E_AUTH_BYPASS === "1"
   );
 }
 
@@ -78,4 +50,4 @@ export function Header({ statsSlot }: HeaderProps) {
   );
 }
 
-export { AccountFallback, ExchangeRateDataStats, getHeaderAccount };
+export { ExchangeRateDataStats, getHeaderIsGuest };

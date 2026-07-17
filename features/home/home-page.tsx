@@ -1,6 +1,6 @@
 import { getServerConversions } from "@/features/conversion-log/api/server";
 import { getServerFavorites } from "@/features/favorites/api/server";
-import { AccountFallback, ExchangeRateDataStats, getHeaderAccount } from "@/features/header/header";
+import { ExchangeRateDataStats, getHeaderIsGuest } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
 import { getConverterModel } from "@/features/converter/model/converter";
 import { normalizeConverterRates } from "@/features/converter/model/exchange";
@@ -43,7 +43,10 @@ type HomePageRouteContentProps = {
 };
 
 async function HeaderStats() {
-  const currencyReferenceData = await getCurrencyReferenceData();
+  const [currencyReferenceData, isGuest] = await Promise.all([
+    getCurrencyReferenceData(),
+    getHeaderIsGuest(),
+  ]);
 
   assertDataAvailable(currencyReferenceData);
 
@@ -51,17 +54,9 @@ async function HeaderStats() {
     <div className="flex items-center gap-200">
       <ExchangeRateDataStats currencyCount={currencyReferenceData.currencyCount} />
       <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
-      <Suspense fallback={<AccountFallback />}>
-        <HeaderAccount />
-      </Suspense>
+      <UserDropdown isGuest={isGuest} />
     </div>
   );
-}
-
-async function HeaderAccount() {
-  const account = await getHeaderAccount();
-
-  return <UserDropdown email={account.email} isGuest={account.isGuest} />;
 }
 
 async function LiveRates() {
