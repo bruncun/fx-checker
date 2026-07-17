@@ -9,12 +9,14 @@ import type {
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { getCurrencyPairUrl, getSelectedCurrencyPairKey } from "@/features/home/utils/url-state";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { AvailableCurrency } from "../model/currencies";
 import { getConverterModel, getExchangeRateLabel } from "../model/converter";
 import type { AmountSide, ConverterRates } from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
 type ConverterProps = {
+  currencyReferencePromise: Promise<AvailableCurrency[]>;
   favoriteButtonSlot: React.ReactNode;
   initialConverterModel?: ReturnType<typeof getConverterModel>;
   rates: ConverterRates;
@@ -44,7 +46,12 @@ async function loadConversionLogDependencies() {
   };
 }
 
-function Converter({ favoriteButtonSlot, initialConverterModel, rates }: ConverterProps) {
+function Converter({
+  currencyReferencePromise,
+  favoriteButtonSlot,
+  initialConverterModel,
+  rates,
+}: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
   const [, startTransition] = React.useTransition();
@@ -166,6 +173,7 @@ function Converter({ favoriteButtonSlot, initialConverterModel, rates }: Convert
     <>
       <div className="rounded-20 bg-neutral-700 shadow-[var(--shadow-elevation-card)]">
         <ConverterAmountControls
+          currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
           favoriteButtonSlot={favoriteButtonSlot}
           focusTriggerRequests={focusTriggerRequests}
