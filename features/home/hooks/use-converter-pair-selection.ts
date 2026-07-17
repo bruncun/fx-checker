@@ -46,5 +46,7 @@ function useConverterPairSelection() {
   );
 }
 
-export { useConverterPairSelection };
+const useSelectConverterPair = useConverterPairSelection;
+
+export { useConverterPairSelection, useSelectConverterPair };
 export type { SelectConverterPairInput };

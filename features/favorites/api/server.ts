@@ -9,8 +9,9 @@ import {
   createSupabaseFavoriteStore,
   type FavoriteStore,
 } from "../stores/store";
+import { FAVORITES_CACHE_TAG } from "./tags";
 
-export const FAVORITES_CACHE_TAG = "favorites";
+export { FAVORITES_CACHE_TAG };
 
 async function getFavoriteReadStore(): Promise<FavoriteStore> {
   const cookieStore = await cookies();

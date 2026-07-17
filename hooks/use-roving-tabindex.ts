@@ -3,6 +3,7 @@
 import * as React from "react";
 
 type RovingFocusOrientation = "horizontal" | "vertical";
+type RovingFocusActivation = "focus" | "manual";
 type RovingFocusKey = "ArrowDown" | "ArrowLeft" | "ArrowRight" | "ArrowUp" | "End" | "Home";
 
 const rovingFocusKeys: RovingFocusKey[] = [
@@ -64,10 +65,12 @@ type UseRovingTabIndexOptions<TItem extends HTMLElement> = {
   itemSelector: string;
   onCurrentElementChange?: (element: TItem) => void;
   orientation: RovingFocusOrientation;
+  activation?: RovingFocusActivation;
   wrap?: boolean;
 };
 
 export function useRovingTabIndex<TItem extends HTMLElement>({
+  activation = "focus",
   containerRef,
   itemSelector,
   onCurrentElementChange,
@@ -88,9 +91,30 @@ export function useRovingTabIndex<TItem extends HTMLElement>({
     items.forEach((currentItem) => {
       currentItem.tabIndex = currentItem === item ? 0 : -1;
     });
-    onCurrentElementChange?.(item);
+    if (activation === "focus") {
+      onCurrentElementChange?.(item);
+    }
     item.focus({ preventScroll: true });
     item.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }
+
+  function focusCurrentItem() {
+    const items = getItems();
+    const focusedItem = items.find((item) => item === document.activeElement);
+    const currentTabStop = items.find((item) => item.tabIndex === 0);
+
+    focusItem(focusedItem ?? currentTabStop ?? items[0]);
+  }
+
+  function restoreTabStop() {
+    const items = getItems();
+    const focusedItem = items.find((item) => item === document.activeElement);
+    const currentTabStop = items.find((item) => item.tabIndex === 0);
+    const tabStop = focusedItem ?? currentTabStop ?? items[0];
+
+    items.forEach((item) => {
+      item.tabIndex = item === tabStop ? 0 : -1;
+    });
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLElement>) {
@@ -123,8 +147,12 @@ export function useRovingTabIndex<TItem extends HTMLElement>({
   }
 
   return {
+    focusCurrentItem,
     focusItem,
     getItems,
     handleKeyDown,
+    restoreTabStop,
   };
 }
+
+export type { RovingFocusActivation, RovingFocusOrientation };

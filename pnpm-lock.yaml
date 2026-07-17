@@ -9,10 +9,10 @@ importers:
   .:
     dependencies:
       '@supabase/ssr':
-        specifier: latest
+        specifier: 0.12.3
         version: 0.12.3(@supabase/supabase-js@2.110.5)
       '@supabase/supabase-js':
-        specifier: latest
+        specifier: 2.110.5
         version: 2.110.5
       clsx:
         specifier: ^2.1.1

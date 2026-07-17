@@ -21,7 +21,7 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites/model/favorites";
-import { deleteFavorite } from "@/features/favorites/api/client";
+import { deleteFavorite } from "@/features/favorites/api/client-actions";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,
@@ -32,7 +32,6 @@ import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavaila
 import type { LiveRate } from "@/features/live-rates/components/live-rate-item";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import {
   getAvailableCurrencyByCode,
   getFavoriteRateRow,
@@ -140,7 +139,6 @@ function FavoriteRates({
   liveRates,
   liveRateHistoryRates,
 }: FavoriteRatesProps) {
-  const router = useRouter();
   const selectConverterPair = useConverterPairSelection();
   const showDataUnavailableError = useDataUnavailableError();
   const favorites = useOptimisticFavorites(initialFavorites);
@@ -202,7 +200,6 @@ function FavoriteRates({
     React.startTransition(async () => {
       try {
         await deleteFavorite(pair);
-        router.refresh();
       } catch (error) {
         const removalPending = favoriteTransitions.hasPendingExit(pairKey);
 

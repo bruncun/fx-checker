@@ -16,7 +16,10 @@ import { TabPendingState } from "@/components/ui/tab-pending-state";
 import { useTransitioningList } from "@/hooks/use-transitioning-list";
 import { useRovingTabIndex } from "@/hooks/use-roving-tabindex";
 import type { Conversion } from "@/features/conversion-log/model/conversion-log";
-import { deleteAllConversions, deleteConversion } from "@/features/conversion-log/api/client";
+import {
+  deleteAllConversions,
+  deleteConversion,
+} from "@/features/conversion-log/api/client-actions";
 import {
   clearOptimisticConversions,
   removeOptimisticConversion,
@@ -28,7 +31,6 @@ import { useConverterPairSelection } from "@/features/home/hooks/use-converter-p
 import { useDataUnavailableError } from "@/features/home/hooks/use-data-unavailable-error";
 import { getCurrencyByCode } from "@/features/home/utils/url-state";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import {
   formatAmount,
   formatRelativeTime,
@@ -89,14 +91,7 @@ function ConversionLogToolbar({ children }: { children: React.ReactNode }) {
   });
 
   React.useLayoutEffect(() => {
-    const items = rovingFocus.getItems();
-    const focusedItem = items.find((item) => item === document.activeElement);
-    const currentTabStop = items.find((item) => item.tabIndex === 0);
-    const tabStop = focusedItem ?? currentTabStop ?? items[0];
-
-    items.forEach((item) => {
-      item.tabIndex = item === tabStop ? 0 : -1;
-    });
+    rovingFocus.restoreTabStop();
   });
 
   return (
@@ -189,7 +184,6 @@ function ConversionLog({
   conversions: initialConversions,
   isGuestMode = false,
 }: ConversionLogProps) {
-  const router = useRouter();
   const selectConverterPair = useConverterPairSelection();
   const showDataUnavailableError = useDataUnavailableError();
   const conversions = useOptimisticConversions(initialConversions);
@@ -249,7 +243,6 @@ function ConversionLog({
     React.startTransition(async () => {
       try {
         await deleteConversion(id);
-        router.refresh();
       } catch (error) {
         const removalPending = conversionTransitions.hasPendingExit(id);
 
@@ -283,7 +276,6 @@ function ConversionLog({
     React.startTransition(async () => {
       try {
         await deleteAllConversions();
-        router.refresh();
       } catch (error) {
         const removalPending = conversionTransitions.hasPendingExits();
 

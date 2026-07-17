@@ -25,7 +25,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/api/client", () => ({
+vi.mock("@/features/favorites/api/client-actions", () => ({
   deleteFavorite,
 }));
 

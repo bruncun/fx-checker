@@ -9,8 +9,9 @@ import {
   createSupabaseConversionStore,
   type ConversionStore,
 } from "../stores/store";
+import { CONVERSIONS_CACHE_TAG } from "./tags";
 
-export const CONVERSIONS_CACHE_TAG = "conversions";
+export { CONVERSIONS_CACHE_TAG };
 
 async function getConversionReadStore(): Promise<ConversionStore> {
   const cookieStore = await cookies();

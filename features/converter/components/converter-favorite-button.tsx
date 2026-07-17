@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 
 import { FavoriteButton } from "@/components/ui/favorite-button";
 import {
@@ -11,7 +10,7 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites/model/favorites";
-import { createFavorite, deleteFavorite } from "@/features/favorites/api/client";
+import { createFavorite, deleteFavorite } from "@/features/favorites/api/client-actions";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,
@@ -53,7 +52,6 @@ function useConverterFavoritePair() {
 }
 
 function ConverterFavoriteButton({ favoritesPromise, ...props }: ConverterFavoriteButtonProps) {
-  const router = useRouter();
   const showDataUnavailableError = useDataUnavailableError();
   const initialFavorites = React.use(favoritesPromise);
   const pair = useConverterFavoritePair();
@@ -69,7 +67,6 @@ function ConverterFavoriteButton({ favoritesPromise, ...props }: ConverterFavori
       React.startTransition(async () => {
         try {
           await deleteFavorite(normalizedPair);
-          router.refresh();
         } catch (error) {
           console.error("Failed to delete favorite", error);
           addOptimisticFavorite(existingFavorite);
@@ -93,7 +90,6 @@ function ConverterFavoriteButton({ favoritesPromise, ...props }: ConverterFavori
         const createdFavorite = await createFavorite(normalizedPair);
 
         replaceOptimisticFavorite(pendingFavorite, createdFavorite);
-        router.refresh();
       } catch (error) {
         console.error("Failed to create favorite", error);
         removeOptimisticFavorite(normalizedPair);

@@ -37,12 +37,12 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/favorites/api/client", () => ({
+vi.mock("@/features/favorites/api/client-actions", () => ({
   createFavorite,
   deleteFavorite: vi.fn(),
 }));
 
-vi.mock("@/features/conversion-log/api/client", () => ({
+vi.mock("@/features/conversion-log/api/client-actions", () => ({
   createConversion,
 }));
 

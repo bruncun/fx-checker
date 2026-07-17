@@ -1,11 +1,13 @@
 import {
-  createConversionAction,
-  deleteAllConversionsAction,
-} from "@/features/conversion-log/api/actions";
+  createConversionMutation,
+  deleteAllConversionsMutation,
+} from "@/features/conversion-log/api/mutations";
+import { CONVERSIONS_CACHE_TAG } from "@/features/conversion-log/api/tags";
 import {
   InvalidConversionInputError,
   parseCreateConversionInput,
 } from "@/features/conversion-log/model/conversion-log";
+import { revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 
 async function readConversionInput(request: NextRequest) {
@@ -27,13 +29,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid conversion" }, { status: 400 });
   }
 
-  const conversion = await createConversionAction(input);
+  const conversion = await createConversionMutation(input);
+
+  revalidateTag(CONVERSIONS_CACHE_TAG, { expire: 0 });
 
   return NextResponse.json(conversion);
 }
 
 export async function DELETE() {
-  await deleteAllConversionsAction();
+  await deleteAllConversionsMutation();
+  revalidateTag(CONVERSIONS_CACHE_TAG, { expire: 0 });
 
   return new NextResponse(null, { status: 204 });
 }

@@ -1,5 +1,7 @@
-import { createFavorite, deleteFavorite } from "@/features/favorites/api/actions";
+import { createFavoriteMutation, deleteFavoriteMutation } from "@/features/favorites/api/mutations";
+import { FAVORITES_CACHE_TAG } from "@/features/favorites/api/tags";
 import { InvalidFavoritePairError, parseFavoritePair } from "@/features/favorites/model/favorites";
+import { revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 
 async function readFavoritePair(request: NextRequest) {
@@ -21,7 +23,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid favorite currency pair" }, { status: 400 });
   }
 
-  const favorite = await createFavorite(pair);
+  const favorite = await createFavoriteMutation(pair);
+
+  revalidateTag(FAVORITES_CACHE_TAG, { expire: 0 });
 
   return NextResponse.json(favorite);
 }
@@ -33,7 +37,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Invalid favorite currency pair" }, { status: 400 });
   }
 
-  await deleteFavorite(pair);
+  await deleteFavoriteMutation(pair);
+  revalidateTag(FAVORITES_CACHE_TAG, { expire: 0 });
 
   return new NextResponse(null, { status: 204 });
 }

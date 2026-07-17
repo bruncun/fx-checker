@@ -5,7 +5,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { RateDetailsList } from "./rate-details-list-shell";
 
-type RateDetailsTreeGridProps = {
+type RateDetailsInteractiveTableProps = {
   actionSelector: string;
   children: React.ReactNode;
   columns: React.ReactNode;
@@ -14,19 +14,19 @@ type RateDetailsTreeGridProps = {
   onCurrentRowIdChange: (rowId: string) => void;
 };
 
-function RateDetailsTreeGrid({
+function RateDetailsInteractiveTable({
   actionSelector,
   children,
   columns,
   "aria-label": ariaLabel,
   labelledBy,
   onCurrentRowIdChange,
-}: RateDetailsTreeGridProps) {
-  const treeGridRef = React.useRef<HTMLTableElement>(null);
+}: RateDetailsInteractiveTableProps) {
+  const tableRef = React.useRef<HTMLTableElement>(null);
 
   function getRows() {
     return Array.from(
-      treeGridRef.current?.querySelectorAll<HTMLTableRowElement>("[data-rate-details-row]") ?? []
+      tableRef.current?.querySelectorAll<HTMLTableRowElement>("[data-rate-details-row]") ?? []
     );
   }
 
@@ -159,7 +159,9 @@ function RateDetailsTreeGrid({
       aria-labelledby={labelledBy}
       className="block w-full border-separate border-spacing-y-150"
       onKeyDown={handleTableKeyDown}
-      ref={treeGridRef}
+      ref={tableRef}
+      // Production semantics intentionally remain table-like while this composite navigation
+      // pattern awaits a table-vs-grid screen reader audit.
       role="table"
     >
       <thead className="sr-only">
@@ -176,11 +178,11 @@ type RateDetailsRowActionProps = {
   tabIndex: 0 | -1;
 };
 
-type RateDetailsTreeGridCellProps = React.TdHTMLAttributes<HTMLTableCellElement> & {
+type RateDetailsInteractiveTableCellProps = React.TdHTMLAttributes<HTMLTableCellElement> & {
   isPrimary?: boolean;
 };
 
-type RateDetailsTreeGridRowProps = {
+type RateDetailsInteractiveTableRowProps = {
   "aria-label": string;
   action: (props: RateDetailsRowActionProps) => React.ReactNode;
   children: React.ReactNode;
@@ -193,13 +195,13 @@ type RateDetailsTreeGridRowProps = {
   tabIndex: 0 | -1;
 };
 
-function RateDetailsTreeGridCell({
+function RateDetailsInteractiveTableCell({
   children,
   className,
   isPrimary = false,
   tabIndex = -1,
   ...props
-}: RateDetailsTreeGridCellProps) {
+}: RateDetailsInteractiveTableCellProps) {
   return (
     <td
       {...props}
@@ -214,7 +216,7 @@ function RateDetailsTreeGridCell({
   );
 }
 
-function RateDetailsTreeGridRow({
+function RateDetailsInteractiveTableRow({
   "aria-label": ariaLabel,
   action,
   actionClassName,
@@ -225,7 +227,7 @@ function RateDetailsTreeGridRow({
   onSelect,
   rowId,
   tabIndex,
-}: RateDetailsTreeGridRowProps) {
+}: RateDetailsInteractiveTableRowProps) {
   const actionRef = React.useRef<HTMLButtonElement>(null);
 
   return (
@@ -254,5 +256,17 @@ function RateDetailsTreeGridRow({
   );
 }
 
-export { RateDetailsList, RateDetailsTreeGrid, RateDetailsTreeGridCell, RateDetailsTreeGridRow };
+const RateDetailsTreeGrid = RateDetailsInteractiveTable;
+const RateDetailsTreeGridCell = RateDetailsInteractiveTableCell;
+const RateDetailsTreeGridRow = RateDetailsInteractiveTableRow;
+
+export {
+  RateDetailsList,
+  RateDetailsInteractiveTable,
+  RateDetailsInteractiveTableCell,
+  RateDetailsInteractiveTableRow,
+  RateDetailsTreeGrid,
+  RateDetailsTreeGridCell,
+  RateDetailsTreeGridRow,
+};
 export type { RateDetailsRowActionProps };

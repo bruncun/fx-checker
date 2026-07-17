@@ -7,6 +7,7 @@ import {
   getCurrencyCodePairFromParams,
   getCurrencyPairLabelFromParams,
   getCurrencyPairUrl,
+  getFxUrlStateFromParams,
   getRateHistoryUrlStateFromParams,
   getSelectedCurrencyPairFromParams,
 } from "./url-state";
@@ -53,6 +54,28 @@ describe("url state", () => {
       receiveCurrencyCode: "USD",
       selectedPair: "GBP/USD",
       selectedRange: "5Y",
+      sendCurrencyCode: "GBP",
+    });
+  });
+
+  it("builds a canonical FX URL state with a stable route key", () => {
+    expect(
+      getFxUrlStateFromParams({
+        amount: "2500",
+        amountSource: "receive",
+        from: "gbp",
+        range: "1Y",
+        receiveAmount: "3000",
+        to: "usd",
+      })
+    ).toEqual({
+      amount: "2500",
+      amountSource: "receive",
+      receiveAmount: undefined,
+      receiveCurrencyCode: "USD",
+      routeKey: "GBP/USD:1Y",
+      selectedPair: "GBP/USD",
+      selectedRange: "1Y",
       sendCurrencyCode: "GBP",
     });
   });
