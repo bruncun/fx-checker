@@ -78,9 +78,7 @@ function getDateDaysBefore(date: string, days: number) {
 
 export async function getLatestRatesData(): Promise<LatestRatesData> {
   try {
-    const rates = await getRates();
-
-    return await getFreshLatestRatesDataForRates(rates);
+    return await getFreshLatestRatesData();
   } catch {
     try {
       const snapshot = await getLatestExchangeRateSnapshot();
@@ -102,10 +100,12 @@ export async function getLatestRatesData(): Promise<LatestRatesData> {
   }
 }
 
-async function getFreshLatestRatesDataForRates(rates: FrankfurterRate[]): Promise<LatestRatesData> {
+async function getFreshLatestRatesData(): Promise<LatestRatesData> {
   "use cache";
   cacheLife("days");
   cacheTag(EXCHANGE_RATES_CACHE_TAG);
+
+  const rates = await getRates();
 
   if (rates.length === 0) {
     return { status: "unavailable" };
