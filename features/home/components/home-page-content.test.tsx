@@ -31,7 +31,7 @@ describe("HomePageContent", () => {
     render(
       <HomePageContent
         headerStatsSlot={<span>56 Currencies</span>}
-        liveRatesSlot={<section aria-label="Market snapshot exchange rates" />}
+        liveRatesSlot={<section aria-label="Exchange rates" />}
       >
         <section aria-label="Route content" />
       </HomePageContent>
@@ -44,7 +44,7 @@ describe("HomePageContent", () => {
       "#converter"
     );
     expect(screen.getByText("56 Currencies")).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Market snapshot exchange rates" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Exchange rates" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Route content" })).toBeTruthy();
   });
 
@@ -52,7 +52,7 @@ describe("HomePageContent", () => {
     render(
       <HomePageContent
         headerStatsSlot={<span>56 Currencies</span>}
-        liveRatesSlot={<section aria-label="Market snapshot exchange rates" />}
+        liveRatesSlot={<section aria-label="Exchange rates" />}
       >
         <section aria-label="Route content" />
       </HomePageContent>

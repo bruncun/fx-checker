@@ -39,12 +39,7 @@ function RegisteredHistoryRangeActions({
   });
 
   return (
-    <div
-      aria-label="Market snapshot exchange rates"
-      data-live-rates-scroll-region
-      role="region"
-      tabIndex={0}
-    >
+    <div aria-label="Exchange rates" data-live-rates-scroll-region role="region" tabIndex={0}>
       Market snapshot
     </div>
   );
@@ -104,7 +99,7 @@ describe("KeyboardShortcutsProvider", () => {
     expect(onNextRange).toHaveBeenCalledOnce();
 
     const liveMarkets = screen.getByRole("region", {
-      name: "Market snapshot exchange rates",
+      name: "Exchange rates",
     });
 
     liveMarkets.focus();

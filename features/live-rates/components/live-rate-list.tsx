@@ -18,7 +18,7 @@ export function LiveRateList({ rates }: LiveRateListProps) {
           <span id="market-snapshot-heading">Market snapshot</span>
         </div>
         <div
-          aria-label="Market snapshot exchange rates"
+          aria-label="Exchange rates"
           className="min-w-0 flex-1 overflow-x-auto focus-visible:outline-none focus-visible:[&>ul]:relative focus-visible:[&>ul]:after:pointer-events-none focus-visible:[&>ul]:after:absolute focus-visible:[&>ul]:after:inset-0 focus-visible:[&>ul]:after:z-10 focus-visible:[&>ul]:after:shadow-[inset_0_0_0_1px_hsl(var(--lime-500))] focus-visible:[&>ul]:after:content-['']"
           data-live-rates-scroll-region
           role="region"

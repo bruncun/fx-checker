@@ -15,7 +15,7 @@ describe("LiveRateList", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
     const badge = screen.getByText("Market snapshot").parentElement;
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
 
     expect(screen.getByRole("complementary", { name: "Market snapshot" })).toBeTruthy();
     expect(badge?.nextElementSibling).toBe(scroller);
@@ -26,7 +26,7 @@ describe("LiveRateList", () => {
   it("renders every mock rate in order", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
     const list = within(scroller).getByRole("list");
     const items = within(list).getAllByRole("listitem");
 
@@ -48,7 +48,7 @@ describe("LiveRateList", () => {
   it("keeps the scroll region keyboard focusable", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
 
     expect(scroller.getAttribute("tabindex")).toBe("0");
     expect(scroller.hasAttribute("data-live-rates-scroll-region")).toBe(true);
@@ -60,7 +60,7 @@ describe("LiveRateList", () => {
   it("renders rate items as static content", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
     const list = within(scroller).getByRole("list");
 
     expect(within(list).getAllByRole("listitem")).toHaveLength(7);
@@ -72,7 +72,7 @@ describe("LiveRateList", () => {
   it("does not expose ticker items as focusable actions", () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
     const list = within(scroller).getByRole("list");
     const firstItem = within(list).getAllByRole("listitem")[0];
 
@@ -84,7 +84,7 @@ describe("LiveRateList", () => {
   it("uses the direction to style positive and negative changes", () => {
     render(<LiveRateList rates={mockLiveRates.slice(0, 2)} />);
 
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
     const list = within(scroller).getByRole("list");
     const items = within(list).getAllByRole("listitem");
     const negativeChange = items[0]?.querySelector("span:last-child");
@@ -107,7 +107,7 @@ describe("LiveRateList", () => {
       />
     );
 
-    const scroller = screen.getByRole("region", { name: "Market snapshot exchange rates" });
+    const scroller = screen.getByRole("region", { name: "Exchange rates" });
     const list = within(scroller).getByRole("list");
     const item = within(list).getByRole("listitem");
 
