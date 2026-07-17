@@ -12,6 +12,16 @@ function SkeletonBlock({ className }: { className: string }) {
   return <span aria-hidden className={cx("fx-skeleton block", className)} />;
 }
 
+function SkeletonText({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <span aria-hidden="true" className={cx("fx-skeleton inline-block rounded-4", className)}>
+      <span className="text-transparent" style={{ visibility: "hidden" }}>
+        {children}
+      </span>
+    </span>
+  );
+}
+
 function FallbackAmountInput({ className }: { className?: string }) {
   return (
     <span
@@ -48,21 +58,24 @@ function FallbackCurrencyButton() {
 
 function HeaderStatsFallback() {
   return (
-    <InlineMetaList
-      className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
-      aria-label="Exchange rate data stats"
-      items={[
-        <SkeletonBlock className="h-200 w-[88px] rounded-4 sm:h-250" key="currencies" />,
-        <abbr key="eod" title="End of day">
-          EOD
-        </abbr>,
-        {
-          className: "hidden sm:list-item",
-          content: "Central bank data",
-        },
-        <AccountFallback key="account" />,
-      ]}
-    />
+    <div className="flex items-center gap-200">
+      <InlineMetaList
+        className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
+        aria-label="Exchange rate data stats"
+        items={[
+          <SkeletonText key="currencies">31 Currencies</SkeletonText>,
+          <abbr key="eod" title="End of day">
+            EOD
+          </abbr>,
+          {
+            className: "hidden sm:list-item",
+            content: "Central bank data",
+          },
+        ]}
+      />
+      <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
+      <AccountFallback />
+    </div>
   );
 }
 
