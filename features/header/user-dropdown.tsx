@@ -45,8 +45,11 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isSigningOut, setIsSigningOut] = React.useState(false);
   const panelId = React.useId();
+  const titleId = React.useId();
+  const hasFocusedDialogTitleRef = React.useRef(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const titleRef = React.useRef<HTMLHeadingElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const showDataUnavailableError = useDataUnavailableError();
   const activeTheme =
@@ -102,6 +105,7 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
 
   React.useLayoutEffect(() => {
     if (!isOpen) {
+      hasFocusedDialogTitleRef.current = false;
       return;
     }
 
@@ -112,7 +116,11 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
     menuButtons.forEach((button) => {
       button.tabIndex = button === activeThemeButton ? 0 : -1;
     });
-    activeThemeButton?.focus({ preventScroll: true });
+
+    if (!hasFocusedDialogTitleRef.current) {
+      hasFocusedDialogTitleRef.current = true;
+      titleRef.current?.focus({ preventScroll: true });
+    }
   }, [activeTheme, isOpen, menuFocus]);
 
   usePointerDownOutside({
@@ -162,11 +170,23 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
       const menuButtons = menuFocus.getItems();
       const currentIndex = menuButtons.findIndex((button) => button === document.activeElement);
 
-      if (menuButtons.length === 0 || currentIndex === -1) {
+      if (menuButtons.length === 0) {
         return;
       }
 
       event.preventDefault();
+      if (currentIndex === -1) {
+        const currentTabStopIndex = menuButtons.findIndex((button) => button.tabIndex === 0);
+        const nextIndex = event.shiftKey
+          ? menuButtons.length - 1
+          : currentTabStopIndex === -1
+            ? 0
+            : currentTabStopIndex;
+
+        menuFocus.focusItem(menuButtons[nextIndex]);
+        return;
+      }
+
       const nextIndex = event.shiftKey
         ? (currentIndex - 1 + menuButtons.length) % menuButtons.length
         : (currentIndex + 1) % menuButtons.length;
@@ -285,13 +305,16 @@ export function UserDropdown({ isGuest = false }: UserDropdownProps) {
       {isOpen ? (
         <div
           ref={panelRef}
-          aria-label="Account menu"
+          aria-labelledby={titleId}
           aria-modal="true"
           className="fx-panel-in absolute top-[calc(100%+8px)] right-0 z-[100] flex w-[min(calc(100vw-32px),116px)] flex-col gap-100 rounded-10 bg-neutral-600 p-100 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),var(--shadow-elevation-popover)]"
           id={panelId}
           onKeyDown={handlePanelKeyDown}
           role="dialog"
         >
+          <h2 ref={titleRef} className="sr-only" id={titleId} tabIndex={-1}>
+            Account menu
+          </h2>
           {renderThemeToggle({ menu: true })}
 
           {isGuest ? (

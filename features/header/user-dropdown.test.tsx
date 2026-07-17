@@ -93,6 +93,21 @@ describe("UserDropdown", () => {
     expect(screen.getAllByRole("button", { name: "Sign out" })[0]).toBeTruthy();
   });
 
+  it("opens the account dialog with initial focus on the dialog title", async () => {
+    render(<UserDropdown />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+
+    const dialogTitle = screen.getByRole("heading", { name: "Account menu" });
+    const systemTheme = screen.getAllByRole("radio", { name: "System" })[0];
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(dialogTitle);
+    });
+    expect(dialogTitle.tabIndex).toBe(-1);
+    expect(systemTheme.tabIndex).toBe(0);
+  });
+
   it("opens an account dialog with auth links for guest users", () => {
     render(<UserDropdown isGuest />);
 
@@ -228,21 +243,26 @@ describe("UserDropdown", () => {
     render(<UserDropdown />);
 
     fireEvent.click(screen.getByRole("button", { name: "Account menu" }));
+    const dialogTitle = screen.getByRole("heading", { name: "Account menu" });
     const systemTheme = screen.getAllByRole("radio", { name: "System" })[0];
     const signOutButton = screen.getAllByRole("button", { name: "Sign out" })[0];
 
     await waitFor(() => {
-      expect(document.activeElement).toBe(systemTheme);
+      expect(document.activeElement).toBe(dialogTitle);
     });
 
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Tab" });
 
+    expect(document.activeElement).toBe(systemTheme);
+
+    fireEvent.keyDown(systemTheme, { key: "Tab" });
     expect(document.activeElement).toBe(signOutButton);
 
     fireEvent.keyDown(signOutButton, { key: "Tab" });
     expect(document.activeElement).toBe(systemTheme);
 
-    fireEvent.keyDown(systemTheme, { key: "Tab", shiftKey: true });
+    dialogTitle.focus();
+    fireEvent.keyDown(dialogTitle, { key: "Tab", shiftKey: true });
     expect(document.activeElement).toBe(signOutButton);
   });
 
