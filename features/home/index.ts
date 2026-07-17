@@ -1,1 +1,1 @@
-export { HomePageShell } from "./home-page";
+export { HomePageRouteContent, HomePageShell, type HomePageSearchParams } from "./home-page";

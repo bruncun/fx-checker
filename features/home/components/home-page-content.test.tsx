@@ -30,11 +30,11 @@ describe("HomePageContent", () => {
   it("renders the immediate shell and slots", () => {
     render(
       <HomePageContent
-        converterSlot={<div data-testid="converter-slot" />}
         headerStatsSlot={<span>56 Currencies</span>}
         liveRatesSlot={<section aria-label="Market snapshot exchange rates" />}
-        rateDetailsSlot={<section aria-label="Rate details" />}
-      />
+      >
+        <section aria-label="Route content" />
+      </HomePageContent>
     );
 
     expect(screen.getByRole("banner")).toBeTruthy();
@@ -44,20 +44,18 @@ describe("HomePageContent", () => {
       "#converter"
     );
     expect(screen.getByText("56 Currencies")).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Converter" })).toBeTruthy();
-    expect(screen.getByTestId("converter-slot")).toBeTruthy();
     expect(screen.getByRole("region", { name: "Market snapshot exchange rates" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Rate details" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Route content" })).toBeTruthy();
   });
 
   it("renders the guest alert slot inside the shell", () => {
     render(
       <HomePageContent
-        converterSlot={<section aria-label="Converter" />}
         headerStatsSlot={<span>56 Currencies</span>}
         liveRatesSlot={<section aria-label="Market snapshot exchange rates" />}
-        rateDetailsSlot={<section aria-label="Rate details" />}
-      />
+      >
+        <section aria-label="Route content" />
+      </HomePageContent>
     );
 
     expect(guestModeAlert).toHaveBeenCalled();

@@ -10,11 +10,16 @@ import {
 } from "@/features/favorites/components/favorite-rates";
 import { getServerFavorites } from "@/features/favorites/api/server";
 import { getFavoriteRateRows } from "@/features/favorites/model/favorite-rate-rows";
+import { HomePageRouteContent, type HomePageSearchParams } from "@/features/home";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import { deriveLiveRateForPair } from "@/features/live-rates/model/live-rates";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import type { Metadata } from "next";
 import { Suspense } from "react";
+
+type FavoriteRatesPageProps = {
+  searchParams: HomePageSearchParams;
+};
 
 export const metadata: Metadata = {
   title: "Dashboard - Favorite Rates",
@@ -84,10 +89,12 @@ async function FavoriteRatesUserContent({
   );
 }
 
-export default function FavoriteRatesPage() {
+export default function FavoriteRatesPage({ searchParams }: FavoriteRatesPageProps) {
   return (
-    <Suspense fallback={<FavoriteRatesFallback />}>
-      <FavoriteRatesContent />
-    </Suspense>
+    <HomePageRouteContent searchParams={searchParams}>
+      <Suspense fallback={<FavoriteRatesFallback />}>
+        <FavoriteRatesContent />
+      </Suspense>
+    </HomePageRouteContent>
   );
 }

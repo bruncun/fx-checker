@@ -18,17 +18,28 @@ import { LiveRateList } from "@/features/live-rates/components/live-rate-list";
 import { RateDetails } from "@/features/rate-details";
 import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
-import {
-  ConverterFallback,
-  HeaderStatsFallback,
-  LiveRatesFallback,
-} from "./components/home-page-fallback";
+import { HeaderStatsFallback, LiveRatesFallback } from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
+import { createUrlSearchParams } from "./utils/url-state";
 
 type HomePageShellProps = {
   children: ReactNode;
+};
+
+type HomePageSearchParams = Promise<{
+  amount?: string;
+  amountSource?: string;
+  from?: string;
+  range?: string;
+  receiveAmount?: string;
+  to?: string;
+}>;
+
+type HomePageRouteContentProps = {
+  children: ReactNode;
+  searchParams: HomePageSearchParams;
 };
 
 async function HeaderStats() {
@@ -61,12 +72,15 @@ async function LiveRates() {
   return <LiveRateList rates={liveRatesData.liveRates} />;
 }
 
-async function ConverterSlot() {
+async function ConverterSlot({ searchParams }: { searchParams: HomePageSearchParams }) {
   const latestRatesData = await getLatestRatesData();
 
   assertDataAvailable(latestRatesData);
 
-  const currencyReferenceData = await getCurrencyReferenceDataForLatestRates(latestRatesData.rates);
+  const [params, currencyReferenceData] = await Promise.all([
+    searchParams,
+    getCurrencyReferenceDataForLatestRates(latestRatesData.rates),
+  ]);
 
   assertDataAvailable(currencyReferenceData);
 
@@ -88,7 +102,7 @@ async function ConverterSlot() {
         }
         initialConverterModel={getConverterModel({
           rates: converterRates,
-          searchParams: new URLSearchParams(),
+          searchParams: createUrlSearchParams(params),
         })}
         rates={converterRates}
       />
@@ -114,11 +128,6 @@ async function RateDetailsNavigationSlot() {
 export function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
-      converterSlot={
-        <Suspense fallback={<ConverterFallback />}>
-          <ConverterSlot />
-        </Suspense>
-      }
       headerStatsSlot={
         <Suspense fallback={<HeaderStatsFallback />}>
           <HeaderStats />
@@ -129,7 +138,27 @@ export function HomePageShell({ children }: HomePageShellProps) {
           <LiveRates />
         </Suspense>
       }
-      rateDetailsSlot={
+    >
+      {children}
+    </HomePageContent>
+  );
+}
+
+export function HomePageRouteContent({ children, searchParams }: HomePageRouteContentProps) {
+  return (
+    <>
+      <section
+        aria-label="Converter"
+        className="relative z-[30] scroll-mt-200 focus:outline-none"
+        id="converter"
+        tabIndex={-1}
+      >
+        <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
+          Check the Rate
+        </h1>
+        <ConverterSlot searchParams={searchParams} />
+      </section>
+      <div className="mt-500 lg:mt-400">
         <RateDetails
           navigationSlot={
             <Suspense fallback={<RateDetailsNavigationFallback />}>
@@ -139,7 +168,9 @@ export function HomePageShell({ children }: HomePageShellProps) {
         >
           {children}
         </RateDetails>
-      }
-    />
+      </div>
+    </>
   );
 }
+
+export type { HomePageSearchParams };

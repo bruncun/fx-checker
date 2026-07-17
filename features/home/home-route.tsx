@@ -19,13 +19,10 @@ import {
   RateHistoryStatsFallback,
 } from "@/features/rate-details/components/rate-details-fallback";
 import { Suspense } from "react";
+import { HomePageRouteContent, type HomePageSearchParams } from "./home-page";
 
 export type HomeRouteProps = {
-  searchParams: Promise<{
-    from?: string;
-    range?: string;
-    to?: string;
-  }>;
+  searchParams: HomePageSearchParams;
 };
 
 type RateHistoryContentProps = {
@@ -126,8 +123,10 @@ async function HomeRouteContent({ searchParams }: HomeRouteProps) {
 
 export function HomeRoute({ searchParams }: HomeRouteProps) {
   return (
-    <Suspense fallback={<RateHistoryFallback />}>
-      <HomeRouteContent searchParams={searchParams} />
-    </Suspense>
+    <HomePageRouteContent searchParams={searchParams}>
+      <Suspense fallback={<RateHistoryFallback />}>
+        <HomeRouteContent searchParams={searchParams} />
+      </Suspense>
+    </HomePageRouteContent>
   );
 }

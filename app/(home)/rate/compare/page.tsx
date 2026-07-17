@@ -8,6 +8,7 @@ import {
   getLatestRatesData,
 } from "@/features/exchange-rates/api/server";
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
+import { HomePageRouteContent, type HomePageSearchParams } from "@/features/home";
 import {
   getConverterAmountFromParams,
   getSelectedCurrencyPairFromParams,
@@ -19,12 +20,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 type CompareRatesPageProps = {
-  searchParams: Promise<{
-    amount?: string;
-    amountSource?: string;
-    from?: string;
-    to?: string;
-  }>;
+  searchParams: HomePageSearchParams;
 };
 
 export const metadata: Metadata = {
@@ -89,8 +85,10 @@ async function CompareRatesShell({ searchParams }: CompareRatesPageProps) {
 
 export default function CompareRatesPage({ searchParams }: CompareRatesPageProps) {
   return (
-    <Suspense fallback={<CompareRatesFallback />}>
-      <CompareRatesShell searchParams={searchParams} />
-    </Suspense>
+    <HomePageRouteContent searchParams={searchParams}>
+      <Suspense fallback={<CompareRatesFallback />}>
+        <CompareRatesShell searchParams={searchParams} />
+      </Suspense>
+    </HomePageRouteContent>
   );
 }
