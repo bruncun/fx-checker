@@ -166,6 +166,7 @@ describe("FavoriteRates", () => {
     expect(getFavoriteRow("USD/EUR").textContent).toContain("0.8000");
     expect(screen.getByText("0.8000")).toBeTruthy();
     expect(screen.getByText("-0.80%")).toBeTruthy();
+    expect(getFavoriteRow("USD/EUR").getAttribute("aria-label")).toBe("Select USD/EUR");
     expect(getFavoriteAction("USD/EUR").getAttribute("aria-label")).toBe("Remove");
     expect(getFavoriteAction("USD/EUR").querySelectorAll("svg")).toHaveLength(1);
   });

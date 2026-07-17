@@ -182,7 +182,7 @@ function CompareRateItem({
     fromCurrency: fromCurrencyCode,
     toCurrency: currency.code,
   };
-  const rowLabel = `Use ${fromCurrencyCode}/${currency.code} in converter, ${amount} ${currency.code} at ${rate}`;
+  const rowLabel = `Select ${currency.code}`;
 
   function selectCompareCurrency() {
     onCompareCurrencySelect?.(currency);
@@ -301,7 +301,7 @@ function CompareRatesPanel({
     >
       <RateDetailsTreeGrid
         actionSelector="[data-compare-favorite-button]"
-        aria-label="Rates table"
+        aria-label="Rates"
         onCurrentRowIdChange={onCurrentRowIdChange ?? (() => {})}
         columns={
           <>
