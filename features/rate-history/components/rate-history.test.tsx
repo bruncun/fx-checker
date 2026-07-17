@@ -129,7 +129,7 @@ describe("RateHistory", () => {
     fireEvent.pointerMove(hoverSurface as HTMLElement, { clientX: 0 });
 
     expect(details.textContent).toContain("0.8500");
-    expect(details.textContent).toContain("May 19, 2026 16:00 CET");
+    expect(details.textContent).toContain("May 19 16:00 CET");
     expect(hoverSurface?.querySelector(".rounded-full")).toBeTruthy();
 
     fireEvent.pointerLeave(hoverSurface as HTMLElement);
@@ -254,20 +254,20 @@ describe("RateHistory", () => {
 
     fireEvent.keyDown(chart, { key: "ArrowLeft" });
     expect(details.textContent).toContain("0.8550");
-    expect(details.textContent).toContain("Jun 18, 2026 16:00 CET");
+    expect(details.textContent).toContain("Jun 18 16:00 CET");
     expect(chart.querySelector(".rounded-full")).toBeTruthy();
 
     fireEvent.keyDown(chart, { key: "ArrowLeft" });
     expect(details.textContent).toContain("0.8520");
-    expect(details.textContent).toContain("Jun 12, 2026 16:00 CET");
+    expect(details.textContent).toContain("Jun 12 16:00 CET");
 
     fireEvent.keyDown(chart, { key: "Home" });
     expect(details.textContent).toContain("0.8500");
-    expect(details.textContent).toContain("May 19, 2026 16:00 CET");
+    expect(details.textContent).toContain("May 19 16:00 CET");
 
     fireEvent.keyDown(chart, { key: "End" });
     expect(details.textContent).toContain("0.8600");
-    expect(details.textContent).toContain("Jun 19, 2026 16:00 CET");
+    expect(details.textContent).toContain("Jun 19 16:00 CET");
   });
 
   it("uses PageUp and PageDown for larger chart-point jumps", () => {
@@ -284,11 +284,11 @@ describe("RateHistory", () => {
 
     fireEvent.keyDown(chart, { key: "PageUp" });
     expect(details.textContent).toContain("0.9000");
-    expect(details.textContent).toContain("Jun 17, 2026 16:00 CET");
+    expect(details.textContent).toContain("Jun 17 16:00 CET");
 
     fireEvent.keyDown(chart, { key: "PageDown" });
     expect(details.textContent).toContain("0.9200");
-    expect(details.textContent).toContain("Jun 19, 2026 16:00 CET");
+    expect(details.textContent).toContain("Jun 19 16:00 CET");
   });
 
   it("renders the tab empty state with the selected pair when history data is missing", () => {

@@ -26,13 +26,6 @@ const dateFormatter = new Intl.DateTimeFormat("en", {
   timeZone: "UTC",
 });
 
-const hoverDateFormatter = new Intl.DateTimeFormat("en", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-  year: "numeric",
-});
-
 function formatRateAxisLabel(value: number) {
   return value.toFixed(4);
 }
@@ -100,7 +93,7 @@ function getRateHistoryChartModel(points: RateHistoryPoint[]): RateHistoryChartM
     lastRate: lastPoint.rate.toFixed(4),
     linePath,
     points: chartPoints.map((point) => ({
-      dateLabel: hoverDateFormatter.format(point.date),
+      dateLabel: formatDateAxisLabel(point.date),
       rateLabel: point.rate.toFixed(4),
       x: xScale(point.date),
       y: yScale(point.rate),
