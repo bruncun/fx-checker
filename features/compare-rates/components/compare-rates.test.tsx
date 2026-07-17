@@ -168,7 +168,7 @@ describe("CompareRates", () => {
       ],
     });
 
-    expect(screen.getByRole("table", { name: "Rates table" })).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Rates" })).toBeTruthy();
     expect(screen.getByText("Multi-Currency")).toBeTruthy();
     expect(screen.getByText("1,000")).toBeTruthy();
     expect(screen.getByText("From USD")).toBeTruthy();
@@ -178,6 +178,7 @@ describe("CompareRates", () => {
     expect(screen.getByText("736")).toBeTruthy();
     expect(screen.getByText("@ 0.7360")).toBeTruthy();
     expect(screen.queryByRole("img", { name: "United Kingdom" })).toBeNull();
+    expect(getRateRow("GBP").getAttribute("aria-label")).toBe("Select GBP");
     expect(getRateAction("GBP").getAttribute("aria-label")).toBe("Remove");
     expect(getRateAction("CHF").getAttribute("aria-label")).toBe("Favorite");
   });
@@ -241,7 +242,7 @@ describe("CompareRates", () => {
     expect(screen.getByText(/Enter an amount in SEND above to see what your money/)).toBeTruthy();
     expect(screen.getByText(/is worth in other currencies/)).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Compare" })).toBeNull();
-    expect(screen.queryByRole("table", { name: "Rates table" })).toBeNull();
+    expect(screen.queryByRole("table", { name: "Rates" })).toBeNull();
   });
 
   it("selects compare rows to load the receive currency into the converter", () => {

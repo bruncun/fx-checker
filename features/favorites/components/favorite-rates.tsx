@@ -70,8 +70,7 @@ function FavoriteRateItem({
     fromCurrency: favorite.fromCurrency,
     toCurrency: favorite.toCurrency,
   };
-  const directionLabel = rate.direction;
-  const rowLabel = `Use ${rate.pair} in converter, rate ${rate.rate}, ${directionLabel} ${rate.change}`;
+  const rowLabel = `Select ${rate.pair}`;
 
   function selectPair() {
     onPairSelect({

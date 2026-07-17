@@ -127,7 +127,7 @@ function ConversionLogItem({
   const pair = `${conversion.fromCurrency}/${conversion.toCurrency}`;
   const sendAmount = formatAmount(conversion.sendAmount);
   const receiveAmount = formatAmount(conversion.receiveAmount);
-  const rowLabel = `Load ${pair} conversion, sent ${sendAmount}, received ${receiveAmount}`;
+  const rowLabel = `Load ${pair}`;
 
   return (
     <RateDetailsTreeGridRow

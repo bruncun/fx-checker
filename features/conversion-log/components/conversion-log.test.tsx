@@ -163,6 +163,9 @@ describe("ConversionLog", () => {
     expect(screen.getByText("1,000")).toBeTruthy();
     expect(screen.getByText("853.02")).toBeTruthy();
     expect(screen.getByText("92,490")).toBeTruthy();
+    expect(getConversionRow("conversion-usd-eur").getAttribute("aria-label")).toBe(
+      "Load USD/EUR"
+    );
   });
 
   it("loads a conversion into the converter when its row is selected", () => {
