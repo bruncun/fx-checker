@@ -177,9 +177,8 @@ function RateDetailsNavigationFallback() {
         <Icon decorative height={7} iconName="chevron-down" width={11} />
       </button>
       <div
+        aria-hidden="true"
         className="hidden w-full items-start gap-250 shadow-[inset_0_-1px_0_0_hsl(var(--neutral-600))] sm:flex sm:gap-100"
-        aria-label="Sections"
-        role="tablist"
       >
         {rateDetailsSectionDefinitions.map((item) => (
           <TabButton
@@ -190,6 +189,7 @@ function RateDetailsNavigationFallback() {
             href={item.href}
             id={getRateDetailsTabId(item.value)}
             label={item.label}
+            role="presentation"
             reserveCount={item.value === "favorites" || item.value === "log"}
             scroll={false}
             tabIndex={-1}

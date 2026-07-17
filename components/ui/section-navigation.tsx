@@ -57,6 +57,7 @@ function SectionNavigation({
   const tabListRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const isPointerTabFocusRef = React.useRef(false);
+  const isRovingTabFocusRef = React.useRef(false);
   const activeItem = items.find((item) => item.value === value) ?? items[0];
   const activeLabel = activeItem?.label ?? "";
   const activeCount = activeItem?.count;
@@ -137,6 +138,20 @@ function SectionNavigation({
   const tabRovingFocus = useRovingTabIndex<HTMLAnchorElement>({
     containerRef: tabListRef,
     itemSelector: "[data-section-navigation-tab]",
+    onCurrentElementChange: (element) => {
+      const item = items.find((section) => section.value === element.dataset.sectionValue);
+
+      if (!item || item.value === activeItem?.value) {
+        return;
+      }
+
+      isRovingTabFocusRef.current = true;
+      onTabActivate?.(item);
+
+      window.setTimeout(() => {
+        isRovingTabFocusRef.current = false;
+      }, 0);
+    },
     orientation: "horizontal",
   });
 
@@ -299,6 +314,10 @@ function SectionNavigation({
               label={item.label}
               onFocus={() => {
                 if (isCurrent) {
+                  return;
+                }
+
+                if (isRovingTabFocusRef.current) {
                   return;
                 }
 
