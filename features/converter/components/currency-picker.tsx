@@ -159,7 +159,7 @@ function CurrencyPicker({
 
     if (options?.restoreFocus ?? true) {
       requestAnimationFrame(() => {
-        triggerRef.current?.focus();
+        triggerRef.current?.focus({ preventScroll: true });
       });
     }
   }

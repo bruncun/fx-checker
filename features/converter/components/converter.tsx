@@ -54,7 +54,6 @@ function Converter({
 }: ConverterProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
-  const [, startTransition] = React.useTransition();
   const showDataUnavailableError = useDataUnavailableError();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
@@ -110,10 +109,7 @@ function Converter({
     const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
 
     if (nextUrl !== currentUrl) {
-      window.history.replaceState(null, "", nextUrl);
-      startTransition(() => {
-        router.refresh();
-      });
+      router.replace(nextUrl, { scroll: false });
     }
   }
 
