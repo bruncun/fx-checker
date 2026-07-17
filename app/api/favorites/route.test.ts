@@ -1,14 +1,19 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createFavorite, deleteFavorite } = vi.hoisted(() => ({
+const { createFavorite, deleteFavorite, revalidateTag } = vi.hoisted(() => ({
   createFavorite: vi.fn(),
   deleteFavorite: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 
-vi.mock("@/features/favorites/api/actions", () => ({
-  createFavorite,
-  deleteFavorite,
+vi.mock("@/features/favorites/api/mutations", () => ({
+  createFavoriteMutation: createFavorite,
+  deleteFavoriteMutation: deleteFavorite,
+}));
+
+vi.mock("next/cache", () => ({
+  revalidateTag,
 }));
 
 async function readJson(response: Response) {
@@ -19,6 +24,7 @@ describe("favorites API route", () => {
   beforeEach(() => {
     createFavorite.mockReset();
     deleteFavorite.mockReset();
+    revalidateTag.mockReset();
   });
 
   it("rejects malformed favorite payloads", async () => {

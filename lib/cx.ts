@@ -1,5 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
+import { cn } from "./utils";
+import type { ClassValue } from "clsx";
 
 export function cx(...inputs: ClassValue[]) {
-  return clsx(inputs);
+  return cn(inputs);
 }

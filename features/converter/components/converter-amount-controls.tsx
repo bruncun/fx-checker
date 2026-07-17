@@ -24,7 +24,11 @@ import {
 } from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterFavoritePairProvider } from "./converter-favorite-button";
-import { CurrencyPickerWithData, type CurrencyPickerWithDataProps } from "./currency-picker";
+import {
+  CurrencyPickerWithData,
+  type CurrencyPickerHandle,
+  type CurrencyPickerWithDataProps,
+} from "./currency-picker";
 
 type ConverterAmountPanelProps = {
   amount: string;
@@ -32,28 +36,21 @@ type ConverterAmountPanelProps = {
   countryCode?: SelectedCurrency["countryCode"];
   currencyReferencePromise: Promise<AvailableCurrency[]>;
   currencyCode: string;
-  focusSearchRequest: number;
-  focusTriggerRequest: number;
   label: string;
+  pickerRef: React.Ref<CurrencyPickerHandle>;
   onAmountChange: (amount: string) => void;
   onCurrencyChange: (currency: SelectedCurrency) => void;
   onInteraction: (side: AmountSide) => void;
 };
 
-type DeferredCurrencyPickerProps = Omit<
-  CurrencyPickerWithDataProps,
-  "currenciesPromise" | "openRequest"
-> & {
+type DeferredCurrencyPickerProps = Omit<CurrencyPickerWithDataProps, "currenciesPromise"> & {
   currenciesPromise: Promise<AvailableCurrency[]>;
-  focusSearchRequest: number;
-  focusTriggerRequest: number;
 };
 
 type ConverterAmountControlsProps = {
   currencyReferencePromise: Promise<AvailableCurrency[]>;
   exchangeRateLabel: string;
   favoriteButtonSlot: React.ReactNode;
-  focusTriggerRequests: Record<AmountSide, number>;
   initialAmount?: string;
   initialAmountSource?: AmountSide;
   initialReceiveAmount?: string;
@@ -61,13 +58,10 @@ type ConverterAmountControlsProps = {
   receiveCurrency: SelectedCurrency;
   sendCurrency: SelectedCurrency;
   onConversionLogCreate?: (conversion: CreateConversionInput) => void;
-  onSelectedCurrenciesChange: (
-    currencies: {
-      receiveCurrency: SelectedCurrency;
-      sendCurrency: SelectedCurrency;
-    },
-    selectedSide?: AmountSide
-  ) => void;
+  onSelectedCurrenciesChange: (currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) => void;
 };
 
 const logConversionAcknowledgementMs = 700;
@@ -79,22 +73,20 @@ function DeferredCurrencyPicker({
   currencyCode,
   flagFetchPriority,
   flagLoading,
-  focusSearchRequest,
-  focusTriggerRequest,
   onPickerOpen,
   onCurrencySelect,
   left,
+  ref,
 }: DeferredCurrencyPickerProps) {
   return (
     <CurrencyPickerWithData
+      ref={ref}
       className={className}
       countryCode={countryCode}
       currenciesPromise={currenciesPromise}
       currencyCode={currencyCode}
       flagFetchPriority={flagFetchPriority}
       flagLoading={flagLoading}
-      focusSearchRequest={focusSearchRequest}
-      focusTriggerRequest={focusTriggerRequest}
       left={left}
       onCurrencySelect={onCurrencySelect}
       onPickerOpen={onPickerOpen}
@@ -116,9 +108,8 @@ function ConverterAmountPanel({
   countryCode,
   currencyReferencePromise,
   currencyCode,
-  focusSearchRequest,
-  focusTriggerRequest,
   label,
+  pickerRef,
   onAmountChange,
   onCurrencyChange,
   onInteraction,
@@ -157,8 +148,6 @@ function ConverterAmountPanel({
               currencyCode={currencyCode}
               flagFetchPriority="high"
               flagLoading="eager"
-              focusSearchRequest={focusSearchRequest}
-              focusTriggerRequest={focusTriggerRequest}
               onPickerOpen={() => {
                 onInteraction(amountSide);
               }}
@@ -168,6 +157,7 @@ function ConverterAmountPanel({
                   currencyCode: currency.code,
                 });
               }}
+              ref={pickerRef}
               left={label === "Send"}
             />
           </React.Suspense>
@@ -231,7 +221,6 @@ function ConverterAmountControls({
   currencyReferencePromise,
   exchangeRateLabel,
   favoriteButtonSlot,
-  focusTriggerRequests,
   initialAmount,
   initialAmountSource,
   initialReceiveAmount,
@@ -242,10 +231,8 @@ function ConverterAmountControls({
   onSelectedCurrenciesChange,
 }: ConverterAmountControlsProps) {
   const shortcuts = useOptionalKeyboardShortcuts();
-  const [focusSearchRequests, setFocusSearchRequests] = React.useState({
-    receive: 0,
-    send: 0,
-  });
+  const sendPickerRef = React.useRef<CurrencyPickerHandle>(null);
+  const receivePickerRef = React.useRef<CurrencyPickerHandle>(null);
   const [lastInteractedSide, setLastInteractedSide] = React.useState<AmountSide>("send");
   const [amountState, setAmountState] = usePersistedConverterAmount({
     initialAmount,
@@ -310,12 +297,18 @@ function ConverterAmountControls({
 
   function updateSendCurrency(currency: SelectedCurrency) {
     clearLogAcknowledgement();
-    onSelectedCurrenciesChange({ sendCurrency: currency, receiveCurrency }, "send");
+    onSelectedCurrenciesChange({ sendCurrency: currency, receiveCurrency });
+    requestAnimationFrame(() => {
+      sendPickerRef.current?.focusTrigger();
+    });
   }
 
   function updateReceiveCurrency(currency: SelectedCurrency) {
     clearLogAcknowledgement();
-    onSelectedCurrenciesChange({ sendCurrency, receiveCurrency: currency }, "receive");
+    onSelectedCurrenciesChange({ sendCurrency, receiveCurrency: currency });
+    requestAnimationFrame(() => {
+      receivePickerRef.current?.focusTrigger();
+    });
   }
 
   const exchangeCurrencies = React.useCallback(() => {
@@ -328,10 +321,9 @@ function ConverterAmountControls({
 
   React.useEffect(() => {
     shortcuts?.registerFocusCurrencySearch(() => {
-      setFocusSearchRequests((requests) => ({
-        ...requests,
-        [lastInteractedSide]: requests[lastInteractedSide] + 1,
-      }));
+      const pickerRef = lastInteractedSide === "send" ? sendPickerRef : receivePickerRef;
+
+      pickerRef.current?.openAndFocusSearch();
     });
     shortcuts?.registerSwapCurrencies(exchangeCurrencies);
 
@@ -349,9 +341,8 @@ function ConverterAmountControls({
           amount={sendAmount}
           amountSide="send"
           currencyReferencePromise={currencyReferencePromise}
-          focusSearchRequest={focusSearchRequests.send}
-          focusTriggerRequest={focusTriggerRequests.send}
           label="Send"
+          pickerRef={sendPickerRef}
           onInteraction={setLastInteractedSide}
           onAmountChange={updateSendAmount}
           onCurrencyChange={updateSendCurrency}
@@ -368,9 +359,8 @@ function ConverterAmountControls({
           amount={receiveAmount}
           amountSide="receive"
           currencyReferencePromise={currencyReferencePromise}
-          focusSearchRequest={focusSearchRequests.receive}
-          focusTriggerRequest={focusTriggerRequests.receive}
           label="Receive"
+          pickerRef={receivePickerRef}
           onInteraction={setLastInteractedSide}
           onAmountChange={updateReceiveAmount}
           onCurrencyChange={updateReceiveCurrency}

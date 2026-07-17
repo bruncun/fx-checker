@@ -11,7 +11,7 @@ import { getCurrencyPairUrl, getSelectedCurrencyPairKey } from "@/features/home/
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AvailableCurrency } from "../model/currencies";
 import { getConverterModel, getExchangeRateLabel } from "../model/converter";
-import type { AmountSide, ConverterRates } from "../model/exchange";
+import type { ConverterRates } from "../model/exchange";
 import type { SelectedCurrency } from "../model/selected-currency";
 import { ConverterAmountControls } from "./converter-amount-controls";
 
@@ -33,7 +33,7 @@ async function loadConversionLogDependencies() {
     { addOptimisticConversion, removeOptimisticConversion, replaceOptimisticConversion },
   ] = await Promise.all([
     import("@/features/conversion-log/model/conversion-log"),
-    import("@/features/conversion-log/api/client"),
+    import("@/features/conversion-log/api/client-actions"),
     import("@/features/conversion-log/stores/optimistic-conversions"),
   ]);
 
@@ -81,12 +81,6 @@ function Converter({
     currencies: selectedCurrencyPairFromUrl,
     serverUrlKey: selectedCurrencyPairUrlKey,
   }));
-  const [focusTriggerRequests, setFocusTriggerRequests] = React.useState<
-    Record<AmountSide, number>
-  >({
-    receive: 0,
-    send: 0,
-  });
   const selectedCurrencies =
     localSelectedCurrencies.serverUrlKey === selectedCurrencyPairUrlKey
       ? localSelectedCurrencies.currencies
@@ -98,20 +92,10 @@ function Converter({
       ? liveConverterModel.exchangeRateLabel
       : getExchangeRateLabel({ rates, receiveCurrency, sendCurrency });
 
-  function updateSelectedCurrencies(
-    currencies: {
-      receiveCurrency: SelectedCurrency;
-      sendCurrency: SelectedCurrency;
-    },
-    selectedSide?: AmountSide
-  ) {
-    if (selectedSide) {
-      setFocusTriggerRequests((requests) => ({
-        ...requests,
-        [selectedSide]: requests[selectedSide] + 1,
-      }));
-    }
-
+  function updateSelectedCurrencies(currencies: {
+    receiveCurrency: SelectedCurrency;
+    sendCurrency: SelectedCurrency;
+  }) {
     setLocalSelectedCurrencies({
       currencies,
       serverUrlKey: selectedCurrencyPairUrlKey,
@@ -160,7 +144,6 @@ function Converter({
         const createdConversion = await createConversion(normalizedInput);
 
         replaceOptimisticConversion(pendingConversion.id, createdConversion);
-        router.refresh();
       } catch (error) {
         console.error("Failed to log conversion", error);
         removeOptimisticConversion(pendingConversion.id);
@@ -176,7 +159,6 @@ function Converter({
           currencyReferencePromise={currencyReferencePromise}
           exchangeRateLabel={exchangeRateLabel}
           favoriteButtonSlot={favoriteButtonSlot}
-          focusTriggerRequests={focusTriggerRequests}
           initialAmount={converterAmount.amount}
           initialAmountSource={converterAmount.amountSource}
           initialReceiveAmount={converterAmount.receiveAmount}

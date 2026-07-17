@@ -23,7 +23,7 @@ import {
   type Favorite,
   type FavoriteCurrencyPair,
 } from "@/features/favorites/model/favorites";
-import { createFavorite, deleteFavorite } from "@/features/favorites/api/client";
+import { createFavorite, deleteFavorite } from "@/features/favorites/api/client-actions";
 import {
   addOptimisticFavorite,
   removeOptimisticFavorite,
@@ -35,7 +35,7 @@ import { useConverterPairSelection } from "@/features/home/hooks/use-converter-p
 import { getConverterAmountFromParams } from "@/features/home/utils/url-state";
 import type { FrankfurterRate } from "@/lib/frankfurter";
 import { cn } from "@/lib/utils";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   formatMoneyValue,
   getCompareCurrencies,
@@ -109,7 +109,6 @@ function CompareFavoriteButton({
   favoritesPromise,
   pair,
 }: CompareFavoriteButtonProps) {
-  const router = useRouter();
   const showDataUnavailableError = useDataUnavailableError();
   const initialFavorites = React.use(favoritesPromise);
   const favorites = useOptimisticFavorites(initialFavorites);
@@ -126,7 +125,6 @@ function CompareFavoriteButton({
       React.startTransition(async () => {
         try {
           await deleteFavorite(normalizedPair);
-          router.refresh();
         } catch (error) {
           console.error("Failed to delete favorite", error);
           addOptimisticFavorite(existingFavorite);
@@ -150,7 +148,6 @@ function CompareFavoriteButton({
         const createdFavorite = await createFavorite(normalizedPair);
 
         replaceOptimisticFavorite(pendingFavorite, createdFavorite);
-        router.refresh();
       } catch (error) {
         console.error("Failed to create favorite", error);
         removeOptimisticFavorite(normalizedPair);

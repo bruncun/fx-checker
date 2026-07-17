@@ -1,7 +1,8 @@
 import { assertDataAvailable } from "@/features/home/components/data-unavailable";
 import {
   createUrlSearchParams,
-  getRateHistoryUrlStateFromParams,
+  getFxUrlStateFromParams,
+  type FxUrlState,
 } from "@/features/home/utils/url-state";
 import {
   RateHistoryChartPanel,
@@ -29,7 +30,7 @@ type RateHistoryContentProps = {
   historyPageData: Promise<HistoryPageData>;
   receiveCurrencyCode: string;
   selectedPair: string;
-  selectedRange: ReturnType<typeof getRateHistoryUrlStateFromParams>["selectedRange"];
+  selectedRange: FxUrlState["selectedRange"];
   sendCurrencyCode: string;
 };
 
@@ -81,14 +82,13 @@ async function RateHistoryChartContent(props: RateHistoryContentProps) {
 }
 
 async function HomeRouteContent({ searchParams }: HomeRouteProps) {
-  const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
-    getRateHistoryUrlStateFromParams(createUrlSearchParams(await searchParams));
+  const { receiveCurrencyCode, routeKey, selectedPair, selectedRange, sendCurrencyCode } =
+    getFxUrlStateFromParams(createUrlSearchParams(await searchParams));
   const historyPageData = getHistoryPageData({
     baseCurrency: sendCurrencyCode,
     quoteCurrency: receiveCurrencyCode,
     range: selectedRange,
   });
-  const boundaryKey = `${selectedPair}:${selectedRange}`;
 
   return (
     <div className="uppercase">
@@ -97,7 +97,7 @@ async function HomeRouteContent({ searchParams }: HomeRouteProps) {
         role="group"
         aria-label="Header"
       >
-        <Suspense fallback={<RateHistoryStatsFallback />} key={`stats:${boundaryKey}`}>
+        <Suspense fallback={<RateHistoryStatsFallback />} key={`stats:${routeKey}`}>
           <RateHistoryStatsContent
             historyPageData={historyPageData}
             receiveCurrencyCode={receiveCurrencyCode}
@@ -108,7 +108,7 @@ async function HomeRouteContent({ searchParams }: HomeRouteProps) {
         </Suspense>
         <RateHistoryRangePicker selectedRange={selectedRange} />
       </div>
-      <Suspense fallback={<ChartFallback />} key={`chart:${boundaryKey}`}>
+      <Suspense fallback={<ChartFallback />} key={`chart:${routeKey}`}>
         <RateHistoryChartContent
           historyPageData={historyPageData}
           receiveCurrencyCode={receiveCurrencyCode}

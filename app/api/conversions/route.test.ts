@@ -1,14 +1,19 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createConversionAction, deleteAllConversionsAction } = vi.hoisted(() => ({
+const { createConversionAction, deleteAllConversionsAction, revalidateTag } = vi.hoisted(() => ({
   createConversionAction: vi.fn(),
   deleteAllConversionsAction: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 
-vi.mock("@/features/conversion-log/api/actions", () => ({
-  createConversionAction,
-  deleteAllConversionsAction,
+vi.mock("@/features/conversion-log/api/mutations", () => ({
+  createConversionMutation: createConversionAction,
+  deleteAllConversionsMutation: deleteAllConversionsAction,
+}));
+
+vi.mock("next/cache", () => ({
+  revalidateTag,
 }));
 
 async function readJson(response: Response) {
@@ -19,6 +24,7 @@ describe("conversions API route", () => {
   beforeEach(() => {
     createConversionAction.mockReset();
     deleteAllConversionsAction.mockReset();
+    revalidateTag.mockReset();
   });
 
   it("rejects malformed conversion payloads", async () => {

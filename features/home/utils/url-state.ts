@@ -11,6 +11,17 @@ const DEFAULT_HISTORY_RANGE: HistoryRange = "1M";
 
 type SearchParamsInput = URLSearchParams | Record<string, string | undefined>;
 
+type FxUrlState = {
+  amount: string;
+  amountSource: AmountSide;
+  receiveAmount?: string;
+  receiveCurrencyCode: string;
+  routeKey: string;
+  selectedPair: string;
+  selectedRange: HistoryRange;
+  sendCurrencyCode: string;
+};
+
 function createUrlSearchParams(input: SearchParamsInput) {
   if (input instanceof URLSearchParams) {
     return input;
@@ -62,6 +73,25 @@ function getRateHistoryUrlStateFromParams(input: SearchParamsInput) {
     receiveCurrencyCode,
     selectedPair: `${sendCurrencyCode}/${receiveCurrencyCode}`,
     selectedRange: normalizeHistoryRange(searchParams.get("range") ?? undefined),
+    sendCurrencyCode,
+  };
+}
+
+function getFxUrlStateFromParams(input: SearchParamsInput): FxUrlState {
+  const searchParams = createUrlSearchParams(input);
+  const { amount, amountSource, receiveAmount } = getConverterAmountFromParams(searchParams);
+  const { receiveCurrencyCode, selectedPair, selectedRange, sendCurrencyCode } =
+    getRateHistoryUrlStateFromParams(searchParams);
+  const routeKey = `${selectedPair}:${selectedRange}`;
+
+  return {
+    amount,
+    amountSource,
+    receiveAmount,
+    receiveCurrencyCode,
+    routeKey,
+    selectedPair,
+    selectedRange,
     sendCurrencyCode,
   };
 }
@@ -197,7 +227,9 @@ export {
   getCurrencyByCode,
   getCurrencyPairUrl,
   getDefaultCurrencyPair,
+  getFxUrlStateFromParams,
   getRateHistoryUrlStateFromParams,
   getSelectedCurrencyPairFromParams,
   getSelectedCurrencyPairKey,
 };
+export type { FxUrlState };

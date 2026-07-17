@@ -27,9 +27,6 @@ export interface CurrencyPickerProps {
   currencyCode: string;
   flagFetchPriority?: React.ComponentProps<typeof CurrencyButton>["flagFetchPriority"];
   flagLoading?: React.ComponentProps<typeof CurrencyButton>["flagLoading"];
-  focusSearchRequest?: number;
-  focusTriggerRequest?: number;
-  openRequest?: number;
   ref?: React.Ref<CurrencyPickerHandle>;
   onPickerOpen?: () => void;
   onCurrencySelect?: (currency: CurrencyPickerItem) => void;
@@ -41,6 +38,7 @@ export type CurrencyPickerWithDataProps = Omit<CurrencyPickerProps, "currencies"
 };
 
 export type CurrencyPickerHandle = {
+  openAndFocusSearch: () => void;
   focusSearch: () => void;
   focusTrigger: () => void;
 };
@@ -52,9 +50,6 @@ function CurrencyPicker({
   currencyCode,
   flagFetchPriority,
   flagLoading,
-  focusSearchRequest = 0,
-  focusTriggerRequest = 0,
-  openRequest = 0,
   ref,
   onPickerOpen,
   onCurrencySelect,
@@ -138,9 +133,9 @@ function CurrencyPicker({
     finishOpeningPicker();
   }
 
-  function focusSearch() {
+  function openAndFocusSearch() {
     if (!isOpen) {
-      openPicker();
+      finishOpeningPicker();
       return;
     }
 
@@ -149,63 +144,15 @@ function CurrencyPicker({
     });
   }
 
+  function focusSearch() {
+    openAndFocusSearch();
+  }
+
   function focusTrigger() {
     triggerRef.current?.focus({ preventScroll: true });
   }
 
-  React.useImperativeHandle(ref, () => ({ focusSearch, focusTrigger }));
-
-  const openPickerFromTriggerRef = React.useRef(openPickerFromTrigger);
-  const focusSearchRef = React.useRef(focusSearch);
-  const focusTriggerRef = React.useRef(focusTrigger);
-
-  React.useEffect(() => {
-    openPickerFromTriggerRef.current = openPickerFromTrigger;
-    focusSearchRef.current = focusSearch;
-    focusTriggerRef.current = focusTrigger;
-  });
-
-  React.useEffect(() => {
-    if (openRequest === 0) {
-      return;
-    }
-
-    const animationFrameId = requestAnimationFrame(() => {
-      openPickerFromTriggerRef.current();
-    });
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [openRequest]);
-
-  React.useEffect(() => {
-    if (focusSearchRequest === 0) {
-      return;
-    }
-
-    const animationFrameId = requestAnimationFrame(() => {
-      focusSearchRef.current();
-    });
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [focusSearchRequest]);
-
-  React.useEffect(() => {
-    if (focusTriggerRequest === 0) {
-      return;
-    }
-
-    const animationFrameId = requestAnimationFrame(() => {
-      focusTriggerRef.current();
-    });
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [focusTriggerRequest]);
+  React.useImperativeHandle(ref, () => ({ focusSearch, focusTrigger, openAndFocusSearch }));
 
   function closePicker(options?: { restoreFocus?: boolean }) {
     setIsOpen(false);

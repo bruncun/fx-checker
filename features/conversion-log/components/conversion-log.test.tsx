@@ -31,7 +31,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
-vi.mock("@/features/conversion-log/api/client", () => ({
+vi.mock("@/features/conversion-log/api/client-actions", () => ({
   deleteAllConversions,
   deleteConversion,
 }));
