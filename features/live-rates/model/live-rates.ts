@@ -77,16 +77,34 @@ function formatChangePercent(currentRate: Decimal, previousRate: Decimal) {
   } satisfies Pick<LiveRate, "change" | "direction">;
 }
 
-function getBaselineRatesByDate(latestDate: string, historicalRates: FrankfurterRate[]) {
-  const baselineDate = historicalRates.reduce<string | null>((earliestDate, rate) => {
-    if (rate.date >= latestDate) {
-      return earliestDate;
+function getBaselineRatesByCurrency({
+  base,
+  historicalRates,
+  latestDate,
+  quote,
+}: {
+  base: string;
+  historicalRates: FrankfurterRate[];
+  latestDate: string;
+  quote: string;
+}) {
+  const historicalDates = [
+    ...new Set(
+      historicalRates.filter((rate) => rate.date < latestDate).map((rate) => rate.date)
+    ),
+  ].sort();
+
+  for (const date of historicalDates) {
+    const ratesByCurrency = getRateByCurrency(
+      historicalRates.filter((rate) => rate.date === date)
+    );
+
+    if (ratesByCurrency && derivePairRate(ratesByCurrency, base, quote)) {
+      return ratesByCurrency;
     }
+  }
 
-    return earliestDate === null || rate.date < earliestDate ? rate.date : earliestDate;
-  }, null);
-
-  return baselineDate ? historicalRates.filter((rate) => rate.date === baselineDate) : [];
+  return null;
 }
 
 export function deriveLiveRateForPair({
@@ -103,7 +121,7 @@ export function deriveLiveRateForPair({
   const latestRatesByCurrency = getRateByCurrency(latestRates);
   const latestDate = latestRates[0]?.date;
   const baselineRatesByCurrency = latestDate
-    ? getRateByCurrency(getBaselineRatesByDate(latestDate, historicalRates))
+    ? getBaselineRatesByCurrency({ base, historicalRates, latestDate, quote })
     : null;
 
   if (!latestRatesByCurrency || !baselineRatesByCurrency) {

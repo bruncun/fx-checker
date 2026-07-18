@@ -44,6 +44,17 @@ describe("live rate derivation", () => {
     expect(deriveLiveRates({ historicalRates: latestRates, latestRates })).toEqual([]);
   });
 
+  it("uses the earliest date that contains each pair when historical dates are sparse", () => {
+    const sparseHistoricalRates: FrankfurterRate[] = [
+      { date: "2026-06-10", base: "EUR", quote: "BRL", rate: 6.4 },
+      ...historicalRates,
+    ];
+
+    expect(deriveLiveRates({ historicalRates: sparseHistoricalRates, latestRates })).toHaveLength(
+      7
+    );
+  });
+
   it("marks unchanged rounded rates as neutral", () => {
     expect(
       deriveLiveRates({
