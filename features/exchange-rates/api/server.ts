@@ -8,6 +8,7 @@ import type { LiveRate } from "@/features/live-rates/components/live-rate-item";
 import { deriveLiveRates } from "@/features/live-rates/model/live-rates";
 import {
   EXCHANGE_RATES_CACHE_TAG,
+  FRANKFURTER_SOURCE_CACHE_TAG,
   getCurrencies,
   getRates,
   type FrankfurterRate,
@@ -103,7 +104,7 @@ export async function getLatestRatesData(): Promise<LatestRatesData> {
 async function getFreshLatestRatesData(): Promise<LatestRatesData> {
   "use cache";
   cacheLife("days");
-  cacheTag(EXCHANGE_RATES_CACHE_TAG);
+  cacheTag(FRANKFURTER_SOURCE_CACHE_TAG);
 
   const rates = await getRates();
 

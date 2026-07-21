@@ -58,6 +58,17 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
     [currentRange, getRangeUrl, pathname, router, searchParamsString, selectedRange]
   );
 
+  const prefetchRange = useCallback(
+    (value: string) => {
+      if (!historyRanges.includes(value as HistoryRange) || value === currentRange) {
+        return;
+      }
+
+      router.prefetch(getRangeUrl(value as HistoryRange));
+    },
+    [currentRange, getRangeUrl, router]
+  );
+
   const selectAdjacentRange = useCallback(
     (direction: -1 | 1) => {
       const currentIndex = historyRanges.indexOf(currentRange);
@@ -91,6 +102,7 @@ function RateHistoryRangePicker({ selectedRange }: RateHistoryRangePickerProps) 
     <RangePicker
       aria-label="Timeframe"
       className="mt-250 lg:mt-0 lg:shrink-0"
+      onValuePrefetch={prefetchRange}
       onValueChange={selectRange}
       options={ranges}
       shortcutLabels={{

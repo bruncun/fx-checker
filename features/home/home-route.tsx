@@ -39,6 +39,10 @@ type RateHistoryPanelData = {
   pair: string;
 };
 
+type ResolvedRateHistoryContentProps = {
+  rateHistoryPanelData: Promise<RateHistoryPanelData>;
+};
+
 async function getRateHistoryPanelData({
   historyPageData,
   receiveCurrencyCode,
@@ -65,14 +69,14 @@ async function getRateHistoryPanelData({
   };
 }
 
-async function RateHistoryStatsContent(props: RateHistoryContentProps) {
-  const { panel } = await getRateHistoryPanelData(props);
+async function RateHistoryStatsContent({ rateHistoryPanelData }: ResolvedRateHistoryContentProps) {
+  const { panel } = await rateHistoryPanelData;
 
   return panel ? <RateHistoryStats panel={panel} /> : null;
 }
 
-async function RateHistoryChartContent(props: RateHistoryContentProps) {
-  const { pair, panel } = await getRateHistoryPanelData(props);
+async function RateHistoryChartContent({ rateHistoryPanelData }: ResolvedRateHistoryContentProps) {
+  const { pair, panel } = await rateHistoryPanelData;
 
   return panel ? (
     <RateHistoryChartPanel panel={panel} pair={pair} />
@@ -85,9 +89,14 @@ async function HomeRouteContent({ searchParams }: HomeRouteProps) {
   const { receiveCurrencyCode, routeKey, selectedPair, selectedRange, sendCurrencyCode } =
     getFxUrlStateFromParams(createUrlSearchParams(await searchParams));
   const historyPageData = getHistoryPageData({
-    baseCurrency: sendCurrencyCode,
-    quoteCurrency: receiveCurrencyCode,
     range: selectedRange,
+  });
+  const rateHistoryPanelData = getRateHistoryPanelData({
+    historyPageData,
+    receiveCurrencyCode,
+    selectedPair,
+    selectedRange,
+    sendCurrencyCode,
   });
 
   return (
@@ -98,24 +107,12 @@ async function HomeRouteContent({ searchParams }: HomeRouteProps) {
         aria-label="Header"
       >
         <Suspense fallback={<RateHistoryStatsFallback />} key={`stats:${routeKey}`}>
-          <RateHistoryStatsContent
-            historyPageData={historyPageData}
-            receiveCurrencyCode={receiveCurrencyCode}
-            selectedPair={selectedPair}
-            selectedRange={selectedRange}
-            sendCurrencyCode={sendCurrencyCode}
-          />
+          <RateHistoryStatsContent rateHistoryPanelData={rateHistoryPanelData} />
         </Suspense>
         <RateHistoryRangePicker selectedRange={selectedRange} />
       </div>
       <Suspense fallback={<ChartFallback />} key={`chart:${routeKey}`}>
-        <RateHistoryChartContent
-          historyPageData={historyPageData}
-          receiveCurrencyCode={receiveCurrencyCode}
-          selectedPair={selectedPair}
-          selectedRange={selectedRange}
-          sendCurrencyCode={sendCurrencyCode}
-        />
+        <RateHistoryChartContent rateHistoryPanelData={rateHistoryPanelData} />
       </Suspense>
     </div>
   );

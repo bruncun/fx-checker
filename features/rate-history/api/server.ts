@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getCurrencyFlagCountryCode } from "@/features/converter/model/currencies";
 import { getLatestRatesData } from "@/features/exchange-rates/api/server";
 import { EXCHANGE_RATES_CACHE_TAG, getRates, type FrankfurterRate } from "@/lib/frankfurter";
 import { cacheLife, cacheTag } from "next/cache";
@@ -11,10 +12,7 @@ import {
 
 const RATE_HISTORY_YEARS = 5;
 
-type DateRange = {
-  from: string;
-  to: string;
-};
+type HistoryDataset = "daily-3m" | "monthly-5y" | "weekly-1y";
 
 type DataResult<T> =
   | ({
@@ -26,120 +24,49 @@ export type HistoryPageData = DataResult<{
   historicalRates: FrankfurterRate[];
 }>;
 
-function parseIsoDate(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
+function getHistoryDataset(range: HistoryRange): HistoryDataset {
+  if (range === "5Y") {
+    return "monthly-5y";
+  }
 
-  if (!year || !month || !day) {
+  return range === "1Y" ? "weekly-1y" : "daily-3m";
+}
+
+function getCanonicalHistorySource(latestRates: FrankfurterRate[]) {
+  const sharedBaseCurrency = latestRates[0]?.base;
+
+  if (!sharedBaseCurrency || latestRates.some((rate) => rate.base !== sharedBaseCurrency)) {
     return null;
   }
 
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function formatIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function addYears(date: Date, years: number) {
-  const nextDate = new Date(date);
-
-  nextDate.setUTCFullYear(nextDate.getUTCFullYear() + years);
-
-  return nextDate;
-}
-
-function getPreviousDate(date: Date) {
-  const previousDate = new Date(date);
-
-  previousDate.setUTCDate(previousDate.getUTCDate() - 1);
-
-  return previousDate;
-}
-
-export function getYearlyDateRanges({
-  from,
-  years,
-  to,
-}: {
-  from: string;
-  years: number;
-  to: string;
-}): DateRange[] {
-  const startDate = parseIsoDate(from);
-  const endDate = parseIsoDate(to);
-
-  if (!startDate || !endDate || startDate > endDate || years < 1) {
-    return [];
-  }
-
-  const ranges: DateRange[] = [];
-
-  for (let index = 0; index < years; index += 1) {
-    const rangeStartDate = addYears(startDate, index);
-    const nextRangeStartDate = addYears(startDate, index + 1);
-    const rangeEndDate = index === years - 1 ? endDate : getPreviousDate(nextRangeStartDate);
-
-    if (rangeStartDate > endDate) {
-      break;
-    }
-
-    const clampedRangeEndDate = rangeEndDate < endDate ? rangeEndDate : endDate;
-
-    ranges.push({
-      from: formatIsoDate(rangeStartDate),
-      to: formatIsoDate(clampedRangeEndDate),
-    });
-  }
-
-  return ranges;
-}
-
-async function getHistoricalRates({
-  from,
-  quotes,
-  range,
-  to,
-}: DateRange & {
-  quotes: string[];
-  range: HistoryRange;
-}) {
-  if (range !== "5Y") {
-    return getRates({ from, quotes, to });
-  }
-
-  const ranges = getYearlyDateRanges({ from, to, years: RATE_HISTORY_YEARS });
-  const rateGroups = await Promise.all(
-    ranges.map((dateRange) => getRates({ ...dateRange, quotes }))
-  );
-
-  return rateGroups.flat();
-}
-
-function getHistoryQuotes({
-  baseCurrency,
-  fallbackQuoteCurrency,
-  quoteCurrency,
-  sharedBaseCurrency,
-}: {
-  baseCurrency: string;
-  fallbackQuoteCurrency: string;
-  quoteCurrency: string;
-  sharedBaseCurrency: string;
-}) {
   const quotes = [
-    ...new Set([baseCurrency, quoteCurrency].filter((currency) => currency !== sharedBaseCurrency)),
-  ];
+    ...new Set(
+      latestRates
+        .map((rate) => rate.quote)
+        .filter(
+          (currency) =>
+            currency !== sharedBaseCurrency && getCurrencyFlagCountryCode(currency) !== undefined
+        )
+    ),
+  ].sort();
 
-  return quotes.length > 0 ? quotes : [fallbackQuoteCurrency];
+  if (quotes.length === 0) {
+    return null;
+  }
+
+  const quoteSet = new Set(quotes);
+  const sourceVersion = latestRates
+    .filter((rate) => quoteSet.has(rate.quote))
+    .map((rate) => `${rate.date}:${rate.base}:${rate.quote}:${rate.rate}`)
+    .sort()
+    .join("|");
+
+  return sourceVersion ? { quotes, sourceVersion } : null;
 }
 
 export async function getHistoryPageData({
-  baseCurrency,
-  quoteCurrency,
   range,
 }: {
-  baseCurrency: string;
-  quoteCurrency: string;
   range: HistoryRange;
 }): Promise<HistoryPageData> {
   try {
@@ -149,54 +76,60 @@ export async function getHistoryPageData({
       return { status: "unavailable" };
     }
 
-    return getHistoryPageDataForLatestRates({
-      baseCurrency,
-      latestRates: latestRatesData.rates,
-      quoteCurrency,
-      range,
-    });
+    return getHistoryPageDataForLatestRates(latestRatesData.rates, range);
   } catch {
     return { status: "unavailable" };
   }
 }
 
-async function getHistoryPageDataForLatestRates({
-  baseCurrency,
-  latestRates,
-  quoteCurrency,
-  range,
+export async function getHistoryPageDataForLatestRates(
+  latestRates: FrankfurterRate[],
+  range: HistoryRange
+): Promise<HistoryPageData> {
+  const latestDate = latestRates[0]?.date;
+  const source = getCanonicalHistorySource(latestRates);
+
+  if (!latestDate || !source) {
+    return { status: "unavailable" };
+  }
+
+  return getCanonicalHistoryPageData({
+    dataset: getHistoryDataset(range),
+    latestDate,
+    quotes: source.quotes,
+    sourceVersion: source.sourceVersion,
+  });
+}
+
+async function getCanonicalHistoryPageData({
+  dataset,
+  latestDate,
+  quotes,
+  sourceVersion,
 }: {
-  baseCurrency: string;
-  latestRates: FrankfurterRate[];
-  quoteCurrency: string;
-  range: HistoryRange;
+  dataset: HistoryDataset;
+  latestDate: string;
+  quotes: string[];
+  sourceVersion: string;
 }): Promise<HistoryPageData> {
   "use cache";
   cacheLife("days");
   cacheTag(EXCHANGE_RATES_CACHE_TAG);
 
   try {
-    const latestRate = latestRates[0];
-    const latestDate = latestRate?.date;
-    const historyStartDate = latestDate
-      ? range === "5Y"
-        ? getDateYearsBefore(latestDate, RATE_HISTORY_YEARS)
-        : getRateHistoryRangeStartDate(latestDate, range)
-      : null;
+    const historyStartDate =
+      dataset === "daily-3m"
+        ? getRateHistoryRangeStartDate(latestDate, "3M")
+        : getDateYearsBefore(latestDate, dataset === "monthly-5y" ? RATE_HISTORY_YEARS : 1);
 
-    if (!latestRate || !latestDate || !historyStartDate) {
+    if (!historyStartDate || !sourceVersion) {
       return { status: "unavailable" };
     }
 
-    const historicalRates = await getHistoricalRates({
+    const historicalRates = await getRates({
       from: historyStartDate,
-      quotes: getHistoryQuotes({
-        baseCurrency,
-        fallbackQuoteCurrency: latestRate.quote,
-        quoteCurrency,
-        sharedBaseCurrency: latestRate.base,
-      }),
-      range,
+      group: dataset === "monthly-5y" ? "month" : dataset === "weekly-1y" ? "week" : undefined,
+      quotes,
       to: latestDate,
     });
 

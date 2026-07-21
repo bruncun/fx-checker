@@ -3,8 +3,8 @@ import {
   getLatestRatesData,
   getLiveRatesDataForLatestRates,
 } from "@/features/exchange-rates/api/server";
-import { getHistoryPageData } from "@/features/rate-history/api/server";
-import { EXCHANGE_RATES_CACHE_TAG } from "@/lib/frankfurter";
+import { getHistoryPageDataForLatestRates } from "@/features/rate-history/api/server";
+import { FRANKFURTER_SOURCE_CACHE_TAG } from "@/lib/frankfurter";
 import { revalidateTag } from "next/cache";
 
 type WarmupStatus = "available" | "unavailable";
@@ -20,33 +20,40 @@ export type FrankfurterCacheWarmupResult = {
 };
 
 export async function warmFrankfurterCache(): Promise<FrankfurterCacheWarmupResult> {
-  revalidateTag(EXCHANGE_RATES_CACHE_TAG, { expire: 0 });
+  revalidateTag(FRANKFURTER_SOURCE_CACHE_TAG, { expire: 0 });
 
   const latestRatesData = await getLatestRatesData();
-  const [currencyReferenceData, liveRatesData, historyPageData] =
+  const [
+    currencyReferenceData,
+    liveRatesData,
+    dailyHistoryData,
+    oneYearHistoryData,
+    fiveYearHistoryData,
+  ] =
     latestRatesData.status === "available"
       ? await Promise.all([
           getCurrencyReferenceDataForLatestRates(latestRatesData.rates),
           getLiveRatesDataForLatestRates(latestRatesData.rates),
-          getHistoryPageData({
-            baseCurrency: "USD",
-            quoteCurrency: "EUR",
-            range: "1M",
-          }),
+          getHistoryPageDataForLatestRates(latestRatesData.rates, "3M"),
+          getHistoryPageDataForLatestRates(latestRatesData.rates, "1Y"),
+          getHistoryPageDataForLatestRates(latestRatesData.rates, "5Y"),
         ])
       : await Promise.all([
           Promise.resolve({ status: "unavailable" as const }),
           Promise.resolve({ status: "unavailable" as const }),
-          getHistoryPageData({
-            baseCurrency: "USD",
-            quoteCurrency: "EUR",
-            range: "1M",
-          }),
+          Promise.resolve({ status: "unavailable" as const }),
+          Promise.resolve({ status: "unavailable" as const }),
+          Promise.resolve({ status: "unavailable" as const }),
         ]);
 
   const results = {
     currencyReferenceData: currencyReferenceData.status,
-    historicalRates: historyPageData.status,
+    historicalRates:
+      dailyHistoryData.status === "available" &&
+      oneYearHistoryData.status === "available" &&
+      fiveYearHistoryData.status === "available"
+        ? ("available" as const)
+        : ("unavailable" as const),
     latestRates: latestRatesData.status,
     liveRates: liveRatesData.status,
   };

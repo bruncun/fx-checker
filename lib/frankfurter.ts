@@ -3,11 +3,13 @@ import "server-only";
 const DEFAULT_FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2";
 const EXCHANGE_RATES_REVALIDATE_SECONDS = 60 * 60 * 24;
 export const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
+export const FRANKFURTER_SOURCE_CACHE_TAG = "frankfurter-source";
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
 
 type FrankfurterEndpoint = "currencies" | "rates";
 type FrankfurterRatesParams = {
   from?: string;
+  group?: "month" | "week";
   providers?: string;
   quotes?: string[];
   to?: string;
@@ -71,6 +73,10 @@ function getFrankfurterEndpointUrl(
 
     if (params.to) {
       url.searchParams.set("to", params.to);
+    }
+
+    if (params.group) {
+      url.searchParams.set("group", params.group);
     }
 
     if (params.quotes && params.quotes.length > 0) {
@@ -188,7 +194,7 @@ async function fetchFrankfurterEndpoint(
       const response = await fetch(url, {
         next: {
           revalidate: EXCHANGE_RATES_REVALIDATE_SECONDS,
-          tags: [EXCHANGE_RATES_CACHE_TAG],
+          tags: [FRANKFURTER_SOURCE_CACHE_TAG],
         },
       });
 

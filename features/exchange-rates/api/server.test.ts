@@ -24,6 +24,7 @@ const { getLatestExchangeRateSnapshot, saveLatestExchangeRateSnapshot } = vi.hoi
 
 vi.mock("@/lib/frankfurter", () => ({
   EXCHANGE_RATES_CACHE_TAG: "exchange-rates",
+  FRANKFURTER_SOURCE_CACHE_TAG: "frankfurter-source",
   getCurrencies,
   getRates,
 }));

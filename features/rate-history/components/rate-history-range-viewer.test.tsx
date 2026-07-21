@@ -6,18 +6,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeyboardShortcutsProvider } from "@/features/keyboard-shortcuts";
 import { RateHistoryRangePicker } from "./rate-history-range-viewer";
 
-const { replace, testSearchParams } = vi.hoisted(() => ({
+const { prefetch, replace, testSearchParams } = vi.hoisted(() => ({
+  prefetch: vi.fn(),
   replace: vi.fn(),
   testSearchParams: { current: "" },
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
-  useRouter: () => ({ replace }),
+  useRouter: () => ({ prefetch, replace }),
   useSearchParams: () => new URLSearchParams(testSearchParams.current),
 }));
 
 afterEach(() => {
+  prefetch.mockReset();
   replace.mockReset();
   testSearchParams.current = "";
   cleanup();
@@ -45,6 +47,16 @@ describe("RateHistoryRangePicker", () => {
     fireEvent.click(screen.getByRole("radio", { name: "1Y" }));
 
     expect(replace).toHaveBeenCalledWith("/?from=GBP&to=JPY&range=1Y", { scroll: false });
+  });
+
+  it("prefetches a range when the user points at it", () => {
+    testSearchParams.current = "from=GBP&to=JPY&range=1M";
+
+    render(<RateHistoryRangePicker selectedRange="1M" />);
+
+    fireEvent.mouseEnter(screen.getByRole("radio", { name: "5Y" }));
+
+    expect(prefetch).toHaveBeenCalledWith("/?from=GBP&to=JPY&range=5Y");
   });
 
   it("moves to adjacent ranges with left and right shortcuts", () => {

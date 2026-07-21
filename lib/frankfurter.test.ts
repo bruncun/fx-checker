@@ -105,7 +105,7 @@ describe("getCurrencies", () => {
     expect(fetch).toHaveBeenCalledWith("http://localhost:3100/v2/currencies", {
       next: {
         revalidate: 86_400,
-        tags: ["exchange-rates"],
+        tags: ["frankfurter-source"],
       },
     });
   });
@@ -141,7 +141,7 @@ describe("getCurrencies", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["exchange-rates"],
+          tags: ["frankfurter-source"],
         },
       }
     );
@@ -232,7 +232,7 @@ describe("getRates", () => {
     expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates", {
       next: {
         revalidate: 86_400,
-        tags: ["exchange-rates"],
+        tags: ["frankfurter-source"],
       },
     });
   });
@@ -256,7 +256,7 @@ describe("getRates", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["exchange-rates"],
+          tags: ["frankfurter-source"],
         },
       }
     );
@@ -282,7 +282,34 @@ describe("getRates", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["exchange-rates"],
+          tags: ["frankfurter-source"],
+        },
+      }
+    );
+  });
+
+  it("supports grouped time series requests", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockRates),
+    });
+
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      getRates({
+        from: "2021-06-19",
+        group: "month",
+        quotes: ["GBP", "USD"],
+        to: "2026-06-19",
+      })
+    ).resolves.toEqual(mockRates);
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.frankfurter.dev/v2/rates?from=2021-06-19&to=2026-06-19&group=month&quotes=GBP%2CUSD",
+      {
+        next: {
+          revalidate: 86_400,
+          tags: ["frankfurter-source"],
         },
       }
     );

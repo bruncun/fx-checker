@@ -46,6 +46,25 @@ describe("RangePicker", () => {
     expect(onValueChange).toHaveBeenCalledWith("3M");
   });
 
+  it("emits a prefetch intent when an inactive range is hovered", () => {
+    const onValuePrefetch = vi.fn();
+
+    render(
+      <RangePicker
+        aria-label="History range"
+        onValuePrefetch={onValuePrefetch}
+        options={options}
+        value="1M"
+      />
+    );
+
+    fireEvent.mouseEnter(screen.getByRole("radio", { name: "3M" }));
+    fireEvent.mouseEnter(screen.getByRole("radio", { name: "1M" }));
+
+    expect(onValuePrefetch).toHaveBeenCalledTimes(1);
+    expect(onValuePrefetch).toHaveBeenCalledWith("3M");
+  });
+
   it("activates the next range when focus moves with arrow keys", () => {
     const onValueChange = vi.fn();
 

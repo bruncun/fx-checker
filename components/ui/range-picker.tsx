@@ -15,6 +15,7 @@ type RangePickerProps = {
   "aria-label": string;
   className?: string;
   disabled?: boolean;
+  onValuePrefetch?: (value: string) => void;
   onValueChange?: (value: string) => void;
   options: RangePickerOption[];
   shortcutLabels?: {
@@ -28,6 +29,7 @@ function RangePicker({
   "aria-label": ariaLabel,
   className,
   disabled = false,
+  onValuePrefetch,
   onValueChange,
   options,
   shortcutLabels,
@@ -109,6 +111,11 @@ function RangePicker({
             onClick={() => {
               if (!isActive) {
                 onValueChange?.(option.value);
+              }
+            }}
+            onMouseEnter={() => {
+              if (!isActive) {
+                onValuePrefetch?.(option.value);
               }
             }}
             type="button"
