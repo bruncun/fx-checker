@@ -65,6 +65,15 @@ describe("formatAmountValue", () => {
 });
 
 describe("AmountInput", () => {
+  it("keeps the focus ring out of the animated surface transition", () => {
+    render(<AmountInput aria-label="Amount" value="" onChange={vi.fn()} />);
+
+    const input = screen.getByLabelText("Amount");
+
+    expect(input.className).toContain("fx-transition-amount-input");
+    expect(input.className).not.toContain("fx-transition-surface");
+  });
+
   it("displays the formatted version of the caller value", () => {
     render(<AmountInput aria-label="Amount" value="1234567" onChange={vi.fn()} />);
 

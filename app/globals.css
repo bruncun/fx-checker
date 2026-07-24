@@ -410,6 +410,12 @@
     transition-timing-function: var(--fx-motion-ease-snap);
   }
 
+  .fx-transition-amount-input {
+    transition-property: background-color, color, opacity, filter, border-color, transform;
+    transition-duration: var(--fx-motion-duration-base);
+    transition-timing-function: var(--fx-motion-ease-snap);
+  }
+
   .fx-transition-icon {
     transition-property: opacity, filter, transform;
     transition-duration: var(--fx-motion-duration-quick);
@@ -513,6 +519,7 @@
     }
 
     .fx-transition-surface,
+    .fx-transition-amount-input,
     .fx-transition-icon,
     .fx-transition-layout {
       transition-duration: 1ms;
