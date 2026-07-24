@@ -113,6 +113,36 @@ export const iconAssets = {
     viewBox: "0 0 16 16",
     width: 16,
   },
+  pause: {
+    alt: "Pause",
+    body: (
+      <path
+        d="M1.5 1h3v10h-3zM7.5 1h3v10h-3z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    ),
+    height: 12,
+    viewBox: "0 0 12 12",
+    width: 12,
+  },
+  play: {
+    alt: "Play",
+    body: (
+      <path
+        d="m2.75 1.25 8.5 4.75-8.5 4.75z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    ),
+    height: 12,
+    viewBox: "0 0 12 12",
+    width: 12,
+  },
   search: {
     alt: "Search",
     body: (

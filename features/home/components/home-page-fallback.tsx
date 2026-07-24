@@ -117,20 +117,28 @@ function LiveRateChangeFallback({ value }: { value: string }) {
 }
 
 function LiveRatesFallback() {
+  const headingId = "market-snapshot-fallback-heading";
+
   return (
-    <aside aria-labelledby="Market snapshot" className="relative flex w-full bg-neutral-700">
+    <aside aria-labelledby={headingId} className="relative flex w-full bg-neutral-700">
       <div
         className={cx(
-          "flex shrink-0 items-center gap-100 bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
-          "sm:h-500 sm:px-200 sm:text-preset-5-medium"
+          "flex shrink-0 items-center bg-lime-500 px-100 py-150 text-preset-6 text-neutral-900 uppercase",
+          "sm:h-500 sm:px-200 sm:py-0 sm:text-preset-5-medium"
         )}
       >
-        <span id="market-snapshot-fallback-heading">Market snapshot</span>
+        <span id={headingId}>Market snapshot</span>
       </div>
-      <div className="min-w-0 flex-1 overflow-x-auto" role="region">
+      <span
+        aria-hidden="true"
+        className="flex w-[36px] shrink-0 items-center justify-center bg-neutral-700 sm:h-500"
+      >
+        <span className="size-300 rounded-6 bg-neutral-500 opacity-70 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))]" />
+      </span>
+      <div className="min-w-0 flex-1 overflow-x-clip">
         <ul
-          className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
           aria-label="Exchange rates"
+          className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
         >
           {liveRateFallbackItems.map((item) => (
             <li

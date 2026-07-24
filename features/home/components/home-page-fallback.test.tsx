@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { HeaderStatsFallback } from "./home-page-fallback";
+import { HeaderStatsFallback, LiveRatesFallback } from "./home-page-fallback";
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
@@ -30,5 +30,24 @@ describe("HeaderStatsFallback", () => {
     expect(stats.contains(accountTrigger)).toBe(false);
     expect(divider?.nextElementSibling).toBe(accountTrigger.parentElement);
     expect(accountTrigger.textContent).toBe("Account");
+  });
+});
+
+describe("LiveRatesFallback", () => {
+  it("keeps the market snapshot landmark and compact playback footprint while rates load", () => {
+    render(<LiveRatesFallback />);
+
+    const snapshot = screen.getByRole("complementary", { name: "Market snapshot" });
+    const ratesList = screen.getByRole("list", { name: "Exchange rates" });
+    const viewport = ratesList.parentElement;
+    const controlPlaceholder =
+      screen.getByText("Market snapshot").parentElement?.nextElementSibling;
+
+    expect(snapshot.contains(ratesList)).toBe(true);
+    expect(viewport?.classList.contains("overflow-x-clip")).toBe(true);
+    expect(viewport?.getAttribute("tabindex")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(controlPlaceholder?.getAttribute("aria-hidden")).toBe("true");
+    expect(controlPlaceholder?.nextElementSibling).toBe(viewport);
   });
 });

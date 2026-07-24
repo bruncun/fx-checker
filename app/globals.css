@@ -362,6 +362,12 @@
     }
   }
 
+  @keyframes fx-live-rates-marquee {
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
   .fx-tab-panel-in {
     animation: fx-tab-panel-in var(--fx-motion-duration-base) var(--fx-motion-ease-snap) both;
   }
@@ -410,10 +416,28 @@
     transition-timing-function: var(--fx-motion-ease-snap);
   }
 
+  .fx-market-control-icon path {
+    fill: currentColor;
+    fill-opacity: 0;
+    transition-property: fill-opacity;
+    transition-duration: var(--fx-motion-duration-quick);
+    transition-timing-function: var(--fx-motion-ease-snap);
+  }
+
   .fx-transition-layout {
     transition-property: min-height;
     transition-duration: var(--fx-motion-duration-base);
     transition-timing-function: var(--fx-motion-ease-snap);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .group:hover .fx-market-control-surface {
+      background-color: hsl(var(--neutral-400));
+    }
+
+    .group:hover .fx-market-control-icon path {
+      fill-opacity: 1;
+    }
   }
 
   .fx-skeleton {
@@ -453,6 +477,19 @@
     animation: fx-skeleton-trace 1.7s var(--fx-motion-ease-snap) infinite;
   }
 
+  .fx-live-rates-marquee {
+    animation-name: fx-live-rates-marquee;
+    animation-duration: var(--fx-live-rates-duration);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-play-state: paused;
+    will-change: transform;
+  }
+
+  .fx-live-rates-marquee[data-playback-state="playing"][data-interaction-paused="false"] {
+    animation-play-state: running;
+  }
+
   .light .fx-skeleton {
     --fx-skeleton-base: hsl(var(--neutral-500) / 0.36);
     --fx-skeleton-highlight: hsl(var(--neutral-300) / 0.12);
@@ -478,6 +515,10 @@
     .fx-transition-surface,
     .fx-transition-icon,
     .fx-transition-layout {
+      transition-duration: 1ms;
+    }
+
+    .fx-market-control-icon path {
       transition-duration: 1ms;
     }
 

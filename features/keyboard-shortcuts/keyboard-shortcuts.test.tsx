@@ -38,11 +38,7 @@ function RegisteredHistoryRangeActions({
     previousRange: onPreviousRange,
   });
 
-  return (
-    <div aria-label="Exchange rates" data-live-rates-scroll-region role="region" tabIndex={0}>
-      Market snapshot
-    </div>
-  );
+  return <div>History range shortcuts</div>;
 }
 
 afterEach(() => {
@@ -82,7 +78,7 @@ describe("KeyboardShortcutsProvider", () => {
     expect(onSwap).toHaveBeenCalledOnce();
   });
 
-  it("lets focused market snapshot handle arrow-key scrolling while history shortcuts are registered", () => {
+  it("runs the registered history range arrow-key shortcuts", () => {
     const onNextRange = vi.fn();
     const onPreviousRange = vi.fn();
 
@@ -98,15 +94,10 @@ describe("KeyboardShortcutsProvider", () => {
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(onNextRange).toHaveBeenCalledOnce();
 
-    const liveMarkets = screen.getByRole("region", {
-      name: "Exchange rates",
-    });
+    const wasNotCanceled = fireEvent.keyDown(window, { key: "ArrowLeft" });
 
-    liveMarkets.focus();
-    const wasNotCanceled = fireEvent.keyDown(liveMarkets, { key: "ArrowLeft" });
-
-    expect(wasNotCanceled).toBe(true);
-    expect(onPreviousRange).not.toHaveBeenCalled();
+    expect(wasNotCanceled).toBe(false);
+    expect(onPreviousRange).toHaveBeenCalledOnce();
   });
 
   it("does not handle the former keyboard shortcuts dialog shortcut", () => {
