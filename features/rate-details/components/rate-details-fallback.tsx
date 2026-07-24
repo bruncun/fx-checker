@@ -95,15 +95,6 @@ function ChartFallback() {
                 <line key={y} vectorEffect="non-scaling-stroke" x1="0" x2="267" y1={y} y2={y} />
               ))}
             </g>
-            <path
-              className="fx-skeleton-trace stroke-neutral-400/70"
-              d="M0 194 L36 170 L72 184 L108 146 L148 118 L186 124 L226 92 L267 78"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              vectorEffect="non-scaling-stroke"
-            />
           </svg>
         </div>
         <div aria-hidden="true" />
