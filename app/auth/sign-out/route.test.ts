@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
@@ -36,13 +37,14 @@ describe("sign-out route", () => {
     expect(signOut).toHaveBeenCalled();
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe("https://fx-checker.test/auth/login");
-    expect(setCookie).toHaveLength(4);
+    expect(setCookie).toHaveLength(5);
 
     [
       GUEST_MODE_COOKIE,
       GUEST_FAVORITES_COOKIE,
       GUEST_CONVERSIONS_COOKIE,
       GUEST_ALERT_DISMISSED_COOKIE,
+      GUEST_ALERT_SHOWN_COOKIE,
     ].forEach((name) => {
       const cookie = setCookie.find((value) => value.startsWith(`${name}=`));
 

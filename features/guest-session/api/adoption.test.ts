@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
@@ -114,6 +115,11 @@ describe("adoptGuestSessionData", () => {
     );
     expect(cookieSet).toHaveBeenCalledWith(
       GUEST_ALERT_DISMISSED_COOKIE,
+      "",
+      expect.objectContaining({ maxAge: 0, path: "/" })
+    );
+    expect(cookieSet).toHaveBeenCalledWith(
+      GUEST_ALERT_SHOWN_COOKIE,
       "",
       expect.objectContaining({ maxAge: 0, path: "/" })
     );

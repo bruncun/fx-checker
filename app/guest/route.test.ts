@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
@@ -34,6 +35,9 @@ describe("guest route", () => {
     expect(
       setCookie.find((value) => value.startsWith(`${GUEST_ALERT_DISMISSED_COOKIE}=`))
     ).toContain("Max-Age=0");
+    expect(setCookie.find((value) => value.startsWith(`${GUEST_ALERT_SHOWN_COOKIE}=`))).toContain(
+      "Max-Age=0"
+    );
   });
 
   it("does not replace existing guest favorites or conversions", () => {

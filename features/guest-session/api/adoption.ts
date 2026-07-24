@@ -4,6 +4,7 @@ import type { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
   GUEST_CONVERSIONS_COOKIE,
   GUEST_FAVORITES_COOKIE,
   GUEST_MODE_COOKIE,
@@ -19,6 +20,7 @@ const guestSessionCookies = [
   GUEST_FAVORITES_COOKIE,
   GUEST_CONVERSIONS_COOKIE,
   GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
 ];
 
 async function clearGuestSessionCookies() {

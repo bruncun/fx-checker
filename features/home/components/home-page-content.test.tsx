@@ -3,7 +3,10 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/model/guest-session";
+import {
+  GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
+} from "@/features/guest-session/model/guest-session";
 import { DismissibleGuestPersistenceAlert } from "./guest-mode-alert-client";
 import { HomePageContent } from "./home-page-content";
 import { StaleExchangeRatesAlert } from "./stale-exchange-rates-alert";
@@ -24,6 +27,7 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   document.cookie = `${GUEST_ALERT_DISMISSED_COOKIE}=; Path=/; Max-Age=0`;
+  document.cookie = `${GUEST_ALERT_SHOWN_COOKIE}=; Path=/; Max-Age=0`;
 });
 
 describe("HomePageContent", () => {
@@ -79,6 +83,7 @@ describe("DismissibleGuestPersistenceAlert", () => {
     render(<DismissibleGuestPersistenceAlert />);
 
     expect(screen.getByRole("alert").textContent).toContain("Saved in this browser");
+    expect(document.cookie).toContain(`${GUEST_ALERT_SHOWN_COOKIE}=1`);
     expect(screen.getByRole("link", { name: "Log in" }).getAttribute("href")).toBe("/auth/login");
     expect(screen.getByRole("link", { name: "sign up" }).getAttribute("href")).toBe(
       "/auth/sign-up"

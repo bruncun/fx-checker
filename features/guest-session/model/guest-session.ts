@@ -14,6 +14,7 @@ export const GUEST_MODE_COOKIE = "fx_checker_guest";
 export const GUEST_FAVORITES_COOKIE = "fx_checker_guest_favorites";
 export const GUEST_CONVERSIONS_COOKIE = "fx_checker_guest_conversions";
 export const GUEST_ALERT_DISMISSED_COOKIE = "fx_checker_guest_alert_dismissed";
+export const GUEST_ALERT_SHOWN_COOKIE = "fx_checker_guest_alert_shown";
 
 const MAX_GUEST_FAVORITES = 100;
 const MAX_GUEST_CONVERSIONS = 30;

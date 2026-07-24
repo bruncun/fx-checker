@@ -3,7 +3,10 @@
 import * as React from "react";
 
 import { CloseButton } from "@/components/ui/close-button";
-import { GUEST_ALERT_DISMISSED_COOKIE } from "@/features/guest-session/model/guest-session";
+import {
+  GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
+} from "@/features/guest-session/model/guest-session";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -15,6 +18,8 @@ export function DismissibleGuestPersistenceAlert() {
   const exitTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
+    document.cookie = `${GUEST_ALERT_SHOWN_COOKIE}=1; Path=/; SameSite=Lax`;
+
     return () => {
       if (exitTimeoutRef.current) {
         clearTimeout(exitTimeoutRef.current);

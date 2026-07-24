@@ -1,5 +1,6 @@
 import {
   GUEST_ALERT_DISMISSED_COOKIE,
+  GUEST_ALERT_SHOWN_COOKIE,
   GUEST_MODE_COOKIE,
 } from "@/features/guest-session/model/guest-session";
 import { NextResponse, type NextRequest } from "next/server";
@@ -37,6 +38,12 @@ export function GET(request: NextRequest) {
   });
 
   response.cookies.set(GUEST_ALERT_DISMISSED_COOKIE, "", {
+    maxAge: 0,
+    path: "/",
+    sameSite: "lax",
+  });
+
+  response.cookies.set(GUEST_ALERT_SHOWN_COOKIE, "", {
     maxAge: 0,
     path: "/",
     sameSite: "lax",
