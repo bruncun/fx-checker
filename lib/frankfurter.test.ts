@@ -105,7 +105,7 @@ describe("getCurrencies", () => {
     expect(fetch).toHaveBeenCalledWith("http://localhost:3100/v2/currencies", {
       next: {
         revalidate: 86_400,
-        tags: ["frankfurter-source"],
+        tags: ["frankfurter-currencies-source"],
       },
     });
   });
@@ -141,7 +141,7 @@ describe("getCurrencies", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["frankfurter-source"],
+          tags: ["frankfurter-currencies-source"],
         },
       }
     );
@@ -232,7 +232,7 @@ describe("getRates", () => {
     expect(fetch).toHaveBeenCalledWith("https://api.frankfurter.dev/v2/rates", {
       next: {
         revalidate: 86_400,
-        tags: ["frankfurter-source"],
+        tags: ["frankfurter-latest-rates-source"],
       },
     });
   });
@@ -256,7 +256,7 @@ describe("getRates", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["frankfurter-source"],
+          tags: ["frankfurter-dated-rates-source"],
         },
       }
     );
@@ -282,7 +282,7 @@ describe("getRates", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["frankfurter-source"],
+          tags: ["frankfurter-dated-rates-source"],
         },
       }
     );
@@ -309,7 +309,7 @@ describe("getRates", () => {
       {
         next: {
           revalidate: 86_400,
-          tags: ["frankfurter-source"],
+          tags: ["frankfurter-dated-rates-source"],
         },
       }
     );

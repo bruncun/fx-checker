@@ -3,7 +3,12 @@ import "server-only";
 import { getCurrencyFlagCountryCode } from "@/features/converter/model/currencies";
 import { getLatestRatesData } from "@/features/exchange-rates/api/server";
 import { EXCHANGE_RATES_CACHE_TAG, getRates, type FrankfurterRate } from "@/lib/frankfurter";
+import {
+  getCachedLatestExchangeRateDataSnapshot,
+  type CanonicalHistoryDataset,
+} from "@/lib/latest-exchange-rate-data-snapshot";
 import { cacheLife, cacheTag } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import {
   getDateYearsBefore,
   getRateHistoryRangeStartDate,
@@ -11,8 +16,6 @@ import {
 } from "../model/rate-history";
 
 const RATE_HISTORY_YEARS = 5;
-
-type HistoryDataset = "daily-3m" | "monthly-5y" | "weekly-1y";
 
 type DataResult<T> =
   | ({
@@ -24,7 +27,7 @@ export type HistoryPageData = DataResult<{
   historicalRates: FrankfurterRate[];
 }>;
 
-function getHistoryDataset(range: HistoryRange): HistoryDataset {
+function getHistoryDataset(range: HistoryRange): CanonicalHistoryDataset {
   if (range === "5Y") {
     return "monthly-5y";
   }
@@ -69,6 +72,15 @@ export async function getHistoryPageData({
 }: {
   range: HistoryRange;
 }): Promise<HistoryPageData> {
+  const dataSnapshot = await getCachedLatestExchangeRateDataSnapshot(getHistoryDataset(range));
+
+  if (dataSnapshot) {
+    return {
+      historicalRates: dataSnapshot.rates,
+      status: "available",
+    };
+  }
+
   try {
     const latestRatesData = await getLatestRatesData();
 
@@ -77,7 +89,8 @@ export async function getHistoryPageData({
     }
 
     return getHistoryPageDataForLatestRates(latestRatesData.rates, range);
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     return { status: "unavailable" };
   }
 }
@@ -93,51 +106,56 @@ export async function getHistoryPageDataForLatestRates(
     return { status: "unavailable" };
   }
 
-  return getCanonicalHistoryPageData({
-    dataset: getHistoryDataset(range),
-    latestDate,
-    quotes: source.quotes,
-    sourceVersion: source.sourceVersion,
-  });
+  try {
+    return await loadCanonicalHistoryPageData({
+      dataset: getHistoryDataset(range),
+      latestDate,
+      quotes: source.quotes,
+      sourceVersion: source.sourceVersion,
+    });
+  } catch (error) {
+    unstable_rethrow(error);
+    return { status: "unavailable" };
+  }
 }
 
-async function getCanonicalHistoryPageData({
+async function loadCanonicalHistoryPageData({
   dataset,
   latestDate,
   quotes,
   sourceVersion,
 }: {
-  dataset: HistoryDataset;
+  dataset: CanonicalHistoryDataset;
   latestDate: string;
   quotes: string[];
   sourceVersion: string;
 }): Promise<HistoryPageData> {
-  "use cache";
+  "use cache: remote";
   cacheLife("days");
   cacheTag(EXCHANGE_RATES_CACHE_TAG);
 
-  try {
-    const historyStartDate =
-      dataset === "daily-3m"
-        ? getRateHistoryRangeStartDate(latestDate, "3M")
-        : getDateYearsBefore(latestDate, dataset === "monthly-5y" ? RATE_HISTORY_YEARS : 1);
+  const historyStartDate =
+    dataset === "daily-3m"
+      ? getRateHistoryRangeStartDate(latestDate, "3M")
+      : getDateYearsBefore(latestDate, dataset === "monthly-5y" ? RATE_HISTORY_YEARS : 1);
 
-    if (!historyStartDate || !sourceVersion) {
-      return { status: "unavailable" };
-    }
-
-    const historicalRates = await getRates({
-      from: historyStartDate,
-      group: dataset === "monthly-5y" ? "month" : dataset === "weekly-1y" ? "week" : undefined,
-      quotes,
-      to: latestDate,
-    });
-
-    return {
-      status: "available",
-      historicalRates,
-    };
-  } catch {
-    return { status: "unavailable" };
+  if (!historyStartDate || !sourceVersion) {
+    throw new Error("Canonical exchange rate history has no valid source range");
   }
+
+  const historicalRates = await getRates({
+    from: historyStartDate,
+    group: dataset === "monthly-5y" ? "month" : dataset === "weekly-1y" ? "week" : undefined,
+    quotes,
+    to: latestDate,
+  });
+
+  if (historicalRates.length === 0) {
+    throw new Error(`Frankfurter returned no rates for ${dataset}`);
+  }
+
+  return {
+    status: "available",
+    historicalRates,
+  };
 }

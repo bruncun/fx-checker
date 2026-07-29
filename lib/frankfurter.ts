@@ -3,7 +3,9 @@ import "server-only";
 const DEFAULT_FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2";
 const EXCHANGE_RATES_REVALIDATE_SECONDS = 60 * 60 * 24;
 export const EXCHANGE_RATES_CACHE_TAG = "exchange-rates";
-export const FRANKFURTER_SOURCE_CACHE_TAG = "frankfurter-source";
+export const FRANKFURTER_CURRENCIES_SOURCE_CACHE_TAG = "frankfurter-currencies-source";
+export const FRANKFURTER_DATED_RATES_SOURCE_CACHE_TAG = "frankfurter-dated-rates-source";
+export const FRANKFURTER_LATEST_RATES_SOURCE_CACHE_TAG = "frankfurter-latest-rates-source";
 const FRANKFURTER_REQUEST_ATTEMPTS = 2;
 
 type FrankfurterEndpoint = "currencies" | "rates";
@@ -89,6 +91,19 @@ function getFrankfurterEndpointUrl(
   }
 
   return url.toString();
+}
+
+function getFrankfurterSourceCacheTag(
+  endpoint: FrankfurterEndpoint,
+  params: FrankfurterRatesParams
+) {
+  if (endpoint === "currencies") {
+    return FRANKFURTER_CURRENCIES_SOURCE_CACHE_TAG;
+  }
+
+  return Object.keys(params).length === 0
+    ? FRANKFURTER_LATEST_RATES_SOURCE_CACHE_TAG
+    : FRANKFURTER_DATED_RATES_SOURCE_CACHE_TAG;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -194,7 +209,7 @@ async function fetchFrankfurterEndpoint(
       const response = await fetch(url, {
         next: {
           revalidate: EXCHANGE_RATES_REVALIDATE_SECONDS,
-          tags: [FRANKFURTER_SOURCE_CACHE_TAG],
+          tags: [getFrankfurterSourceCacheTag(endpoint, params)],
         },
       });
 

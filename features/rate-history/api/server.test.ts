@@ -17,9 +17,17 @@ const { getLatestRatesData } = vi.hoisted(() => ({
   getLatestRatesData: vi.fn(),
 }));
 
+const { getCachedLatestExchangeRateDataSnapshot } = vi.hoisted(() => ({
+  getCachedLatestExchangeRateDataSnapshot: vi.fn(),
+}));
+
 vi.mock("@/lib/frankfurter", () => ({
   EXCHANGE_RATES_CACHE_TAG: "exchange-rates",
   getRates,
+}));
+
+vi.mock("@/lib/latest-exchange-rate-data-snapshot", () => ({
+  getCachedLatestExchangeRateDataSnapshot,
 }));
 
 vi.mock("@/features/exchange-rates/api/server", () => ({
@@ -32,11 +40,35 @@ const latestRates: FrankfurterRate[] = [
 ];
 
 beforeEach(() => {
+  getCachedLatestExchangeRateDataSnapshot.mockReset();
   getLatestRatesData.mockReset();
   getRates.mockReset();
+  getCachedLatestExchangeRateDataSnapshot.mockResolvedValue(null);
 });
 
 describe("rate history data loader", () => {
+  it("serves the requested materialized history dataset without loading latest rates", async () => {
+    const weeklyRates = [
+      { date: "2025-06-19", base: "EUR", quote: "USD", rate: 1.16 },
+      { date: "2026-06-19", base: "EUR", quote: "USD", rate: 1.2 },
+    ];
+    getCachedLatestExchangeRateDataSnapshot.mockResolvedValueOnce({
+      dataset: "weekly-1y",
+      fetchedAt: "2026-06-19T16:00:00.000Z",
+      rates: weeklyRates,
+      sourceDate: "2026-06-19",
+    });
+
+    await expect(getHistoryPageData({ range: "1Y" })).resolves.toEqual({
+      historicalRates: weeklyRates,
+      status: "available",
+    });
+
+    expect(getCachedLatestExchangeRateDataSnapshot).toHaveBeenCalledWith("weekly-1y");
+    expect(getLatestRatesData).not.toHaveBeenCalled();
+    expect(getRates).not.toHaveBeenCalled();
+  });
+
   it("fetches one canonical daily dataset for every range through three months", async () => {
     getLatestRatesData.mockResolvedValueOnce({
       freshness: {
@@ -88,7 +120,7 @@ describe("rate history data loader", () => {
       ],
       status: "available",
     });
-    getRates.mockResolvedValueOnce([]);
+    getRates.mockResolvedValueOnce(latestRates);
 
     await expect(getHistoryPageData({ range: "1D" })).resolves.toMatchObject({
       status: "available",

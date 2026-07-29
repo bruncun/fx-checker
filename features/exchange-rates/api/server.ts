@@ -8,19 +8,22 @@ import type { LiveRate } from "@/features/live-rates/components/live-rate-item";
 import { deriveLiveRates } from "@/features/live-rates/model/live-rates";
 import {
   EXCHANGE_RATES_CACHE_TAG,
-  FRANKFURTER_SOURCE_CACHE_TAG,
+  FRANKFURTER_LATEST_RATES_SOURCE_CACHE_TAG,
   getCurrencies,
   getRates,
   type FrankfurterRate,
 } from "@/lib/frankfurter";
+import { getCachedLatestExchangeRateDataSnapshot } from "@/lib/latest-exchange-rate-data-snapshot";
 import {
   getLatestExchangeRateSnapshot,
   saveLatestExchangeRateSnapshot,
 } from "@/lib/latest-exchange-rate-snapshot";
 import { cacheLife, cacheTag } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 
 const LIVE_RATE_LOOKBACK_DAYS = 7;
+const MATERIALIZED_SNAPSHOT_STALE_AFTER_MS = 36 * 60 * 60 * 1000;
 
 type DataResult<T> =
   | ({
@@ -78,38 +81,62 @@ function getDateDaysBefore(date: string, days: number) {
 }
 
 export async function getLatestRatesData(): Promise<LatestRatesData> {
+  const dataSnapshot = await getCachedLatestExchangeRateDataSnapshot("latest");
+
+  if (dataSnapshot) {
+    const fetchedAt = Date.parse(dataSnapshot.fetchedAt);
+    const isStale =
+      !Number.isFinite(fetchedAt) || Date.now() - fetchedAt > MATERIALIZED_SNAPSHOT_STALE_AFTER_MS;
+
+    return {
+      freshness: {
+        dataStatus: isStale ? "stale" : "fresh",
+        fetchedAt: dataSnapshot.fetchedAt,
+        source: isStale ? "last_known_good" : "api",
+      },
+      rates: dataSnapshot.rates,
+      status: "available",
+    };
+  }
+
+  try {
+    const snapshot = await getLatestExchangeRateSnapshot();
+
+    if (snapshot) {
+      return {
+        freshness: {
+          dataStatus: "stale",
+          fetchedAt: snapshot.fetchedAt,
+          source: "last_known_good",
+        },
+        rates: snapshot.rates,
+        status: "available",
+      };
+    }
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Failed to read latest exchange rate fallback snapshot", {
+      cause: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   try {
     return await getFreshLatestRatesData();
-  } catch {
-    try {
-      const snapshot = await getLatestExchangeRateSnapshot();
-
-      return snapshot
-        ? {
-            freshness: {
-              dataStatus: "stale",
-              fetchedAt: snapshot.fetchedAt,
-              source: "last_known_good",
-            },
-            rates: snapshot.rates,
-            status: "available",
-          }
-        : { status: "unavailable" };
-    } catch {
-      return { status: "unavailable" };
-    }
+  } catch (error) {
+    unstable_rethrow(error);
+    return { status: "unavailable" };
   }
 }
 
-async function getFreshLatestRatesData(): Promise<LatestRatesData> {
-  "use cache";
+export async function getFreshLatestRatesData(): Promise<LatestRatesData> {
+  "use cache: remote";
   cacheLife("days");
-  cacheTag(FRANKFURTER_SOURCE_CACHE_TAG);
+  cacheTag(FRANKFURTER_LATEST_RATES_SOURCE_CACHE_TAG);
 
   const rates = await getRates();
 
   if (rates.length === 0) {
-    return { status: "unavailable" };
+    throw new Error("Frankfurter returned no latest exchange rates");
   }
 
   const fetchedAt = new Date().toISOString();
@@ -147,7 +174,8 @@ export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData>
     }
 
     return deriveCurrencyReferenceDataForLatestRates(currencies, latestRatesData.rates);
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     return { status: "unavailable" };
   }
 }
@@ -155,34 +183,35 @@ export async function getCurrencyReferenceData(): Promise<CurrencyReferenceData>
 export async function getCurrencyReferenceDataForLatestRates(
   latestRates: FrankfurterRate[]
 ): Promise<CurrencyReferenceData> {
-  const currencies = await getCurrencies();
+  try {
+    const currencies = await getCurrencies();
 
-  return deriveCurrencyReferenceDataForLatestRates(currencies, latestRates);
+    return await deriveCurrencyReferenceDataForLatestRates(currencies, latestRates);
+  } catch (error) {
+    unstable_rethrow(error);
+    return { status: "unavailable" };
+  }
 }
 
 async function deriveCurrencyReferenceDataForLatestRates(
   currencies: Awaited<ReturnType<typeof getCurrencies>>,
   latestRates: FrankfurterRate[]
 ): Promise<CurrencyReferenceData> {
-  "use cache";
+  "use cache: remote";
   cacheLife("days");
   cacheTag(EXCHANGE_RATES_CACHE_TAG);
 
-  try {
-    const availableCurrencies = deriveAvailableCurrencies(currencies, latestRates);
+  const availableCurrencies = deriveAvailableCurrencies(currencies, latestRates);
 
-    if (availableCurrencies.length < 2) {
-      return { status: "unavailable" };
-    }
-
-    return {
-      status: "available",
-      availableCurrencies,
-      currencyCount: availableCurrencies.length,
-    };
-  } catch {
+  if (availableCurrencies.length < 2) {
     return { status: "unavailable" };
   }
+
+  return {
+    status: "available",
+    availableCurrencies,
+    currencyCount: availableCurrencies.length,
+  };
 }
 
 export async function getLiveRatesData(): Promise<LiveRatesData> {
@@ -194,7 +223,8 @@ export async function getLiveRatesData(): Promise<LiveRatesData> {
     }
 
     return getLiveRatesDataForLatestRates(latestRatesData.rates);
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     return { status: "unavailable" };
   }
 }
@@ -202,36 +232,43 @@ export async function getLiveRatesData(): Promise<LiveRatesData> {
 export async function getLiveRatesDataForLatestRates(
   latestRates: FrankfurterRate[]
 ): Promise<LiveRatesData> {
-  "use cache";
+  try {
+    return await loadLiveRatesDataForLatestRates(latestRates);
+  } catch (error) {
+    unstable_rethrow(error);
+    return { status: "unavailable" };
+  }
+}
+
+async function loadLiveRatesDataForLatestRates(
+  latestRates: FrankfurterRate[]
+): Promise<LiveRatesData> {
+  "use cache: remote";
   cacheLife("days");
   cacheTag(EXCHANGE_RATES_CACHE_TAG);
 
-  try {
-    const latestDate = latestRates[0]?.date;
-    const lookbackStartDate = latestDate
-      ? getDateDaysBefore(latestDate, LIVE_RATE_LOOKBACK_DAYS)
-      : null;
+  const latestDate = latestRates[0]?.date;
+  const lookbackStartDate = latestDate
+    ? getDateDaysBefore(latestDate, LIVE_RATE_LOOKBACK_DAYS)
+    : null;
 
-    if (!latestDate || !lookbackStartDate) {
-      return { status: "unavailable" };
-    }
-
-    const recentRates = await getRates({
-      from: lookbackStartDate,
-      to: latestDate,
-    });
-    const liveRateHistoryRates = recentRates.filter((rate) => rate.date < latestDate);
-    const liveRates = deriveLiveRates({
-      historicalRates: liveRateHistoryRates,
-      latestRates,
-    });
-
-    return {
-      status: "available",
-      liveRateHistoryRates,
-      liveRates,
-    };
-  } catch {
-    return { status: "unavailable" };
+  if (!latestDate || !lookbackStartDate) {
+    throw new Error("Latest exchange rates have no valid source date");
   }
+
+  const recentRates = await getRates({
+    from: lookbackStartDate,
+    to: latestDate,
+  });
+  const liveRateHistoryRates = recentRates.filter((rate) => rate.date < latestDate);
+  const liveRates = deriveLiveRates({
+    historicalRates: liveRateHistoryRates,
+    latestRates,
+  });
+
+  return {
+    status: "available",
+    liveRateHistoryRates,
+    liveRates,
+  };
 }

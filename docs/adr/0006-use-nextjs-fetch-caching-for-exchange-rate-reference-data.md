@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [0011. Materialize complete exchange-rate chart snapshots](0011-materialize-complete-exchange-rate-chart-snapshots.md)
 
 ## Context
 
