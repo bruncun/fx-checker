@@ -89,15 +89,11 @@ function getBaselineRatesByCurrency({
   quote: string;
 }) {
   const historicalDates = [
-    ...new Set(
-      historicalRates.filter((rate) => rate.date < latestDate).map((rate) => rate.date)
-    ),
+    ...new Set(historicalRates.filter((rate) => rate.date < latestDate).map((rate) => rate.date)),
   ].sort();
 
   for (const date of historicalDates) {
-    const ratesByCurrency = getRateByCurrency(
-      historicalRates.filter((rate) => rate.date === date)
-    );
+    const ratesByCurrency = getRateByCurrency(historicalRates.filter((rate) => rate.date === date));
 
     if (ratesByCurrency && derivePairRate(ratesByCurrency, base, quote)) {
       return ratesByCurrency;
