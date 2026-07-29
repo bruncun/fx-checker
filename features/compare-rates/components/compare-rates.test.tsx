@@ -286,9 +286,12 @@ describe("CompareRates", () => {
   it("supports row-first table keyboard navigation and selection", () => {
     renderCompareRates();
 
+    const gbpRow = getRateRow("GBP");
     const gbpCurrencyCell = getRateCell("GBP", 0);
     const jpyCurrencyCell = getRateCell("JPY", 0);
 
+    expect(gbpRow.className).not.toContain("focus-within:shadow");
+    expect(gbpRow.className).toContain("[&:has(:focus-visible)]:shadow");
     expect(gbpCurrencyCell.tabIndex).toBe(0);
     expect(jpyCurrencyCell.tabIndex).toBe(-1);
 
