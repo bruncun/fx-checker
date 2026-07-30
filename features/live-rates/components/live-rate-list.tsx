@@ -13,6 +13,10 @@ type LiveRateListProps = {
 const MARKET_SNAPSHOT_PAUSED_STORAGE_KEY = "fx-checker:market-snapshot-paused";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const MARQUEE_SPEED_PX_PER_SECOND = 26;
+const MARQUEE_KEYFRAMES: Keyframe[] = [
+  { transform: "translate3d(0, 0, 0)" },
+  { transform: "translate3d(-50%, 0, 0)" },
+];
 
 function hasSavedPause() {
   try {
@@ -34,9 +38,44 @@ function savePausedPreference(isPaused: boolean) {
   }
 }
 
+function setAnimationPlayback(animation: Animation, shouldPlay: boolean) {
+  const currentTime = animation.currentTime;
+
+  if (shouldPlay) {
+    const timelineTime = animation.timeline?.currentTime;
+
+    animation.play();
+
+    if (currentTime !== null) {
+      animation.currentTime = currentTime;
+    }
+
+    if (
+      typeof currentTime === "number" &&
+      typeof timelineTime === "number" &&
+      animation.playbackRate !== 0
+    ) {
+      animation.startTime = timelineTime - currentTime / animation.playbackRate;
+    }
+
+    return;
+  }
+
+  animation.pause();
+
+  if (currentTime !== null) {
+    animation.currentTime = currentTime;
+  }
+}
+
 export function LiveRateList({ rates }: LiveRateListProps) {
   const headingId = React.useId();
   const ratesListId = React.useId();
+  const marqueeAnimationRef = React.useRef<{
+    animation: Animation;
+    durationMilliseconds: number;
+  } | null>(null);
+  const marqueeTrackRef = React.useRef<HTMLDivElement>(null);
   const primaryListRef = React.useRef<HTMLUListElement>(null);
   const [animationDurationSeconds, setAnimationDurationSeconds] = React.useState<number | null>(
     null
@@ -76,6 +115,60 @@ export function LiveRateList({ rates }: LiveRateListProps) {
       resizeObserver.disconnect();
     };
   }, [rates]);
+
+  React.useLayoutEffect(() => {
+    const marqueeTrack = marqueeTrackRef.current;
+
+    if (!marqueeTrack || animationDurationSeconds === null) {
+      return;
+    }
+
+    const durationMilliseconds = animationDurationSeconds * 1000;
+    let marqueeAnimationState = marqueeAnimationRef.current;
+
+    if (!marqueeAnimationState) {
+      const animation = marqueeTrack.animate(MARQUEE_KEYFRAMES, {
+        duration: durationMilliseconds,
+        easing: "linear",
+        iterations: Infinity,
+      });
+
+      marqueeAnimationState = { animation, durationMilliseconds };
+      marqueeAnimationRef.current = marqueeAnimationState;
+    } else if (marqueeAnimationState.durationMilliseconds !== durationMilliseconds) {
+      const { animation, durationMilliseconds: previousDurationMilliseconds } =
+        marqueeAnimationState;
+      const previousCurrentTime = animation.currentTime;
+
+      animation.effect?.updateTiming({ duration: durationMilliseconds });
+
+      if (
+        typeof previousCurrentTime === "number" &&
+        previousDurationMilliseconds > 0 &&
+        durationMilliseconds > 0
+      ) {
+        const completedIterations = Math.floor(previousCurrentTime / previousDurationMilliseconds);
+        const iterationProgress =
+          (previousCurrentTime % previousDurationMilliseconds) / previousDurationMilliseconds;
+
+        animation.currentTime = (completedIterations + iterationProgress) * durationMilliseconds;
+      }
+
+      marqueeAnimationState.durationMilliseconds = durationMilliseconds;
+    }
+
+    const { animation: marqueeAnimation } = marqueeAnimationState;
+
+    setAnimationPlayback(marqueeAnimation, isPlaying && !isHoverPaused);
+  }, [animationDurationSeconds, isHoverPaused, isPlaying]);
+
+  React.useLayoutEffect(
+    () => () => {
+      marqueeAnimationRef.current?.animation.cancel();
+      marqueeAnimationRef.current = null;
+    },
+    []
+  );
 
   React.useEffect(() => {
     if (typeof window.matchMedia !== "function") {
@@ -177,13 +270,7 @@ export function LiveRateList({ rates }: LiveRateListProps) {
             )}
             data-interaction-paused={isHoverPaused}
             data-playback-state={isPlaying ? "playing" : "paused"}
-            style={
-              animationDurationSeconds === null
-                ? undefined
-                : ({
-                    "--fx-live-rates-duration": `${animationDurationSeconds}s`,
-                  } as React.CSSProperties)
-            }
+            ref={marqueeTrackRef}
           >
             <ul
               aria-label="Exchange rates"

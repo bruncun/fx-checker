@@ -8,6 +8,29 @@ import { LiveRateList } from "./live-rate-list";
 
 const MARKET_SNAPSHOT_PAUSED_STORAGE_KEY = "fx-checker:market-snapshot-paused";
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+const cancelMarqueeAnimation = vi.fn();
+const pauseMarqueeAnimation = vi.fn();
+const playMarqueeAnimation = vi.fn();
+const updateMarqueeTiming = vi.fn();
+const marqueeTimeline = { currentTime: 50_000 } as AnimationTimeline;
+const animateMarquee = vi.fn(
+  () =>
+    ({
+      cancel: cancelMarqueeAnimation,
+      currentTime: 0,
+      effect: {
+        updateTiming: updateMarqueeTiming,
+      },
+      pause: pauseMarqueeAnimation,
+      play: playMarqueeAnimation,
+      playbackRate: 1,
+      startTime: null,
+      timeline: marqueeTimeline,
+    }) as unknown as Animation
+);
+
+let originalAnimate: PropertyDescriptor | undefined;
+let mockedListWidth = 1300;
 
 function installMatchMedia(initialMatches = false) {
   let matches = initialMatches;
@@ -54,7 +77,18 @@ function installMatchMedia(initialMatches = false) {
 beforeEach(() => {
   window.localStorage.clear();
   installMatchMedia();
-  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(1300);
+  animateMarquee.mockClear();
+  cancelMarqueeAnimation.mockClear();
+  pauseMarqueeAnimation.mockClear();
+  playMarqueeAnimation.mockClear();
+  updateMarqueeTiming.mockClear();
+  mockedListWidth = 1300;
+  originalAnimate = Object.getOwnPropertyDescriptor(Element.prototype, "animate");
+  Object.defineProperty(Element.prototype, "animate", {
+    configurable: true,
+    value: animateMarquee,
+  });
+  vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(() => mockedListWidth);
 });
 
 afterEach(() => {
@@ -62,6 +96,12 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   window.localStorage.clear();
+
+  if (originalAnimate) {
+    Object.defineProperty(Element.prototype, "animate", originalAnimate);
+  } else {
+    Reflect.deleteProperty(Element.prototype, "animate");
+  }
 });
 
 function getRatesList() {
@@ -134,7 +174,51 @@ describe("LiveRateList", () => {
     expect(getRatesTrack().getAttribute("data-playback-state")).toBe("playing");
     expect(getRatesTrack().getAttribute("data-interaction-paused")).toBe("false");
     expect(getRatesTrack().classList.contains("fx-live-rates-marquee")).toBe(true);
-    expect(getRatesTrack().style.getPropertyValue("--fx-live-rates-duration")).toBe("50s");
+    expect(animateMarquee).toHaveBeenCalledWith(
+      [{ transform: "translate3d(0, 0, 0)" }, { transform: "translate3d(-50%, 0, 0)" }],
+      {
+        duration: 50_000,
+        easing: "linear",
+        iterations: Infinity,
+      }
+    );
+    expect(playMarqueeAnimation).toHaveBeenCalled();
+  });
+
+  it("retimes the existing animation without changing its visual progress", async () => {
+    let resizeCallback: ResizeObserverCallback | undefined;
+
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          resizeCallback = callback;
+        }
+
+        disconnect() {}
+        observe() {}
+      }
+    );
+
+    render(<LiveRateList rates={mockLiveRates} />);
+    await screen.findByRole("button", { name: "Pause rates" });
+
+    const marqueeAnimation = animateMarquee.mock.results[0]?.value;
+
+    if (!marqueeAnimation || !resizeCallback) {
+      throw new Error("Expected the marquee animation and resize observer");
+    }
+
+    marqueeAnimation.currentTime = 25_000;
+    mockedListWidth = 2600;
+
+    act(() => {
+      resizeCallback?.([], {} as ResizeObserver);
+    });
+
+    expect(animateMarquee).toHaveBeenCalledOnce();
+    expect(updateMarqueeTiming).toHaveBeenCalledWith({ duration: 100_000 });
+    expect(marqueeAnimation.currentTime).toBe(50_000);
   });
 
   it("pauses on mouse hover and resumes immediately after hover ends", async () => {
@@ -148,11 +232,57 @@ describe("LiveRateList", () => {
       throw new Error("Expected the exchange rate track to have a viewport");
     }
 
+    pauseMarqueeAnimation.mockClear();
+    playMarqueeAnimation.mockClear();
+
     fireEvent.pointerEnter(viewport, { pointerType: "mouse" });
     expect(track.getAttribute("data-interaction-paused")).toBe("true");
+    expect(pauseMarqueeAnimation).toHaveBeenCalledOnce();
 
     fireEvent.pointerLeave(viewport, { pointerType: "mouse", relatedTarget: document.body });
     expect(track.getAttribute("data-interaction-paused")).toBe("false");
+    expect(playMarqueeAnimation).toHaveBeenCalledOnce();
+  });
+
+  it("restores the current time when pausing rewinds Safari's animation timeline", async () => {
+    render(<LiveRateList rates={mockLiveRates} />);
+    await screen.findByRole("button", { name: "Pause rates" });
+
+    const marqueeAnimation = animateMarquee.mock.results[0]?.value;
+
+    if (!marqueeAnimation) {
+      throw new Error("Expected the marquee animation");
+    }
+
+    marqueeAnimation.currentTime = 1806;
+    pauseMarqueeAnimation.mockImplementationOnce(() => {
+      marqueeAnimation.currentTime = 706;
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Pause rates" }));
+
+    expect(marqueeAnimation.currentTime).toBe(1806);
+  });
+
+  it("anchors the start time when resuming so Safari does not add the paused interval", async () => {
+    render(<LiveRateList rates={mockLiveRates} />);
+    await screen.findByRole("button", { name: "Pause rates" });
+
+    const marqueeAnimation = animateMarquee.mock.results[0]?.value;
+    const viewport = getRatesTrack().parentElement;
+
+    if (!marqueeAnimation || !viewport) {
+      throw new Error("Expected the marquee animation and viewport");
+    }
+
+    marqueeAnimation.currentTime = 11_942;
+    marqueeAnimation.startTime = null;
+
+    fireEvent.pointerEnter(viewport, { pointerType: "mouse" });
+    fireEvent.pointerLeave(viewport, { pointerType: "mouse", relatedTarget: document.body });
+
+    expect(marqueeAnimation.currentTime).toBe(11_942);
+    expect(marqueeAnimation.startTime).toBe(38_058);
   });
 
   it("keeps hover playback paused while the mouse moves between rate items", async () => {
@@ -214,15 +344,21 @@ describe("LiveRateList", () => {
   it("saves an explicit pause and clears it when playback resumes", async () => {
     render(<LiveRateList rates={mockLiveRates} />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Pause rates" }));
+    await screen.findByRole("button", { name: "Pause rates" });
+    pauseMarqueeAnimation.mockClear();
+    playMarqueeAnimation.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pause rates" }));
 
     expect(screen.getByRole("button", { name: "Play rates" })).toBeTruthy();
     expect(window.localStorage.getItem(MARKET_SNAPSHOT_PAUSED_STORAGE_KEY)).toBe("1");
+    expect(pauseMarqueeAnimation).toHaveBeenCalledOnce();
 
     fireEvent.click(screen.getByRole("button", { name: "Play rates" }));
 
     expect(screen.getByRole("button", { name: "Pause rates" })).toBeTruthy();
     expect(window.localStorage.getItem(MARKET_SNAPSHOT_PAUSED_STORAGE_KEY)).toBeNull();
+    expect(playMarqueeAnimation).toHaveBeenCalledOnce();
   });
 
   it("responds to system motion preference changes without saving a manual pause", async () => {

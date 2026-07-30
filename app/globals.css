@@ -362,12 +362,6 @@
     }
   }
 
-  @keyframes fx-live-rates-marquee {
-    to {
-      transform: translate3d(-50%, 0, 0);
-    }
-  }
-
   .fx-tab-panel-in {
     animation: fx-tab-panel-in var(--fx-motion-duration-base) var(--fx-motion-ease-snap) both;
   }
@@ -484,16 +478,7 @@
   }
 
   .fx-live-rates-marquee {
-    animation-name: fx-live-rates-marquee;
-    animation-duration: var(--fx-live-rates-duration);
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    animation-play-state: paused;
     will-change: transform;
-  }
-
-  .fx-live-rates-marquee[data-playback-state="playing"][data-interaction-paused="false"] {
-    animation-play-state: running;
   }
 
   .light .fx-skeleton {
