@@ -336,11 +336,13 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
               ))}
             </g>
             <path
+              className="fx-chart-area-in"
               d={chart.areaPath}
               fill={`url(#${gradientId})`}
               vectorEffect="non-scaling-stroke"
             />
             <path
+              className="fx-chart-line-in"
               d={chart.linePath}
               stroke="hsl(var(--lime-500))"
               strokeLinejoin="round"

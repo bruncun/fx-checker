@@ -343,6 +343,28 @@
     }
   }
 
+  @keyframes fx-chart-area-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fx-chart-line-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @keyframes fx-skeleton-shimmer {
     from {
       background-position: 100% 0;
@@ -395,6 +417,16 @@
   .fx-panel-flip-bottom {
     animation: fx-panel-flip-from-top var(--fx-motion-duration-quick) var(--fx-motion-ease-snap)
       both;
+  }
+
+  .fx-chart-area-in {
+    animation: fx-chart-area-in var(--fx-motion-duration-panel) var(--fx-motion-ease-snap) both;
+    transform-box: fill-box;
+  }
+
+  .fx-chart-line-in {
+    animation: fx-chart-line-in var(--fx-motion-duration-base) var(--fx-motion-ease-snap) both;
+    transform-box: fill-box;
   }
 
   .fx-transition-surface {
@@ -498,7 +530,9 @@
     .fx-list-row-out,
     .fx-panel-in,
     .fx-panel-flip-top,
-    .fx-panel-flip-bottom {
+    .fx-panel-flip-bottom,
+    .fx-chart-area-in,
+    .fx-chart-line-in {
       animation-duration: 1ms;
       transform: none;
     }
