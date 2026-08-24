@@ -1,6 +1,6 @@
 # Frontend Mentor - FX Checker Solution
 
-This is a solution to the [FX Checker challenge on Frontend Mentor](https://www.frontendmentor.io/challenges/foreign-exchange-currency-converter). FX Checker is a small Next.js application for exploring exchange-rate data. It started from the Supabase Next.js starter and is being refined into a focused product slice, beginning with a server-rendered home page that reads currency metadata from Frankfurter.
+This is a solution to the [FX Checker challenge on Frontend Mentor](https://www.frontendmentor.io/challenges/foreign-exchange-currency-converter). Frontend Mentor challenges help you improve your coding skills by building realistic projects. 
 
 ## Table of Contents
 
@@ -111,7 +111,7 @@ Your users should be able to:
 Next areas of focus:
 
 - Digging deeper into Next.js
-- Collaborating with AI to build richer marketing UX
+- Collaborating with AI to build richer UI at greater scale
 - Building and designing more complex custom features
 
 ### AI Collaboration
