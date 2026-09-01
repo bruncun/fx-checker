@@ -241,7 +241,7 @@ function SectionNavigation({
           <span>{activeLabel}</span>
           {activeCount !== undefined ? <TabCountBadge count={activeCount} /> : null}
         </span>
-        <Icon decorative height={7} iconName="chevron-down" width={11} />
+        <Icon decorative iconName="angle-down" />
       </button>
 
       {isOpen ? (
