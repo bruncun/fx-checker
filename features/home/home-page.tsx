@@ -4,7 +4,6 @@ import { ExchangeRateDataStats, getHeaderIsGuest } from "@/features/header/heade
 import { UserDropdown } from "@/features/header/user-dropdown";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
 import { getConverterModel } from "@/features/converter/model/converter";
-import { normalizeConverterRates } from "@/features/converter/model/exchange";
 import {
   getCurrencyReferenceData,
   getCurrencyReferenceDataForLatestRates,
@@ -28,6 +27,7 @@ import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
 import { createUrlSearchParams } from "./utils/url-state";
+import { getInitialConverterRates } from "./utils/converter-rates";
 
 type HomePageShellProps = {
   children: ReactNode;
@@ -77,16 +77,8 @@ async function ConverterSlot({ searchParams }: { searchParams: HomePageSearchPar
 
   assertDataAvailable(latestRatesData);
   const currencyReferencePromise = getConverterCurrencyReference(latestRatesData.rates);
-
-  const [params, currencyReferenceData] = await Promise.all([
-    searchParams,
-    currencyReferencePromise,
-  ]);
-
-  const converterRates = normalizeConverterRates(
-    latestRatesData.rates,
-    currencyReferenceData.map((currency) => currency.code)
-  );
+  const params = await searchParams;
+  const converterRates = getInitialConverterRates(latestRatesData.rates);
 
   return (
     <>
