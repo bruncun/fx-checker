@@ -19,7 +19,11 @@ import { LiveRateList } from "@/features/live-rates/components/live-rate-list";
 import { RateDetails } from "@/features/rate-details";
 import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
-import { HeaderStatsFallback, LiveRatesFallback } from "./components/home-page-fallback";
+import {
+  ConverterFallback,
+  HeaderStatsFallback,
+  LiveRatesFallback,
+} from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
@@ -76,14 +80,12 @@ async function ConverterSlot({ searchParams }: { searchParams: HomePageSearchPar
 
   const [params, currencyReferenceData] = await Promise.all([
     searchParams,
-    getCurrencyReferenceDataForLatestRates(latestRatesData.rates),
+    currencyReferencePromise,
   ]);
-
-  assertDataAvailable(currencyReferenceData);
 
   const converterRates = normalizeConverterRates(
     latestRatesData.rates,
-    currencyReferenceData.availableCurrencies.map((currency) => currency.code)
+    currencyReferenceData.map((currency) => currency.code)
   );
 
   return (
@@ -164,7 +166,9 @@ export function HomePageRouteContent({ children, searchParams }: HomePageRouteCo
         <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
           Check the Rate
         </h1>
-        <ConverterSlot searchParams={searchParams} />
+        <Suspense fallback={<ConverterFallback />}>
+          <ConverterSlot searchParams={searchParams} />
+        </Suspense>
       </section>
       <div className="mt-500 lg:mt-400">
         <RateDetails

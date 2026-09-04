@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { HeaderStatsFallback, LiveRatesFallback } from "./home-page-fallback";
+import { ConverterFallback, HeaderStatsFallback, LiveRatesFallback } from "./home-page-fallback";
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
@@ -15,6 +15,21 @@ vi.mock("next/navigation", () => ({
 
 afterEach(() => {
   cleanup();
+});
+
+describe("ConverterFallback", () => {
+  it("renders a complete pending converter while rate data loads", () => {
+    render(<ConverterFallback />);
+
+    expect(screen.getByLabelText("Loading exchange rate")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Loading currency" })).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: "Loading favorite state" }).getAttribute("disabled")
+    ).toBe("");
+    expect(screen.getByRole("button", { name: "Log conversion" }).getAttribute("tabindex")).toBe(
+      "-1"
+    );
+  });
 });
 
 describe("HeaderStatsFallback", () => {

@@ -38,6 +38,9 @@ describe("home page", () => {
   it("opens auth forms as modals from the guest account menu", () => {
     cy.visit("/");
 
+    cy.findByRole("list", { name: "Exchange rate data stats" })
+      .find(".fx-skeleton")
+      .should("not.exist");
     cy.findByRole("button", { name: "Account menu" }).click();
     cy.findByRole("link", { name: "Log in" }).click();
 

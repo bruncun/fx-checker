@@ -49,7 +49,8 @@ function redirectToRoot(request: NextRequest, responseToCopy?: NextResponse) {
 }
 
 function startGuestSession(request: NextRequest, responseToCopy?: NextResponse) {
-  const response = NextResponse.redirect(request.nextUrl);
+  request.cookies.set(GUEST_MODE_COOKIE, "1");
+  const response = NextResponse.next({ request });
 
   responseToCopy?.cookies.getAll().forEach((cookie) => {
     response.cookies.set(cookie);

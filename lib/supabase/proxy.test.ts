@@ -43,10 +43,11 @@ afterEach(() => {
 });
 
 describe("updateSession", () => {
-  it("bootstraps guest mode for anonymous root visits", async () => {
+  it("bootstraps guest mode and renders anonymous root visits without a redirect", async () => {
     const response = await updateSessionFor("/");
 
-    expect(response.headers.get("location")).toBe("https://fx-checker.test/");
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-request-cookie")).toContain(`${GUEST_MODE_COOKIE}=1`);
     expect(response.headers.getSetCookie().join("\n")).toContain(`${GUEST_MODE_COOKIE}=1`);
   });
 
