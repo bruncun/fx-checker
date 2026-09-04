@@ -290,14 +290,16 @@ export function LiveRateList({ rates }: LiveRateListProps) {
                 <LiveRateItem key={rate.pair} rate={rate} />
               ))}
             </ul>
-            <ul
-              aria-hidden="true"
-              className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
-            >
-              {rates.map((rate) => (
-                <LiveRateItem key={`duplicate-${rate.pair}`} rate={rate} />
-              ))}
-            </ul>
+            {animationDurationSeconds !== null ? (
+              <ul
+                aria-hidden="true"
+                className="flex w-max divide-x divide-neutral-500 border-r border-neutral-500"
+              >
+                {rates.map((rate) => (
+                  <LiveRateItem key={`duplicate-${rate.pair}`} rate={rate} />
+                ))}
+              </ul>
+            ) : null}
           </div>
         </div>
       </aside>

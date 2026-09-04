@@ -148,8 +148,12 @@ describe("LiveRateList", () => {
     expect(items[6]?.textContent).toBe("USD/CAD1.3815+0.04%");
   });
 
-  it("exposes one rate list while rendering one hidden duplicate for the loop", () => {
+  it("exposes one rate list and adds a hidden duplicate after measuring for the loop", async () => {
     const { container } = render(<LiveRateList rates={mockLiveRates} />);
+
+    expect(container.querySelectorAll("li")).toHaveLength(7);
+
+    await screen.findByRole("button", { name: "Pause rates" });
 
     expect(container.querySelectorAll("li")).toHaveLength(14);
     expect(screen.getAllByRole("list")).toHaveLength(1);
