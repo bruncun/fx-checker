@@ -5,7 +5,7 @@ type HomeRouteGroupLayoutProps = {
   children: ReactNode;
 };
 
-export const prefetch = "allow-runtime";
+export const prefetch = "partial";
 
 export default function HomeRouteGroupLayout({ children }: HomeRouteGroupLayoutProps) {
   return <HomePageShell>{children}</HomePageShell>;
