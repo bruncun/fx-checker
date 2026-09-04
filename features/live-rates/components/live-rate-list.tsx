@@ -81,15 +81,10 @@ export function LiveRateList({ rates }: LiveRateListProps) {
     null
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isPlaybackReady, setIsPlaybackReady] = React.useState(false);
   const [isHoverPaused, setIsHoverPaused] = React.useState(false);
 
-  React.useLayoutEffect(() => {
-    const listElement = primaryListRef.current;
-
-    if (!listElement) {
-      return;
-    }
-
+  React.useEffect(() => {
     function measureList() {
       const currentList = primaryListRef.current;
 
@@ -102,21 +97,25 @@ export function LiveRateList({ rates }: LiveRateListProps) {
       setAnimationDurationSeconds(listWidth > 0 ? listWidth / MARQUEE_SPEED_PX_PER_SECOND : null);
     }
 
-    measureList();
+    let resizeObserver: ResizeObserver | undefined;
+    const animationFrameId = requestAnimationFrame(() => {
+      measureList();
 
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
+      const listElement = primaryListRef.current;
 
-    const resizeObserver = new ResizeObserver(measureList);
-    resizeObserver.observe(listElement);
+      if (listElement && typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(measureList);
+        resizeObserver.observe(listElement);
+      }
+    });
 
     return () => {
-      resizeObserver.disconnect();
+      cancelAnimationFrame(animationFrameId);
+      resizeObserver?.disconnect();
     };
   }, [rates]);
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     const marqueeTrack = marqueeTrackRef.current;
 
     if (!marqueeTrack || animationDurationSeconds === null) {
@@ -162,7 +161,7 @@ export function LiveRateList({ rates }: LiveRateListProps) {
     setAnimationPlayback(marqueeAnimation, isPlaying && !isHoverPaused);
   }, [animationDurationSeconds, isHoverPaused, isPlaying]);
 
-  React.useLayoutEffect(
+  React.useEffect(
     () => () => {
       marqueeAnimationRef.current?.animation.cancel();
       marqueeAnimationRef.current = null;
@@ -171,15 +170,19 @@ export function LiveRateList({ rates }: LiveRateListProps) {
   );
 
   React.useEffect(() => {
+    if (animationDurationSeconds === null) {
+      return;
+    }
+
     if (typeof window.matchMedia !== "function") {
+      setIsPlaybackReady(true);
       return;
     }
 
     const reducedMotion = window.matchMedia(REDUCED_MOTION_QUERY);
     const autoplayTimeout = window.setTimeout(() => {
-      if (!reducedMotion.matches && !hasSavedPause()) {
-        setIsPlaying(true);
-      }
+      setIsPlaying(!reducedMotion.matches && !hasSavedPause());
+      setIsPlaybackReady(true);
     });
 
     function handleReducedMotionChange(event: MediaQueryListEvent) {
@@ -188,6 +191,8 @@ export function LiveRateList({ rates }: LiveRateListProps) {
       } else if (!hasSavedPause()) {
         setIsPlaying(true);
       }
+
+      setIsPlaybackReady(true);
     }
 
     reducedMotion.addEventListener("change", handleReducedMotionChange);
@@ -196,10 +201,9 @@ export function LiveRateList({ rates }: LiveRateListProps) {
       window.clearTimeout(autoplayTimeout);
       reducedMotion.removeEventListener("change", handleReducedMotionChange);
     };
-  }, []);
+  }, [animationDurationSeconds]);
 
-  const playbackAction = isPlaying ? "Pause" : "Play";
-  const playbackIcon = isPlaying ? "pause" : "play";
+  const playbackAction = isPlaybackReady ? (isPlaying ? "Pause" : "Play") : "Loading";
 
   function togglePlayback() {
     savePausedPreference(isPlaying);
@@ -237,7 +241,9 @@ export function LiveRateList({ rates }: LiveRateListProps) {
           <button
             aria-controls={ratesListId}
             aria-label={`${playbackAction} rates`}
+            aria-busy={!isPlaybackReady}
             className="group flex h-full w-full cursor-pointer items-center justify-center focus-visible:outline-none"
+            disabled={!isPlaybackReady}
             onClick={togglePlayback}
             type="button"
           >
@@ -246,13 +252,15 @@ export function LiveRateList({ rates }: LiveRateListProps) {
               className="fx-market-control-surface fx-transition-surface relative flex size-300 items-center justify-center rounded-6 bg-neutral-500 text-neutral-50 shadow-[inset_0_0_0_1px_hsl(var(--neutral-400))] group-focus-visible:shadow-[inset_0_0_0_1px_hsl(var(--neutral-400)),0_0_0_3px_hsl(var(--neutral-700)),0_0_0_4px_hsl(var(--lime-500))]"
             >
               <span className="relative size-[10px] sm:size-[11px]">
-                <Icon
-                  className="fx-market-control-icon absolute inset-0"
-                  decorative
-                  height="100%"
-                  iconName={playbackIcon}
-                  width="100%"
-                />
+                {isPlaybackReady ? (
+                  <Icon
+                    className="fx-market-control-icon absolute inset-0"
+                    decorative
+                    height="100%"
+                    iconName={isPlaying ? "pause" : "play"}
+                    width="100%"
+                  />
+                ) : null}
               </span>
             </span>
           </button>

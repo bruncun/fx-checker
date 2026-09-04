@@ -323,21 +323,21 @@ describe("LiveRateList", () => {
     expect(track.getAttribute("data-interaction-paused")).toBe("false");
   });
 
-  it("starts paused when the visitor previously paused the rates", () => {
+  it("starts paused when the visitor previously paused the rates", async () => {
     window.localStorage.setItem(MARKET_SNAPSHOT_PAUSED_STORAGE_KEY, "1");
 
     render(<LiveRateList rates={mockLiveRates} />);
 
-    expect(screen.getByRole("button", { name: "Play rates" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Play rates" })).toBeTruthy();
     expect(getRatesTrack().getAttribute("data-playback-state")).toBe("paused");
   });
 
-  it("starts paused when reduced motion is requested", () => {
+  it("starts paused when reduced motion is requested", async () => {
     installMatchMedia(true);
 
     render(<LiveRateList rates={mockLiveRates} />);
 
-    expect(screen.getByRole("button", { name: "Play rates" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Play rates" })).toBeTruthy();
     expect(getRatesTrack().getAttribute("data-playback-state")).toBe("paused");
   });
 
@@ -382,11 +382,11 @@ describe("LiveRateList", () => {
     expect(screen.getByRole("button", { name: "Pause rates" })).toBeTruthy();
   });
 
-  it("lets reduced-motion visitors play deliberately without persisting the override", () => {
+  it("lets reduced-motion visitors play deliberately without persisting the override", async () => {
     installMatchMedia(true);
     const firstRender = render(<LiveRateList rates={mockLiveRates} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Play rates" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Play rates" }));
 
     expect(screen.getByRole("button", { name: "Pause rates" })).toBeTruthy();
     expect(window.localStorage.getItem(MARKET_SNAPSHOT_PAUSED_STORAGE_KEY)).toBeNull();
@@ -394,15 +394,15 @@ describe("LiveRateList", () => {
     firstRender.unmount();
     render(<LiveRateList rates={mockLiveRates} />);
 
-    expect(screen.getByRole("button", { name: "Play rates" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Play rates" })).toBeTruthy();
   });
 
-  it("fails safely to static playback when motion preferences are unavailable", () => {
+  it("fails safely to static playback when motion preferences are unavailable", async () => {
     vi.stubGlobal("matchMedia", undefined);
 
     render(<LiveRateList rates={mockLiveRates} />);
 
-    expect(screen.getByRole("button", { name: "Play rates" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Play rates" })).toBeTruthy();
     expect(getRatesTrack().getAttribute("data-playback-state")).toBe("paused");
   });
 
