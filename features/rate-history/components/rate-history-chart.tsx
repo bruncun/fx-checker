@@ -252,7 +252,7 @@ function RateHistoryChart({ chart, pair, range }: RateHistoryChartProps) {
   return (
     <section
       aria-label="Chart"
-      className="rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:p-250"
+      className="rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] [contain:layout_paint] [contain-intrinsic-size:369px] [content-visibility:auto] sm:p-250"
     >
       <div className="flex h-[19px] items-center justify-between gap-150 uppercase">
         <h2 id={chartId} className="text-preset-3-medium text-neutral-50">

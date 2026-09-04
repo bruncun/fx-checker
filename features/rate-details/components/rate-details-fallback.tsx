@@ -52,7 +52,7 @@ function ChartFallback() {
   return (
     <section
       aria-label="Chart"
-      className="mt-200 min-h-[369px] rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] sm:mt-250 sm:p-250"
+      className="mt-200 min-h-[369px] rounded-16 bg-neutral-700 px-150 py-200 shadow-[inset_0_0_0_1px_hsl(var(--neutral-600))] [contain:layout_paint] [contain-intrinsic-size:369px] [content-visibility:auto] sm:mt-250 sm:p-250"
     >
       <div className="flex h-[19px] items-center justify-between gap-150">
         <SkeletonBlock className="h-[19px] w-[74px] rounded-4" />
