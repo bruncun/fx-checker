@@ -22,12 +22,19 @@ function SkeletonText({ children, className }: { children: ReactNode; className?
   );
 }
 
-function FallbackAmountInput({ className }: { className?: string }) {
+function FallbackAmountInput({
+  amountSide,
+  className,
+}: {
+  amountSide: "send" | "receive";
+  className?: string;
+}) {
   return (
     <span
       aria-hidden="true"
       className={cx(
-        "fx-skeleton h-[40px] w-[112px] max-w-[42vw] rounded-6 sm:w-[132px] lg:h-[41px]",
+        "fx-skeleton h-[40px] max-w-[42vw] rounded-6 sm:w-[132px] lg:h-[41px]",
+        amountSide === "receive" ? "w-[141px]" : "w-[118px]",
         className
       )}
     />
@@ -205,7 +212,10 @@ function ConverterAmountPanelFallback({ className, label }: { className?: string
         {label}
       </span>
       <div className="flex items-end justify-between gap-200">
-        <FallbackAmountInput className={className} />
+        <FallbackAmountInput
+          amountSide={label === "Receive" ? "receive" : "send"}
+          className={className}
+        />
         <FallbackCurrencyButton />
       </div>
     </fieldset>
