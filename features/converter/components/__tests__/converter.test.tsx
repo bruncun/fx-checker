@@ -80,12 +80,14 @@ function renderFavoriteButtonSlot(favorites: Favorite[]) {
 
 function renderConverter({
   converterCurrencies = currencies,
+  currencyReferencePromise,
   converterRates: converterRatesFixture = converterRates,
   favorites = [],
   initialSelectedCurrencies = defaultSelectedCurrencies,
   searchParams,
 }: {
   converterCurrencies?: AvailableCurrency[];
+  currencyReferencePromise?: Promise<AvailableCurrency[]>;
   converterRates?: ConverterRates;
   favorites?: Favorite[];
   initialSelectedCurrencies?: {
@@ -103,7 +105,7 @@ function renderConverter({
   return render(
     <KeyboardShortcutsProvider>
       <Converter
-        currencyReferencePromise={fulfilledPromise(converterCurrencies)}
+        currencyReferencePromise={currencyReferencePromise ?? fulfilledPromise(converterCurrencies)}
         favoriteButtonSlot={renderFavoriteButtonSlot(favorites)}
         rates={converterRatesFixture}
       />
@@ -130,6 +132,20 @@ afterEach(() => {
 });
 
 describe("Converter", () => {
+  it("shows the selected currency controls while picker metadata loads", () => {
+    const currencyReferencePromise = new Promise<AvailableCurrency[]>(() => {});
+
+    renderConverter({ currencyReferencePromise });
+
+    for (const currencyCode of ["USD", "EUR"]) {
+      const button = screen.getByRole("button", { name: currencyCode });
+
+      expect(button).toHaveProperty("disabled", true);
+      expect(button.querySelector("img")).toBeTruthy();
+      expect(button.querySelector(".fx-skeleton")).toBeNull();
+    }
+  });
+
   it("converts from the send amount as it is edited", () => {
     renderConverter();
 

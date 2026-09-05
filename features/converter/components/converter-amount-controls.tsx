@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { AmountInput, getAmountValue } from "@/components/ui/amount-input";
+import { CurrencyButton } from "@/components/ui/currency-button";
 import { ExchangeButton } from "@/components/ui/exchange-button";
 import {
   interactiveSurfaceClassName,
@@ -141,7 +142,11 @@ function ConverterAmountPanel({
           className={label === "Receive" ? "text-lime-500" : ""}
         />
         {countryCode ? (
-          <React.Suspense fallback={<CurrencyPickerFallback currencyCode={currencyCode} />}>
+          <React.Suspense
+            fallback={
+              <CurrencyPickerFallback countryCode={countryCode} currencyCode={currencyCode} />
+            }
+          >
             <DeferredCurrencyPicker
               countryCode={countryCode}
               currenciesPromise={currencyReferencePromise}
@@ -169,7 +174,27 @@ function ConverterAmountPanel({
   );
 }
 
-function CurrencyPickerFallback({ currencyCode }: { currencyCode: string }) {
+function CurrencyPickerFallback({
+  countryCode,
+  currencyCode,
+}: {
+  countryCode?: SelectedCurrency["countryCode"];
+  currencyCode: string;
+}) {
+  if (countryCode) {
+    return (
+      <CurrencyButton
+        aria-label={currencyCode}
+        countryCode={countryCode}
+        currencyCode={currencyCode}
+        disabled
+        flagFetchPriority="high"
+        flagLoading="eager"
+        tabIndex={-1}
+      />
+    );
+  }
+
   return (
     <button
       aria-label={currencyCode}
