@@ -149,6 +149,14 @@ export async function getCachedLatestExchangeRateDataSnapshot(
   return loadCachedLatestExchangeRateDataSnapshot(dataset);
 }
 
+// Public, daily snapshot data is safe to include in a prerendered shell.
+// Request-time consumers must continue using the io()-guarded reader above.
+export async function getPrerenderedLatestExchangeRateDataSnapshot(
+  dataset: ExchangeRateSnapshotDataset
+) {
+  return loadCachedLatestExchangeRateDataSnapshot(dataset);
+}
+
 async function loadCachedLatestExchangeRateDataSnapshot(dataset: ExchangeRateSnapshotDataset) {
   "use cache: remote";
   cacheTag(LATEST_EXCHANGE_RATE_DATA_SNAPSHOT_CACHE_TAG);

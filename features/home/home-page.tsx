@@ -3,14 +3,17 @@ import { getServerFavorites } from "@/features/favorites/api/server";
 import { ExchangeRateDataStats, getHeaderIsGuest } from "@/features/header/header";
 import { UserDropdown } from "@/features/header/user-dropdown";
 import type { AvailableCurrency } from "@/features/converter/model/currencies";
+import { getCurrencyFlagCountryCode } from "@/features/converter/model/currencies";
 import { getConverterModel } from "@/features/converter/model/converter";
 import {
-  getCurrencyReferenceData,
   getCurrencyReferenceDataForLatestRates,
   getLatestRatesData,
   getLiveRatesData,
+  getPrerenderedLatestRatesData,
+  getPrerenderedLiveRatesData,
 } from "@/features/exchange-rates/api/server";
 import { Suspense, type ReactNode } from "react";
+import { cacheLife } from "next/cache";
 import { connection } from "next/server";
 import { Converter } from "@/features/converter/components/converter";
 import { FavoriteButtonFallback } from "@/features/converter/components/converter-amount-controls";
@@ -50,29 +53,52 @@ type ConverterData = {
   rates: ReturnType<typeof getInitialConverterRates>;
 };
 
-async function HeaderStats() {
-  const [currencyReferenceData, isGuest] = await Promise.all([
-    getCurrencyReferenceData(),
-    getHeaderIsGuest(),
-  ]);
+async function HeaderCurrencyStats() {
+  "use cache";
+  cacheLife("days");
 
-  assertDataAvailable(currencyReferenceData);
+  const latestRatesData = await getPrerenderedLatestRatesData();
 
+  assertDataAvailable(latestRatesData);
+
+  const currencyCount = new Set(
+    latestRatesData.rates.flatMap(({ base, quote }) =>
+      [base, quote].filter((currency) => getCurrencyFlagCountryCode(currency) !== undefined)
+    )
+  ).size;
+
+  return <ExchangeRateDataStats currencyCount={currencyCount} />;
+}
+
+async function HeaderUserDropdown() {
+  return <UserDropdown isGuest={await getHeaderIsGuest()} />;
+}
+
+function HeaderStats() {
   return (
     <div className="flex items-center gap-200">
-      <ExchangeRateDataStats currencyCount={currencyReferenceData.currencyCount} />
+      <Suspense fallback={<HeaderStatsFallback />}>
+        <HeaderCurrencyStats />
+      </Suspense>
       <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
-      <UserDropdown isGuest={isGuest} />
+      <Suspense fallback={<UserDropdown isGuest />}>
+        <HeaderUserDropdown />
+      </Suspense>
     </div>
   );
 }
 
 async function LiveRates() {
-  const liveRatesData = await getLiveRatesData();
+  "use cache";
+  cacheLife("days");
 
-  assertDataAvailable(liveRatesData);
+  const liveRatesData = await getPrerenderedLiveRatesData();
 
-  return <LiveRateList rates={liveRatesData.liveRates} />;
+  return liveRatesData.status === "available" ? (
+    <LiveRateList rates={liveRatesData.liveRates} />
+  ) : (
+    <LiveRatesFallback />
+  );
 }
 
 async function getConverterData(searchParams: HomePageSearchParams): Promise<ConverterData> {
@@ -141,11 +167,7 @@ async function RateDetailsNavigationSlot() {
 export function HomePageShell({ children }: HomePageShellProps) {
   return (
     <HomePageContent
-      headerStatsSlot={
-        <Suspense fallback={<HeaderStatsFallback />}>
-          <HeaderStats />
-        </Suspense>
-      }
+      headerStatsSlot={<HeaderStats />}
       liveRatesSlot={
         <Suspense fallback={<LiveRatesFallback />}>
           <LiveRates />

@@ -13,7 +13,10 @@ import {
   getRates,
   type FrankfurterRate,
 } from "@/lib/frankfurter";
-import { getCachedLatestExchangeRateDataSnapshot } from "@/lib/latest-exchange-rate-data-snapshot";
+import {
+  getCachedLatestExchangeRateDataSnapshot,
+  getPrerenderedLatestExchangeRateDataSnapshot,
+} from "@/lib/latest-exchange-rate-data-snapshot";
 import {
   getLatestExchangeRateSnapshot,
   saveLatestExchangeRateSnapshot,
@@ -44,6 +47,10 @@ export type CurrencyReferenceData = DataResult<{
 
 export type LatestRatesData = DataResult<{
   freshness: ExchangeRateDataFreshness;
+  rates: FrankfurterRate[];
+}>;
+
+export type PrerenderedLatestRatesData = DataResult<{
   rates: FrankfurterRate[];
 }>;
 
@@ -126,6 +133,12 @@ export async function getLatestRatesData(): Promise<LatestRatesData> {
     unstable_rethrow(error);
     return { status: "unavailable" };
   }
+}
+
+export async function getPrerenderedLatestRatesData(): Promise<PrerenderedLatestRatesData> {
+  const snapshot = await getPrerenderedLatestExchangeRateDataSnapshot("latest");
+
+  return snapshot ? { rates: snapshot.rates, status: "available" } : { status: "unavailable" };
 }
 
 export async function getFreshLatestRatesData(): Promise<LatestRatesData> {
@@ -227,6 +240,43 @@ export async function getLiveRatesData(): Promise<LiveRatesData> {
     unstable_rethrow(error);
     return { status: "unavailable" };
   }
+}
+
+export async function getPrerenderedLiveRatesData(): Promise<LiveRatesData> {
+  const [latestRatesData, dailyHistorySnapshot] = await Promise.all([
+    getPrerenderedLatestRatesData(),
+    getPrerenderedLatestExchangeRateDataSnapshot("daily-3m"),
+  ]);
+
+  if (
+    latestRatesData.status === "unavailable" ||
+    !dailyHistorySnapshot ||
+    latestRatesData.rates[0]?.date !== dailyHistorySnapshot.sourceDate
+  ) {
+    return { status: "unavailable" };
+  }
+
+  const latestDate = latestRatesData.rates[0]?.date;
+  const lookbackStartDate = latestDate
+    ? getDateDaysBefore(latestDate, LIVE_RATE_LOOKBACK_DAYS)
+    : null;
+
+  if (!latestDate || !lookbackStartDate) {
+    return { status: "unavailable" };
+  }
+
+  const liveRateHistoryRates = dailyHistorySnapshot.rates.filter(
+    (rate) => rate.date >= lookbackStartDate && rate.date < latestDate
+  );
+
+  return {
+    liveRateHistoryRates,
+    liveRates: deriveLiveRates({
+      historicalRates: liveRateHistoryRates,
+      latestRates: latestRatesData.rates,
+    }),
+    status: "available",
+  };
 }
 
 export async function getLiveRatesDataForLatestRates(

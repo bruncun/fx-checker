@@ -30,7 +30,7 @@ export function HomePageContent({
             <Suspense fallback={null}>
               <GuestModeAlert />
             </Suspense>
-            {children}
+            <Suspense fallback={null}>{children}</Suspense>
           </div>
         </main>
       </div>

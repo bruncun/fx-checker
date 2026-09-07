@@ -22,9 +22,11 @@ const { getLatestExchangeRateSnapshot, saveLatestExchangeRateSnapshot } = vi.hoi
   saveLatestExchangeRateSnapshot: vi.fn(),
 }));
 
-const { getCachedLatestExchangeRateDataSnapshot } = vi.hoisted(() => ({
-  getCachedLatestExchangeRateDataSnapshot: vi.fn(),
-}));
+const { getCachedLatestExchangeRateDataSnapshot, getPrerenderedLatestExchangeRateDataSnapshot } =
+  vi.hoisted(() => ({
+    getCachedLatestExchangeRateDataSnapshot: vi.fn(),
+    getPrerenderedLatestExchangeRateDataSnapshot: vi.fn(),
+  }));
 
 vi.mock("@/lib/frankfurter", () => ({
   EXCHANGE_RATES_CACHE_TAG: "exchange-rates",
@@ -35,6 +37,7 @@ vi.mock("@/lib/frankfurter", () => ({
 
 vi.mock("@/lib/latest-exchange-rate-data-snapshot", () => ({
   getCachedLatestExchangeRateDataSnapshot,
+  getPrerenderedLatestExchangeRateDataSnapshot,
 }));
 
 vi.mock("@/lib/latest-exchange-rate-snapshot", () => ({
@@ -55,11 +58,13 @@ const latestRates: FrankfurterRate[] = [
 
 beforeEach(() => {
   getCachedLatestExchangeRateDataSnapshot.mockReset();
+  getPrerenderedLatestExchangeRateDataSnapshot.mockReset();
   getCurrencies.mockReset();
   getLatestExchangeRateSnapshot.mockReset();
   getRates.mockReset();
   saveLatestExchangeRateSnapshot.mockReset();
   getCachedLatestExchangeRateDataSnapshot.mockResolvedValue(null);
+  getPrerenderedLatestExchangeRateDataSnapshot.mockResolvedValue(null);
   getLatestExchangeRateSnapshot.mockResolvedValue(null);
 });
 
