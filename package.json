@@ -10,6 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:unit": "vitest run",
+    "test:cold-start": "npm run build && node --test testing/cold-start.check.mjs",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "test:e2e": "start-server-and-test dev:e2e http://localhost:3101/auth/login cypress:run",

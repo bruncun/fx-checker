@@ -63,23 +63,29 @@ function FallbackCurrencyButton() {
   );
 }
 
+function HeaderCurrencyStatsFallback() {
+  return (
+    <InlineMetaList
+      className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
+      aria-label="Exchange rate data stats"
+      items={[
+        <SkeletonText key="currencies">31 Currencies</SkeletonText>,
+        <abbr key="eod" title="End of day">
+          EOD
+        </abbr>,
+        {
+          className: "hidden sm:list-item",
+          content: "Central bank data",
+        },
+      ]}
+    />
+  );
+}
+
 function HeaderStatsFallback() {
   return (
     <div className="flex items-center gap-200">
-      <InlineMetaList
-        className="flex items-center text-preset-6 text-neutral-200 uppercase sm:text-preset-4"
-        aria-label="Exchange rate data stats"
-        items={[
-          <SkeletonText key="currencies">31 Currencies</SkeletonText>,
-          <abbr key="eod" title="End of day">
-            EOD
-          </abbr>,
-          {
-            className: "hidden sm:list-item",
-            content: "Central bank data",
-          },
-        ]}
-      />
+      <HeaderCurrencyStatsFallback />
       <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
       <UserDropdown isGuest />
     </div>
@@ -222,4 +228,4 @@ function ConverterAmountPanelFallback({ className, label }: { className?: string
   );
 }
 
-export { ConverterFallback, HeaderStatsFallback, LiveRatesFallback };
+export { ConverterFallback, HeaderCurrencyStatsFallback, HeaderStatsFallback, LiveRatesFallback };

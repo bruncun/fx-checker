@@ -8,13 +8,11 @@ import { getConverterModel } from "@/features/converter/model/converter";
 import {
   getCurrencyReferenceDataForLatestRates,
   getLatestRatesData,
-  getLiveRatesData,
   getPrerenderedLatestRatesData,
   getPrerenderedLiveRatesData,
 } from "@/features/exchange-rates/api/server";
 import { Suspense, type ReactNode } from "react";
-import { cacheLife } from "next/cache";
-import { connection } from "next/server";
+import { io } from "next/cache";
 import { Converter } from "@/features/converter/components/converter";
 import { FavoriteButtonFallback } from "@/features/converter/components/converter-amount-controls";
 import { ConverterFavoriteButton } from "@/features/converter/components/converter-favorite-button";
@@ -22,7 +20,11 @@ import { LiveRateList } from "@/features/live-rates/components/live-rate-list";
 import { RateDetails } from "@/features/rate-details";
 import { RateDetailsNavigationFallback } from "@/features/rate-details/components/rate-details-fallback";
 import { RateDetailsNavigation } from "@/features/rate-details/components/rate-details-navigation";
-import { HeaderStatsFallback, LiveRatesFallback } from "./components/home-page-fallback";
+import {
+  ConverterFallback,
+  HeaderCurrencyStatsFallback,
+  LiveRatesFallback,
+} from "./components/home-page-fallback";
 import { HomePageContent } from "./components/home-page-content";
 import { assertDataAvailable } from "./components/data-unavailable";
 import { StaleExchangeRatesAlert } from "./components/stale-exchange-rates-alert";
@@ -54,8 +56,8 @@ type ConverterData = {
 };
 
 async function HeaderCurrencyStats() {
-  "use cache";
-  cacheLife("days");
+  // Keep snapshot reads out of the static shell, even when the data cache is cold.
+  await io();
 
   const latestRatesData = await getPrerenderedLatestRatesData();
 
@@ -77,7 +79,7 @@ async function HeaderUserDropdown() {
 function HeaderStats() {
   return (
     <div className="flex items-center gap-200">
-      <Suspense fallback={<HeaderStatsFallback />}>
+      <Suspense fallback={<HeaderCurrencyStatsFallback />}>
         <HeaderCurrencyStats />
       </Suspense>
       <span aria-hidden="true" className="h-300 w-px shrink-0 bg-neutral-500" />
@@ -89,8 +91,8 @@ function HeaderStats() {
 }
 
 async function LiveRates() {
-  "use cache";
-  cacheLife("days");
+  // Keep snapshot reads out of the static shell, even when the data cache is cold.
+  await io();
 
   const liveRatesData = await getPrerenderedLiveRatesData();
 
@@ -179,10 +181,14 @@ export function HomePageShell({ children }: HomePageShellProps) {
   );
 }
 
-export async function HomePageRouteContent({ children, searchParams }: HomePageRouteContentProps) {
-  await connection();
+async function ConverterContent({ searchParams }: { searchParams: HomePageSearchParams }) {
+  await io();
   const converterData = await getConverterData(searchParams);
 
+  return <ConverterSlot converterData={converterData} />;
+}
+
+export function HomePageRouteContent({ children, searchParams }: HomePageRouteContentProps) {
   return (
     <>
       <section
@@ -194,7 +200,9 @@ export async function HomePageRouteContent({ children, searchParams }: HomePageR
         <h1 id="converter-heading" className="mb-200 text-preset-2 text-neutral-50 uppercase">
           Check the Rate
         </h1>
-        <ConverterSlot converterData={converterData} />
+        <Suspense fallback={<ConverterFallback />}>
+          <ConverterContent searchParams={searchParams} />
+        </Suspense>
       </section>
       <div className="mt-500 lg:mt-400">
         <RateDetails
